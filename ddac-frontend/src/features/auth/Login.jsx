@@ -10,7 +10,7 @@ export default function Login() {
 
         if (result.success) {
             localStorage.setItem("token", result.token);
-            navigate("/custDashboard");
+            navigate("/staffDashboard");
         } else {
             alert("Invalid Login Credentials");
         }
