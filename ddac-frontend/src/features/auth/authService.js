@@ -1,16 +1,42 @@
 export const login = async (email, password) => {
     await new Promise(res => setTimeout(res, 800));
 
-    // mock login data 
-    if (email === "test@gmail.com" && password === "123456") {
+    // Mock login data with different roles
+    const mockUsers = {
+        "customer@gmail.com": {
+            email: "customer@gmail.com",
+            name: "Customer User",
+            role: "customer",
+            password: "123456"
+        },
+        "staff@gmail.com": {
+            email: "staff@gmail.com", 
+            name: "Staff User",
+            role: "staff",
+            password: "123456"
+        },
+        "doctor@gmail.com": {
+            email: "doctor@gmail.com",
+            name: "Doctor User", 
+            role: "doctor",
+            password: "123456"
+        }
+    };
+
+    const user = mockUsers[email];
+    if (user && user.password === password) {
         return {
             success: true,
-            token: "mock-token-123",
-            user: {email, name: "Test User"}
+            token: `mock-token-${user.role}-${Date.now()}`,
+            user: {
+                email: user.email,
+                name: user.name,
+                role: user.role
+            }
         };
     }
 
-    return {success: false};
+    return { success: false, message: "Invalid email or password" };
 };
 
 export const register = async (data) => {

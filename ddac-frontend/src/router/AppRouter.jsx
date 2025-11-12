@@ -2,31 +2,63 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
 import ProtectedRoute from "../router/ProtectedRoute";
+import RoleBasedRedirect from "../features/RoleBasedRedirect";
 import CustDashboard from "../features/customer/CustDashboard";
 import CustProfile from "../features/customer/profile/CustProfile";
 import Appointments from "../features/customer/appointments/Appointments";
 import StaffDashboard from "../features/staff/StaffDashboard";
 import StaffProfile from "../features/staff/profile/StaffProfile";
 import StaffAppointments from "../features/staff/appointments/StaffAppointments";
+import DoctorDashboard from "../features/doctor/DoctorDashboard";
+import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
+import DoctorProfile from "../features/doctor/profile/DoctorProfile";
 
 export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        // Auth Routes
+        {/* Auth Routes */}
         <Route path="/" element={<Login />}/>
         <Route path="/login" element={<Login />}/>
         <Route path="/register" element={<Register />}/>
+        <Route path="/role-based-redirect" element={<RoleBasedRedirect />}/>
 
-        // Staff Routes
-        <Route path="/staffDashboard" element={<ProtectedRoute><StaffDashboard/></ProtectedRoute>}/>
-        <Route path="/staffProfile" element={<ProtectedRoute><StaffProfile/></ProtectedRoute>}/>
-        <Route path="/staffAppointments" element={<ProtectedRoute><StaffAppointments/></ProtectedRoute>}/>
+        {/* Staff Routes */}
+        <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboard/></ProtectedRoute>}/>
+        <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfile/></ProtectedRoute>}/>
+        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>
 
-        // Customer Routes
-        <Route path="/custDashboard" element={ <ProtectedRoute><CustDashboard/></ProtectedRoute>}/>
-        <Route path="/custProfile" element={<ProtectedRoute><CustProfile/></ProtectedRoute>}/>
-        <Route path="/appointments" element={<ProtectedRoute><Appointments/></ProtectedRoute>}/>
+        {/* Customer Routes */}
+        <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
+        <Route path="/custProfile" element={<ProtectedRoute allowedRoles={['customer']}><CustProfile/></ProtectedRoute>}/>
+        <Route path="/appointments" element={<ProtectedRoute allowedRoles={['customer']}><Appointments/></ProtectedRoute>}/>
+
+        {/* Doctor Routes */}
+        <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>
+        <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
+        <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
+        
+        {/* Unauthorized Route */}
+        <Route 
+          path="/unauthorized" 
+          element={
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+              <div className="text-center bg-white p-8 rounded-lg shadow-lg">
+                <h1 className="text-3xl font-bold text-red-600 mb-4">Unauthorized Access</h1>
+                <p className="text-gray-600 mb-6">You don't have permission to access this page.</p>
+                <button 
+                  onClick={() => window.location.href = '/login'}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded transition-colors"
+                >
+                  Go to Login
+                </button>
+              </div>
+            </div>
+          } 
+        />
+        
+        {/* Catch all route */}
+        <Route path="*" element={<Login />} />
       </Routes>
     </BrowserRouter>
   );

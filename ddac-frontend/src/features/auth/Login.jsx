@@ -1,18 +1,38 @@
 import AuthForm from "./AuthForm";
-import {login} from "./authService";
+import { login } from "./authService";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
     const navigate = useNavigate();
 
-    const handleLogin = async (data) => {
-        const result = await login(data.email, data.password);
-
-        if (result.success) {
-            localStorage.setItem("token", result.token);
-            navigate("/staffDashboard");
-        } else {
-            alert("Invalid Login Credentials");
+    const handleLogin = async (credentials) => {
+        try {
+            const result = await login(credentials.email, credentials.password);
+            if (result.success) {
+                localStorage.setItem("token", result.token);
+                localStorage.setItem("userRole", result.user.role);
+                localStorage.setItem("userName", result.user.name);
+                
+                // Redirect based on role
+                switch(result.user.role) {
+                    case 'doctor':
+                        navigate('/doctorDashboard');
+                        break;
+                    case 'staff':
+                        navigate('/staffDashboard');
+                        break;
+                    case 'customer':
+                        navigate('/custDashboard');
+                        break;
+                    default:
+                        navigate('/login');
+                }
+            } else {
+                alert("Invalid Login Credentials");
+            }
+        } catch (error) {
+            console.error("Login failed:", error);
+            alert("Login failed: " + error.message);
         }
     };
 
