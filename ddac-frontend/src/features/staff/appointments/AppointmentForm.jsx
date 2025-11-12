@@ -4,7 +4,9 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
   const [formData, setFormData] = useState({
     date: "",
     time: "",
+    patient: "",
     doctor: "",
+    purpose: "",
     status: "Booked",
   });
 
@@ -50,6 +52,18 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
           />
         </div>
         <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-900">Patient</label>
+          <input 
+            type="text" 
+            name="patient" 
+            value={formData.patient} 
+            onChange={handleChange} 
+            required 
+            className="input-field"
+            placeholder="Enter patient's name"
+          />
+        </div>
+        <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Doctor</label>
           <input 
             type="text" 
@@ -59,6 +73,18 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
             required 
             className="input-field"
             placeholder="Enter doctor's name"
+          />
+        </div>
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-gray-900">Purpose</label>
+          <input 
+            type="text" 
+            name="purpose" 
+            value={formData.purpose} 
+            onChange={handleChange} 
+            required 
+            className="input-field"
+            placeholder="Enter purpose of appointment"
           />
         </div>
         <div className="space-y-2">

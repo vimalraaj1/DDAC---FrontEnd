@@ -1,0 +1,20 @@
+[
+  {
+    "id": 2,
+    "date": "2025-11-15",
+    "time": "11:30",
+    "patient": "Jamie Wong",
+    "doctor": "Foong Pooi Lee",
+    "purpose": "Vaccination",
+    "status": "Booked"
+  },
+  {
+    "id": 3,
+    "date": "2025-11-12",
+    "time": "15:00",
+    "patient": "Joachim Wong",
+    "doctor": "Tristen",
+    "purpose": "Checkup",
+    "status": "Booked"
+  }
+]

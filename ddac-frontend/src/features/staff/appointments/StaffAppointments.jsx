@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import StaffNavBar from "../components/StaffNavBar";
 import AppointmentForm from "./AppointmentForm";
-import { getAppointments, deleteAppointment, createAppointment, updateAppointment } from "./appointmentService";
+import { getAllAppointments, deleteAppointment, createAppointment, updateAppointment } from "./appointmentService";
 
 
 export default function StaffAppointments() {
@@ -10,7 +10,7 @@ export default function StaffAppointments() {
   const [showForm, setShowForm] = useState(false);
 
   const fetchAppointments = async () => {
-    const data = await getAppointments();
+    const data = await getAllAppointments();
     setAppointments(data);
   };
 
@@ -81,12 +81,18 @@ export default function StaffAppointments() {
                         {a.status}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{a.doctor}</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">{a.patient}</h3>
                     <p className="text-sm text-gray-neutral">
                       <span className="font-medium">Date:</span> {a.date}
                     </p>
                     <p className="text-sm text-gray-neutral">
                       <span className="font-medium">Time:</span> {a.time}
+                    </p>
+                    <p className="text-sm text-gray-neutral">
+                      <span className="font-medium">Doctor:</span> {a.doctor}
+                    </p>
+                    <p className="text-sm text-gray-neutral">
+                      <span className="font-medium">Purpose:</span> {a.purpose}
                     </p>
                   </div>
                 </div>

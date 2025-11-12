@@ -31,6 +31,23 @@ export default function CustDashboard() {
                     </Link>
 
                     <Link 
+                        to="/registerPatient" 
+                        className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+                    >
+                        <div className="flex items-center space-x-4">
+                            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
+                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Register Patient</h3>
+                                <p className="text-sm text-gray-neutral">Register new patients</p>
+                            </div>
+                        </div>
+                    </Link>
+
+                    <Link 
                         to="/staffProfile" 
                         className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                     >
@@ -65,12 +82,13 @@ export default function CustDashboard() {
                 <div className="mt-8 card">
                     <h2 className="section-title">Quick Actions</h2>
                     <div className="space-y-2 text-gray-neutral">
+                        <p>• Register new patients</p>
                         <p>• Add new appointments</p>
                         <p>• View your bookings</p>
                         <p>• Update your profile information</p>
                     </div>
-                </div>
             </div>
         </div>
-    )
+    </div>
+  );
 }

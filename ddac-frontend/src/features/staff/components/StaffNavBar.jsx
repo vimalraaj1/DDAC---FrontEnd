@@ -35,6 +35,12 @@ export default function StaffNavBar() {
               Appointments
             </Link>
             <Link 
+              to="/registerPatient" 
+              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+            >
+              Register Patient
+            </Link>
+            <Link 
               to="/staffProfile" 
               className="text-gray-neutral hover:text-primary transition-colors font-medium"
             >
