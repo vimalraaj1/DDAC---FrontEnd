@@ -3,7 +3,7 @@ import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
 import ProtectedRoute from "../router/ProtectedRoute";
 import CustDashboard from "../features/customer/CustDashboard";
-import CustProfile from "../features/customer/CustProfile";
+import CustProfile from "../features/customer/profile/CustProfile";
 import Appointments from "../features/customer/appoinments/Appointments";
 
 export default function AppRouter() {

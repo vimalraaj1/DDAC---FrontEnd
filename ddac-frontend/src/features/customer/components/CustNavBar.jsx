@@ -9,11 +9,46 @@ export default function CustNavBar() {
   };
 
   return (
-    <nav style={{ padding: "10px", borderBottom: "1px solid #ccc" }}>
-      <Link to="/custDashboard" style={{ marginRight: "10px" }}>Dashboard</Link>
-      <Link to="/appointments" style={{marginRight:"10px"}}>Appointments</Link>
-      <Link to="/custProfile" style={{ marginRight: "10px" }}>Profile</Link>
-      <button onClick={handleLogout}>Logout</button>
+    <nav className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center space-x-1">
+            <Link 
+              to="/custDashboard" 
+              className="text-xl font-semibold text-primary hover:text-[#3B82F6] transition-colors"
+            >
+              DDAC
+            </Link>
+          </div>
+          
+          <div className="flex items-center space-x-6">
+            <Link 
+              to="/custDashboard" 
+              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+            >
+              Dashboard
+            </Link>
+            <Link 
+              to="/appointments" 
+              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+            >
+              Appointments
+            </Link>
+            <Link 
+              to="/custProfile" 
+              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+            >
+              Profile
+            </Link>
+            <button 
+              onClick={handleLogout}
+              className="btn-secondary text-sm"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
     </nav>
   );
 }
