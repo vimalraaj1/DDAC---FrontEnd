@@ -16,5 +16,14 @@
     "doctor": "Tristen",
     "purpose": "Checkup",
     "status": "Booked"
+  },
+  {
+    "id": 4,
+    "date": "2025-11-13",
+    "time": "16:30",
+    "patient": "Lee Jia Jun",
+    "doctor": "Tristen Chris",
+    "purpose": "Health Checkup",
+    "status": "Booked"
   }
 ]

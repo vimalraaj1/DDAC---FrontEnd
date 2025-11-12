@@ -14,5 +14,13 @@
     "phoneNumber": "0168495615",
     "address": "Kepong",
     "allergies": "Mango"
+  },
+  {
+    "id": 3,
+    "patientName": "Lee Jia Jun",
+    "gender": "male",
+    "phoneNumber": "0185474123",
+    "address": "Penang",
+    "allergies": ""
   }
 ]

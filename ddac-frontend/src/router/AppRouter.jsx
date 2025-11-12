@@ -9,6 +9,7 @@ import Appointments from "../features/customer/appointments/Appointments";
 import StaffDashboard from "../features/staff/StaffDashboard";
 import StaffProfile from "../features/staff/profile/StaffProfile";
 import StaffAppointments from "../features/staff/appointments/StaffAppointments";
+import RegisterPatient from "../features/staff/registration/RegisterPatient"
 import DoctorDashboard from "../features/doctor/DoctorDashboard";
 import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
 import DoctorProfile from "../features/doctor/profile/DoctorProfile";
@@ -26,7 +27,8 @@ export default function AppRouter() {
         {/* Staff Routes */}
         <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboard/></ProtectedRoute>}/>
         <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfile/></ProtectedRoute>}/>
-        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>
+        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>\
+        <Route path="/registerPatient" element={<ProtectedRoute allowedRoles={['staff']}><RegisterPatient/></ProtectedRoute>}/>
 
         {/* Customer Routes */}
         <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
