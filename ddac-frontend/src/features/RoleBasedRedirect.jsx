@@ -12,6 +12,8 @@ const RoleBasedRedirect = () => {
             return <Navigate to="/staffDashboard" replace />;
         case 'customer':
             return <Navigate to="/custDashboard" replace />;
+        case 'manager':
+            return <Navigate to="/managerDashboard" replace />;
         default:
             return <Navigate to="/login" replace />;
     }
