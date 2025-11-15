@@ -1,0 +1,35 @@
+:root{
+    /* Patient / Soft Blue */
+    --primary: #4EA5D9;
+    --primary-hover: #3f93c4;
+    --primary-light: #A8D8FF;
+
+    /* Backgrounds */
+    --bg-main: #F5F7FA;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #4EA5D9; /* if you show role-specific mini UI */
+    --bg-topbar: #FAFCFF;
+
+    /* Text */
+    --text-heading: #1A1A1A;
+    --text-body: #3D3D3D;
+    --text-muted: #7A7A7A;
+    --text-on-dark: #FFFFFF;
+
+    /* Accents */
+    --accent-sky: #A9DFF9;
+    --accent-teal: #45AAB8;
+    --accent-success: #2ECC71;
+    --accent-warning: #F39C12;
+    --accent-danger: #E74C3C;
+
+    /* Buttons & inputs */
+    --btn-primary: #4EA5D9;
+    --btn-primary-hover: #3b8ec6;
+    --btn-secondary: #E8F6FD;
+    --btn-secondary-text: #4EA5D9;
+    --input-border: #DCEFFB;
+
+    /* Borders */
+    --border-color: #E6F3FB;
+}

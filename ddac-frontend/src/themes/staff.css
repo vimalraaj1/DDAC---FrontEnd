@@ -1,0 +1,35 @@
+:root{
+    /* Medical Assistant / Lavender */
+    --primary: #9B5DE5;
+    --primary-hover: #8748d8;
+    --primary-light: #CDA8FF;
+
+    /* Backgrounds */
+    --bg-main: #F5F7FA;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #9B5DE5;
+    --bg-topbar: #FAFCFF;
+
+    /* Text */
+    --text-heading: #1A1A1A;
+    --text-body: #3D3D3D;
+    --text-muted: #7A7A7A;
+    --text-on-dark: #FFFFFF;
+
+    /* Accents */
+    --accent-sky: #D6C0FF;
+    --accent-teal: #45AAB8;
+    --accent-success: #2ECC71;
+    --accent-warning: #F39C12;
+    --accent-danger: #E74C3C;
+
+    /* Buttons & inputs */
+    --btn-primary: #9B5DE5;
+    --btn-primary-hover: #7e3fd3;
+    --btn-secondary: #F0ECFF;
+    --btn-secondary-text: #9B5DE5;
+    --input-border: #E7E0F9;
+
+    /* Borders */
+    --border-color: #EFE8FB;
+}

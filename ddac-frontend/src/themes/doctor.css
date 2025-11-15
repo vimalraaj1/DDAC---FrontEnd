@@ -1,0 +1,35 @@
+:root{
+    /* Doctor / Medical Green */
+    --primary: #2A9D8F;
+    --primary-hover: #238d7f;
+    --primary-light: #6DCDB8;
+
+    /* Backgrounds */
+    --bg-main: #F5F7FA;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #2A9D8F;
+    --bg-topbar: #FAFCFF;
+
+    /* Text */
+    --text-heading: #1A1A1A;
+    --text-body: #3D3D3D;
+    --text-muted: #707070;
+    --text-on-dark: #FFFFFF;
+
+    /* Accents */
+    --accent-sky: #8FD3C7;
+    --accent-teal: #45AAB8;
+    --accent-success: #2ECC71;
+    --accent-warning: #F39C12;
+    --accent-danger: #E74C3C;
+
+    /* Buttons & inputs */
+    --btn-primary: #2A9D8F;
+    --btn-primary-hover: #1f7f6f;
+    --btn-secondary: #E9F6F3;
+    --btn-secondary-text: #2A9D8F;
+    --input-border: #DFF0EC;
+
+    /* Borders */
+    --border-color: #E6F2EF;
+}
