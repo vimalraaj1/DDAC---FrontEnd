@@ -1,52 +1,45 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+    content: [
+        "./index.html",
+        "./src/**/*.{js,ts,jsx,tsx}",
+    ],
     theme: {
         extend: {
             colors: {
+                // Primary colors
                 primary: "var(--primary)",
                 "primary-hover": "var(--primary-hover)",
                 "primary-light": "var(--primary-light)",
 
-                background: {
-                    DEFAULT: "var(--bg-main)",
-                    card: "var(--bg-card)",
-                    sidebar: "var(--bg-sidebar)",
-                    topbar: "var(--bg-topbar)"
-                },
+                // Background colors
+                "bg-main": "var(--bg-main)",
+                "bg-card": "var(--bg-card)",
+                "bg-sidebar": "var(--bg-sidebar)",
+                "bg-topbar": "var(--bg-topbar)",
 
-                text: {
-                    heading: "var(--text-heading)",
-                    body: "var(--text-body)",
-                    muted: "var(--text-muted)",
-                    onDark: "var(--text-on-dark)"
-                },
+                // Text colors - flatten these!
+                "text-heading": "var(--text-heading)",
+                "text-body": "var(--text-body)",
+                "text-muted": "var(--text-muted)",
+                "text-ondark": "var(--text-on-dark)",  // Remove hyphen for class name
 
-                accent: {
-                    sky: "var(--accent-sky)",
-                    teal: "var(--accent-teal)",
-                    success: "var(--accent-success)",
-                    warning: "var(--accent-warning)",
-                    danger: "var(--accent-danger)"
-                },
+                // Accent colors
+                "accent-sky": "var(--accent-sky)",
+                "accent-teal": "var(--accent-teal)",
+                "accent-success": "var(--accent-success)",
+                "accent-warning": "var(--accent-warning)",
+                "accent-danger": "var(--accent-danger)",
 
-                button: {
-                    primary: "var(--btn-primary)",
-                    "primary-hover": "var(--btn-primary-hover)",
-                    secondary: "var(--btn-secondary)",
-                    "secondary-text": "var(--btn-secondary-text)"
-                },
+                // Button colors
+                "btn-primary": "var(--btn-primary)",
+                "btn-primary-hover": "var(--btn-primary-hover)",
+                "btn-secondary": "var(--btn-secondary)",
+                "btn-secondary-text": "var(--btn-secondary-text)",
 
-                input: {
-                    border: "var(--input-border)"
-                },
-
-                border: {
-                    DEFAULT: "var(--border-color)"
-                }
+                // Input/Border
+                "input-border": "var(--input-border)",
+                "border-color": "var(--border-color)"
             },
             borderRadius: {
                 xl: "14px"
@@ -56,6 +49,5 @@ export default {
             }
         }
     },
-  plugins: [],
+    plugins: [],
 }
-

@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import ManagerNavBar from "./components/ManagerNavBar.jsx";
+import '../../themes/manager.css';
+import '../../index.css';
 
 export default function ManagerDashboard() {
     return (
