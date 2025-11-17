@@ -1,69 +1,223 @@
-@import 'tailwindcss';
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
 
-@theme {
-  --color-primary: #1E40AF;
-  --color-primary-hover: #3B82F6;
-  --color-gray-soft: #F3F4F6;
-  --color-gray-neutral: #6B7280;
-  --font-family-sans: 'Inter', system-ui, sans-serif;
+* {
+    box-sizing: border-box;
 }
 
-@layer base {
-  * {
-    @apply box-border;
-  }
-
-  html, body {
-    @apply m-0 p-0;
-  }
-
-  body {
-    @apply bg-white text-gray-900 font-sans antialiased min-h-screen;
-  }
-
-  #root {
-    @apply min-h-screen;
-  }
+html, body {
+    margin: 0;
+    padding: 0;
 }
 
-@layer components {
-  /* Button Styles */
-  .btn-primary {
-    @apply bg-primary text-white px-6 py-2.5 rounded-lg font-medium 
-           transition-colors duration-200 hover:bg-[#3B82F6] 
-           focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-  }
+body {
+    background-color: var(--bg-main, #ffffff);
+    color: var(--text-body, #3D3D3D);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+}
 
-  .btn-secondary {
-    @apply bg-gray-soft text-gray-neutral px-6 py-2.5 rounded-lg font-medium 
-           transition-colors duration-200 hover:bg-gray-200 
-           focus:outline-none focus:ring-2 focus:ring-gray-neutral focus:ring-offset-2;
-  }
+#root {
+    min-height: 100vh;
+}
 
-  /* Input Styles */
-  .input-field {
-    @apply w-full px-4 py-2.5 border border-gray-300 rounded-lg 
-           focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent 
-           transition-all duration-200 text-gray-900 placeholder-gray-400;
-  }
+/* Button Styles */
+.btn-primary {
+    background-color: var(--btn-primary);
+    color: var(--text-on-dark);
+    padding: 0.625rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 200ms;
+    border: none;
+    cursor: pointer;
+}
 
-  /* Card Styles */
-  .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
-  }
+.btn-primary:hover {
+    background-color: var(--btn-primary-hover);
+}
 
-  .card-elevated {
-    @apply bg-white rounded-xl shadow-md border border-gray-200 p-6;
-  }
+.btn-primary:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--primary);
+}
 
-  /* Page Title */
-  .page-title {
-    @apply text-3xl font-semibold text-gray-900 mb-6;
-  }
+.btn-secondary {
+    background-color: var(--btn-secondary);
+    color: var(--btn-secondary-text);
+    padding: 0.625rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 200ms;
+    border: none;
+    cursor: pointer;
+}
 
-  /* Section Title */
-  .section-title {
-    @apply text-xl font-semibold text-gray-900 mb-4;
-  }
+.btn-secondary:hover {
+    background-color: #d1d5db;
+}
+
+/* Input Styles */
+.input-field {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--input-border);
+    border-radius: 0.5rem;
+    transition: all 200ms;
+    color: var(--text-body);
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.input-field::placeholder {
+    color: var(--text-muted);
+}
+
+/* Page Title */
+.page-title {
+    font-size: 1.875rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 1.5rem;
+}
+
+/* Section Title */
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin-bottom: 1rem;
+}
+
+@layer utilities {
+    /* Primary Colors */
+    .bg-primary {
+        background-color: var(--primary);
+    }
+
+    .bg-primary-hover {
+        background-color: var(--primary-hover);
+    }
+
+    .bg-primary-light {
+        background-color: var(--primary-light);
+    }
+
+    .text-primary {
+        color: var(--primary);
+    }
+
+    .text-primary-hover {
+        color: var(--primary-hover);
+    }
+
+    .border-primary {
+        border-color: var(--primary);
+    }
+
+    /* Background Colors */
+    .bg-main {
+        background-color: var(--bg-main);
+    }
+
+    .bg-card {
+        background-color: var(--bg-card);
+    }
+
+    .bg-sidebar {
+        background-color: var(--bg-sidebar);
+    }
+
+    .bg-topbar {
+        background-color: var(--bg-topbar);
+    }
+
+    /* Text Colors */
+    .text-heading {
+        color: var(--text-heading);
+    }
+
+    .text-body {
+        color: var(--text-body);
+    }
+
+    .text-muted {
+        color: var(--text-muted);
+    }
+
+    .text-ondark {
+        color: var(--text-on-dark);
+    }
+
+    /* Accent Colors */
+    .bg-accent-sky {
+        background-color: var(--accent-sky);
+    }
+
+    .text-accent-sky {
+        color: var(--accent-sky);
+    }
+
+    .bg-accent-teal {
+        background-color: var(--accent-teal);
+    }
+
+    .text-accent-teal {
+        color: var(--accent-teal);
+    }
+
+    .bg-accent-success {
+        background-color: var(--accent-success);
+    }
+
+    .text-accent-success {
+        color: var(--accent-success);
+    }
+
+    .bg-accent-warning {
+        background-color: var(--accent-warning);
+    }
+
+    .text-accent-warning {
+        color: var(--accent-warning);
+    }
+
+    .bg-accent-danger {
+        background-color: var(--accent-danger);
+    }
+
+    .text-accent-danger {
+        color: var(--accent-danger);
+    }
+
+    /* Button Colors */
+    .bg-btn-primary {
+        background-color: var(--btn-primary);
+    }
+
+    .bg-btn-primary-hover {
+        background-color: var(--btn-primary-hover);
+    }
+
+    .bg-btn-secondary {
+        background-color: var(--btn-secondary);
+    }
+
+    .text-btn-secondary {
+        color: var(--btn-secondary-text);
+    }
+
+    /* Border Colors */
+    .border-color {
+        border-color: var(--border-color);
+    }
+
+    .border-input {
+        border-color: var(--input-border);
+    }
 }

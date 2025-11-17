@@ -9,9 +9,11 @@ import Appointments from "../features/customer/appointments/Appointments";
 import StaffDashboard from "../features/staff/StaffDashboard";
 import StaffProfile from "../features/staff/profile/StaffProfile";
 import StaffAppointments from "../features/staff/appointments/StaffAppointments";
+import RegisterPatient from "../features/staff/registration/RegisterPatient"
 import DoctorDashboard from "../features/doctor/DoctorDashboard";
 import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
 import DoctorProfile from "../features/doctor/profile/DoctorProfile";
+import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
 
 export default function AppRouter() {
   return (
@@ -26,7 +28,8 @@ export default function AppRouter() {
         {/* Staff Routes */}
         <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboard/></ProtectedRoute>}/>
         <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfile/></ProtectedRoute>}/>
-        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>
+        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>\
+        <Route path="/registerPatient" element={<ProtectedRoute allowedRoles={['staff']}><RegisterPatient/></ProtectedRoute>}/>
 
         {/* Customer Routes */}
         <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
@@ -37,6 +40,11 @@ export default function AppRouter() {
         <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>
         <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
         <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
+
+        {/* Manager Routes */}
+        <Route path="/managerDashboard" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
+        <Route path="/managerAppointments" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
+        <Route path="/managerProfile" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
         
         {/* Unauthorized Route */}
         <Route 

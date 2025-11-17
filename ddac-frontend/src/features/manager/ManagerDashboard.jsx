@@ -1,20 +1,22 @@
-import StaffNavBar from "./components/StaffNavBar";
 import { Link } from "react-router-dom";
+import ManagerNavBar from "./components/ManagerNavBar.jsx";
+import '../../themes/manager.css';
+import '../../index.css';
 
-export default function CustDashboard() {
+export default function ManagerDashboard() {
     return (
         <div className="min-h-screen bg-gray-soft">
-            <StaffNavBar/>
+            <ManagerNavBar/>
 
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
-                    <h1 className="page-title">Welcome to the Staff Dashboard</h1>
-                    <p className="text-gray-neutral text-lg">Manage your appointments and profile from here.</p>
+                    <h1 className="page-title">Welcome to the Manager Dashboard</h1>
+                    <p className="text-gray-neutral text-lg">Manage your patients, appointments and profile from here.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Link 
-                        to="/staffAppointments" 
+                    <Link
+                        to="/managerAppointments"
                         className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                     >
                         <div className="flex items-center space-x-4">
@@ -25,30 +27,30 @@ export default function CustDashboard() {
                             </div>
                             <div>
                                 <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Appointments</h3>
-                                <p className="text-sm text-gray-neutral">View and manage your appointments</p>
+                                <p className="text-sm text-gray-neutral">View and manage patient appointments</p>
                             </div>
                         </div>
                     </Link>
 
-                    <Link 
-                        to="/registerPatient" 
+                    <Link
+                        to="/managerPatients"
                         className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                     >
                         <div className="flex items-center space-x-4">
                             <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
                                 <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                                 </svg>
                             </div>
                             <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Register Patient</h3>
-                                <p className="text-sm text-gray-neutral">Register new patients</p>
+                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Patients</h3>
+                                <p className="text-sm text-gray-neutral">View patient records and history</p>
                             </div>
                         </div>
                     </Link>
 
-                    <Link 
-                        to="/staffProfile" 
+                    <Link
+                        to="/managerProfile"
                         className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
                     >
                         <div className="flex items-center space-x-4">
@@ -63,32 +65,18 @@ export default function CustDashboard() {
                             </div>
                         </div>
                     </Link>
-
-                    <div className="card">
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-gray-soft p-3 rounded-lg">
-                                <svg className="w-6 h-6 text-gray-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Coming Soon</h3>
-                                <p className="text-sm text-gray-neutral">More features on the way</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
 
                 <div className="mt-8 card">
                     <h2 className="section-title">Quick Actions</h2>
                     <div className="space-y-2 text-gray-neutral">
-                        <p>• Register new patients</p>
-                        <p>• Add new appointments</p>
-                        <p>• View your bookings</p>
-                        <p>• Update your profile information</p>
+                        <p>• View today's appointments</p>
+                        <p>• Access patient records</p>
+                        <p>• Update your availability</p>
+                        <p>• Manage medical notes</p>
                     </div>
+                </div>
             </div>
         </div>
-    </div>
-  );
+    )
 }

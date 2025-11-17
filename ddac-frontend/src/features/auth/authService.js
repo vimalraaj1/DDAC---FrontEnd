@@ -3,6 +3,12 @@ export const login = async (email, password) => {
 
     // Mock login data with different roles
     const mockUsers = {
+        "manager@gmail.com": {
+            email: "manager@gmail.com",
+            name: "Manager User",
+            role: "manager",
+            password: "123456"
+        },
         "customer@gmail.com": {
             email: "customer@gmail.com",
             name: "Mr Sick",
