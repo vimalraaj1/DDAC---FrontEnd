@@ -5,7 +5,7 @@ export const login = async (email, password) => {
     const mockUsers = {
         "customer@gmail.com": {
             email: "customer@gmail.com",
-            name: "Customer User",
+            name: "Mr Sick",
             role: "customer",
             password: "123456"
         },

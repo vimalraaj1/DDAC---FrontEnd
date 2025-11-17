@@ -1,76 +1,138 @@
 import CustNavBar from "./components/CustNavBar";
 import { Link } from "react-router-dom";
+import { FaCalendarAlt, FaClock } from "react-icons/fa";
+import { FaLocationDot, FaUserDoctor } from "react-icons/fa6";
+import { MdOutlinePayments, MdFeedback } from "react-icons/md";
 
 export default function CustDashboard() {
-    return (
-        <div className="min-h-screen bg-gray-soft">
-            <CustNavBar/>
+  const name = localStorage.getItem("userName") || "Customer";
 
-            <div className="container mx-auto px-4 py-8">
-                <div className="mb-8">
-                    <h1 className="page-title">Welcome to the Customer Dashboard</h1>
-                    <p className="text-gray-neutral text-lg">Manage your appointments and profile from here.</p>
-                </div>
+  return (
+    <div className="min-h-screen bg-gray-soft">
+      <CustNavBar />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Link 
-                        to="/appointments" 
-                        className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
-                    >
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Appointments</h3>
-                                <p className="text-sm text-gray-neutral">View and manage your appointments</p>
-                            </div>
-                        </div>
-                    </Link>
-
-                    <Link 
-                        to="/custProfile" 
-                        className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
-                    >
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Profile</h3>
-                                <p className="text-sm text-gray-neutral">Update your personal information</p>
-                            </div>
-                        </div>
-                    </Link>
-
-                    <div className="card">
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-gray-soft p-3 rounded-lg">
-                                <svg className="w-6 h-6 text-gray-neutral" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900">Coming Soon</h3>
-                                <p className="text-sm text-gray-neutral">More features on the way</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div className="mt-8 card">
-                    <h2 className="section-title">Quick Actions</h2>
-                    <div className="space-y-2 text-gray-neutral">
-                        <p>• Add new appointments</p>
-                        <p>• View your bookings</p>
-                        <p>• Update your profile information</p>
-                    </div>
-                </div>
-            </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <h1 className="page-title">Welcome back, {name}</h1>
+          <p className="text-gray-neutral text-lg">
+            Manage your appointments, health records, and payments in one place.
+          </p>
         </div>
-    )
+
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Book Appointment */}
+          <Link
+            to="/appointments"
+            className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+          >
+            <div className="flex flex-col items-center text-center gap-1">
+              <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
+                <FaCalendarAlt color="blue"/>
+              </div>
+
+              <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                Book Appointment
+              </h3>
+              <p className="text-sm text-gray-neutral">Schedule a new visit.</p>
+            </div>
+          </Link>
+
+          {/* View Appointments */}
+          <Link
+            to="/custProfile"
+            className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+          >
+            <div className="flex flex-col items-center gap-1 text-center">
+              <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
+                 <FaUserDoctor color="blue"/>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                  View Appointments
+                </h3>
+                <p className="text-sm text-gray-neutral">See your schedule</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Payment History */}
+          <Link
+            to="/custProfile"
+            className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+          >
+            <div className="flex flex-col items-center gap-1 text-center">
+              <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
+                 <MdOutlinePayments color="blue"/>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                  Payment History
+                </h3>
+                <p className="text-sm text-gray-neutral">Track your bills</p>
+              </div>
+            </div>
+          </Link>
+
+          {/* Give Feedback */}
+          <Link
+            to="/custProfile"
+            className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
+          >
+            <div className="flex flex-col items-center gap-1 text-center">
+              <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
+                 <MdFeedback color="blue"/>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">
+                  Give Feedback
+                </h3>
+                <p className="text-sm text-gray-neutral">
+                  Share your experience
+                </p>
+              </div>
+            </div>
+          </Link>
+        </div>
+
+        <div className="mt-8 card">
+          <h2 className="section-title">Your Next Appointment</h2>
+          <div className="justify-between items-center flex">
+            <div className="flex flex-row items-center gap-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+                <h3 className="text-primary font-semibold text-lg">ST</h3>
+              </div>
+              <div className="flex flex-col">
+                <h3>Dr. Sarah Tan</h3>
+                <h3 className="text-sm text-gray-neutral">Cardiologist</h3>
+              </div>
+            </div>
+            <div>
+              <h3 className=" px-5 py-2 bg-primary/10 rounded-full flex items-center justify-center text-primary">
+                Confirmed
+              </h3>
+            </div>
+          </div>
+          <div className="space-y-2 text-gray-neutral">
+            {/* Date */}
+            <div className="flex items-center gap-2">
+              <FaCalendarAlt />
+              <p>Tuesday, 14 Nov 2025</p>
+            </div>
+
+            {/* Time */}
+            <div className="flex items-center gap-2">
+              <FaClock />
+              <p>10:30 AM</p>
+            </div>
+
+            {/* Location */}
+            <div className="flex items-center gap-2">
+              <FaLocationDot />
+              <p>Building A, Room 304</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
