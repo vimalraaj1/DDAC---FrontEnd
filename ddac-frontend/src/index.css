@@ -125,6 +125,10 @@ body {
         background-color: var(--bg-main);
     }
 
+    .bg-secondary{
+        background-color: var(--bg-secondary);
+    }
+
     .bg-card {
         background-color: var(--bg-card);
     }

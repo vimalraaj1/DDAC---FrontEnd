@@ -24,19 +24,19 @@ export default function CustNavBar() {
           <div className="flex items-center space-x-6">
             <Link 
               to="/custDashboard" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+              className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5 "
             >
               Dashboard
             </Link>
             <Link 
               to="/appointments" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+              className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >
               Appointments
             </Link>
             <Link 
               to="/custProfile" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
+              className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >
               Profile
             </Link>

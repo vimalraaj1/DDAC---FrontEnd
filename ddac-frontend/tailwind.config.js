@@ -14,6 +14,7 @@ export default {
 
                 // Background colors
                 "bg-main": "var(--bg-main)",
+                "bg-secondary": "var(--bg-secondary)",
                 "bg-card": "var(--bg-card)",
                 "bg-sidebar": "var(--bg-sidebar)",
                 "bg-topbar": "var(--bg-topbar)",
