@@ -1,0 +1,54 @@
+[
+    {
+        "id": "P0001",
+        "role": "P",
+        "name": "Patient",
+        "gender": "M",
+        "email": "patient@gmail.com",
+        "password": "123456",
+        "dob": "2003-12-05",
+        "phone": "012-3456789",
+        "registrationDate": "2025-11-01"
+    }, 
+    {
+        "id": "D0001",
+        "role": "D",
+        "name": "Doctor",
+        "gender": "F",
+        "email": "doctor@gmail.com",
+        "password": "123456",
+        "dob": "1998-02-23",
+        "phone": "012-3456789",
+        "registrationDate": "2007-08-03"
+    }, {
+        "id": "S0001",
+        "role": "S",
+        "name": "Staff",
+        "gender": "M",
+        "email": "staff@gmail.com",
+        "password": "123456",
+        "dob": "2000-04-14",
+        "phone": "012-3456789",
+        "registrationDate": "2010-03-23"
+    }, {
+        "id": "M0001",
+        "role": "M",
+        "name": "Manager",
+        "gender": "F",
+        "email": "manager@gmail.com",
+        "password": "123456",
+        "dob": "1988-01-01",
+        "phone": "012-3456789",
+        "registrationDate": "2000-01-01"
+    }, {
+        "id": "P0002",
+        "role": "P",
+        "name": "Henry",
+        "gender": "M",
+        "email": "henry@gmail.com",
+        "password": "123456",
+        "dob": "2001-10-23",
+        "phone": "012-3456789",
+        "registrationDate": "2025-10-01"
+    }
+]

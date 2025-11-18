@@ -9,10 +9,14 @@ import Appointments from "../features/customer/appointments/Appointments";
 import StaffDashboard from "../features/staff/StaffDashboard";
 import StaffProfile from "../features/staff/profile/StaffProfile";
 import StaffAppointments from "../features/staff/appointments/StaffAppointments";
-import RegisterPatient from "../features/staff/registration/RegisterPatient"
+import ManagePatients from "../features/staff/patientManagement/ManagePatients";
+import EditPatient from "../features/staff/patientManagement/EditPatientForm";
+import RegisterPatient from "../features/staff/patientManagement/RegisterPatient";
 import DoctorDashboard from "../features/doctor/DoctorDashboard";
 import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
 import DoctorProfile from "../features/doctor/profile/DoctorProfile";
+import DoctorPatients from "../features/doctor/patients/DoctorPatients";
+import DoctorAnalytics from "../features/doctor/analytics/DoctorAnalytics";
 import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
 
 export default function AppRouter() {
@@ -28,8 +32,11 @@ export default function AppRouter() {
         {/* Staff Routes */}
         <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboard/></ProtectedRoute>}/>
         <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfile/></ProtectedRoute>}/>
-        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>\
+        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>
         <Route path="/registerPatient" element={<ProtectedRoute allowedRoles={['staff']}><RegisterPatient/></ProtectedRoute>}/>
+        <Route path="/managePatients" element={<ProtectedRoute allowedRoles={["staff"]}><ManagePatients /></ProtectedRoute>}/>
+        <Route path="/editPatient/:id" element={<ProtectedRoute allowedRoles={["staff"]}><EditPatient /></ProtectedRoute>}/>
+
 
         {/* Customer Routes */}
         <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
@@ -39,6 +46,8 @@ export default function AppRouter() {
         {/* Doctor Routes */}
         <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>
         <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
+        <Route path="/doctorPatients" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorPatients/></ProtectedRoute>}/>
+        <Route path="/doctorAnalytics" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAnalytics/></ProtectedRoute>}/>
         <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
 
         {/* Manager Routes */}
