@@ -6,7 +6,7 @@
     "patient": "Jamie Wong",
     "doctor": "Foong Pooi Lee",
     "purpose": "Vaccination",
-    "status": "Booked"
+    "status": "Completed"
   },
   {
     "id": 3,
@@ -24,6 +24,6 @@
     "patient": "Lee Jia Jun",
     "doctor": "Tristen Chris",
     "purpose": "Health Checkup",
-    "status": "Booked"
+    "status": "Cancelled"
   }
 ]
