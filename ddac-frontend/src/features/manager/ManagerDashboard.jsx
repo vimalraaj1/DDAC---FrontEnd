@@ -2,81 +2,111 @@ import { Link } from "react-router-dom";
 import ManagerNavBar from "./components/ManagerNavBar.jsx";
 import '../../themes/manager.css';
 import '../../index.css';
+import Layout from '../../components/Layout.jsx';
+import {FaCalendarCheck} from "react-icons/fa";
+import {FaUserDoctor, FaHourglassHalf} from "react-icons/fa6";
+import AppointmentsLineChart from "./components/AppointmentsLineChart.jsx";
+import DepartmentPieChart from "./components/DoctorsByDepartmentPieChart.jsx";
+
+const appointmentsData = [
+    { date: "2025-11-10", appointments: 5 },
+    { date: "2025-11-11", appointments: 18 },
+    { date: "2025-11-12", appointments: 14 },
+    { date: "2025-11-13", appointments: 22 },
+    { date: "2025-11-14", appointments: 20 },
+    { date: "2025-11-15", appointments: 26 },
+    { date: "2025-11-16", appointments: 30 }
+];
+
+const doctorsByDept = [
+    { name: "Cardiology", value: 12 },
+    { name: "General", value: 18 },
+    { name: "Pediatrics", value: 6 },
+    { name: "Orthopedics", value: 4 },
+    { name: "Dermatology", value: 2 },
+    { name: "Surgeon", value: 2 }
+];
 
 export default function ManagerDashboard() {
     return (
-        <div className="min-h-screen bg-gray-soft">
-            <ManagerNavBar/>
-
-            <div className="container mx-auto px-4 py-8">
+        <Layout role="manager">
+            <div>
+                {/* Page Header */}
                 <div className="mb-8">
-                    <h1 className="page-title">Welcome to the Manager Dashboard</h1>
-                    <p className="text-gray-neutral text-lg">Manage your patients, appointments and profile from here.</p>
+                    <h1 className="text-3xl font-bold text-heading">Manager Dashboard</h1>
+                    <p className="text-muted mt-1">WellSpring Healthcare Management Overview</p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <Link
-                        to="/managerAppointments"
-                        className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
-                    >
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
+                {/* Stats Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    {/* Card 1 */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                        <div className="flex flex-col items-center text-center mb-4">
+                            <div className="bg-primary bg-opacity-10 p-3 rounded-lg mb-4">
+                                <FaCalendarCheck size={24} className="text-ondark"/>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Appointments</h3>
-                                <p className="text-sm text-gray-neutral">View and manage patient appointments</p>
-                            </div>
+                            {/*<span className="text-accent-success text-sm font-semibold">+12%</span>*/}
+                        <h3 className="text-heading text-3xl font-bold mb-1">248</h3>
+                        <p className="text-muted text-sm">Total Appointments</p>
                         </div>
-                    </Link>
+                    </div>
 
-                    <Link
-                        to="/managerPatients"
-                        className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
-                    >
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
-                                </svg>
+                    {/* Card 2 */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                        <div className="flex flex-col items-center text-center mb-4">
+                            <div className="bg-accent-success bg-opacity-10 p-3 rounded-lg mb-4">
+                                <FaUserDoctor size={24} className="text-ondark"/>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Patients</h3>
-                                <p className="text-sm text-gray-neutral">View patient records and history</p>
-                            </div>
+                            {/*<span className="text-accent-success text-sm font-semibold">+3</span>*/}
+                        <h3 className="text-heading text-3xl font-bold mb-1">42</h3>
+                        <p className="text-muted text-sm">Active Doctors</p>
                         </div>
-                    </Link>
+                    </div>
 
-                    <Link
-                        to="/managerProfile"
-                        className="card hover:shadow-lg transition-shadow duration-200 cursor-pointer group"
-                    >
-                        <div className="flex items-center space-x-4">
-                            <div className="bg-primary/10 p-3 rounded-lg group-hover:bg-primary/20 transition-colors">
-                                <svg className="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
+                    {/* Card 3 */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                        <div className="flex flex-col items-center text-center mb-4">
+                            <div className="bg-accent-warning bg-opacity-10 p-3 rounded-lg mb-4">
+                                <FaHourglassHalf size={24} className="text-ondark"/>
                             </div>
-                            <div>
-                                <h3 className="font-semibold text-gray-900 group-hover:text-primary transition-colors">Profile</h3>
-                                <p className="text-sm text-gray-neutral">Update your personal information</p>
+                            {/*<span className="text-accent-warning text-sm font-semibold">7 pending</span>*/}
+                        <h3 className="text-heading text-3xl font-bold mb-1">15</h3>
+                        <p className="text-muted text-sm">Pending Approvals</p>
+                    </div>
+                    </div>
+
+                    {/* Card 4 */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                        <div className="flex flex-col items-center text-center mb-4">
+                            <div className="bg-accent-danger bg-opacity-10 p-3 rounded-lg mb-4">
+                                <FaCalendarCheck size={24} className="text-ondark"/>
                             </div>
-                        </div>
-                    </Link>
+                            {/*<span className="text-accent-danger text-sm font-semibold">2 critical</span>*/}
+                        <h3 className="text-heading text-3xl font-bold mb-1">5</h3>
+                        <p className="text-muted text-sm">Patients Check-In</p>
+                    </div>
+                    </div>
                 </div>
 
-                <div className="mt-8 card">
-                    <h2 className="section-title">Quick Actions</h2>
-                    <div className="space-y-2 text-gray-neutral">
-                        <p>• View today's appointments</p>
-                        <p>• Access patient records</p>
-                        <p>• Update your availability</p>
-                        <p>• Manage medical notes</p>
+                {/* Charts Row */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {/* Chart 1 */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
+                        <h3 className="text-heading text-lg font-semibold mb-4">Appointments Overview</h3>
+                        <div className="h-64">
+                            <AppointmentsLineChart data={appointmentsData} />
+                        </div>
+                    </div>
+
+                    {/* Chart 2 */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
+                        <h3 className="text-heading text-lg font-semibold mb-4">Department Distribution</h3>
+                        <div className="h-64">
+                            <DepartmentPieChart data={doctorsByDept} />
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
-    )
+        </Layout>
+    );
 }
