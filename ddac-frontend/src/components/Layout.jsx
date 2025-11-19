@@ -16,7 +16,7 @@ export default function Layout({ children, role }) {
     };
     return (
         <div className="flex min-h-screen bg-main">
-            <div className="fixed left-0 top-0 h-min">
+            <div className="fixed left-0 top-0 h-min z-11">
                 {/* Sidebar */}
                 {role === "manager" && <ManagerNavBar />}
                 {role === "staff" && <StaffNavBar />}
@@ -65,7 +65,7 @@ export default function Layout({ children, role }) {
                 </header>
 
                 {/* Page Content */}
-                <main className="flex-1 p-8 overflow-y-auto">
+                <main className="flex-1 p-8 overflow-y-auto overflow-x-hidden">
                     {children}
                 </main>
             </div>
