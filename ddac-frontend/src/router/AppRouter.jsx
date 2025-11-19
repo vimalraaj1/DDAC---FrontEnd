@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
+import Payments from "../features/customer/payments/Payments.js";
 import ProtectedRoute from "../router/ProtectedRoute";
 import RoleBasedRedirect from "../features/RoleBasedRedirect";
 import CustDashboard from "../features/customer/CustDashboard";
@@ -35,6 +36,7 @@ export default function AppRouter() {
         <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
         <Route path="/custProfile" element={<ProtectedRoute allowedRoles={['customer']}><CustProfile/></ProtectedRoute>}/>
         <Route path="/appointments" element={<ProtectedRoute allowedRoles={['customer']}><Appointments/></ProtectedRoute>}/>
+        <Route path="/payments" element={<ProtectedRoute allowedRoles={['customer']}><Payments/></ProtectedRoute>}/>
 
         {/* Doctor Routes */}
         <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>

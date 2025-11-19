@@ -17,7 +17,7 @@ export default function CustNavBar() {
               to="/custDashboard" 
               className="text-xl font-semibold text-primary hover:text-[#3B82F6] transition-colors"
             >
-              DDAC
+              Wellspring Healthcare
             </Link>
           </div>
           
@@ -33,6 +33,12 @@ export default function CustNavBar() {
               className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >
               Appointments
+            </Link>
+            <Link 
+              to="/payments" 
+              className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
+            >
+              Payments
             </Link>
             <Link 
               to="/custProfile" 

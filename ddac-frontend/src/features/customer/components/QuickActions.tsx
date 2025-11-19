@@ -21,7 +21,7 @@ const actions = [
     icon: CreditCard,
     label: "Payment History",
     description: "Track your bills",
-    path: "/appointments",
+    path: "/payments",
   },
   {
     id: 4,
