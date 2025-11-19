@@ -7,6 +7,7 @@ import RoleBasedRedirect from "../features/RoleBasedRedirect";
 import CustDashboard from "../features/customer/CustDashboard";
 import CustProfile from "../features/customer/profile/CustProfile";
 import Appointments from "../features/customer/appointments/Appointments";
+import Feedbacks from "../features/customer/feedbacks/Feedbacks.js";
 import StaffDashboard from "../features/staff/StaffDashboard";
 import StaffProfile from "../features/staff/profile/StaffProfile";
 import StaffAppointments from "../features/staff/appointments/StaffAppointments";
@@ -15,6 +16,7 @@ import DoctorDashboard from "../features/doctor/DoctorDashboard";
 import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
 import DoctorProfile from "../features/doctor/profile/DoctorProfile";
 import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
+import MedicalRecords from "../features/customer/medicalRecords/MedicalRecords.js";
 
 export default function AppRouter() {
   return (
@@ -37,6 +39,8 @@ export default function AppRouter() {
         <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustProfile/></ProtectedRoute>}/>
         <Route path="/appointments" element={<ProtectedRoute allowedRoles={['customer']}><Appointments/></ProtectedRoute>}/>
         <Route path="/payments" element={<ProtectedRoute allowedRoles={['customer']}><Payments/></ProtectedRoute>}/>
+        <Route path="/medicalRecords" element={<ProtectedRoute allowedRoles={['customer']}><MedicalRecords/></ProtectedRoute>}/>
+        <Route path="/feedbacks" element={<ProtectedRoute allowedRoles={['customer']}><Feedbacks/></ProtectedRoute>}/>
 
         {/* Doctor Routes */}
         <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>

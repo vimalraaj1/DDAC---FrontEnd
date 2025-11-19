@@ -49,6 +49,12 @@ export default function CustNavBar() {
               Payments
             </Link>
             <Link
+              to="/feedbacks"
+              className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
+            >
+              Feedbacks
+            </Link>
+            <Link
               to="/profile"
               className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >

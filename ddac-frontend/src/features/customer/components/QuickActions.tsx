@@ -28,7 +28,7 @@ const actions = [
     icon: Star,
     label: "Give Feedback",
     description: "Share your experience",
-    path: "/appointments",
+    path: "/feedbacks",
   },
 ];
 

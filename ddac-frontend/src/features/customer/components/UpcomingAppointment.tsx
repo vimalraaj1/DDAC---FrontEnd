@@ -1,10 +1,12 @@
 import { Calendar, Clock, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export function UpcomingAppointment() {
+  const navigate = useNavigate();
   return (
     <div className="bg-white rounded-xl shadow-sm p-8 space-y-6">
       <h2 className="text-[#1A1A1A]">Your Next Appointment</h2>
-      
+
       <div className="space-y-4 flex flex-col h-full">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-[#E8F6FD] rounded-full flex items-center justify-center flex-shrink-0">
@@ -34,7 +36,8 @@ export function UpcomingAppointment() {
           </div>
         </div>
 
-        <button className="cursor-pointer w-full mt-auto mb-12 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white py-3 px-6 rounded-xl transition-colors">
+        <button className="cursor-pointer w-full mt-auto mb-12 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white py-3 px-6 rounded-xl transition-colors"
+        onClick={() => navigate('/appointments')}>
           View Details
         </button>
       </div>

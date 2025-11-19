@@ -46,6 +46,7 @@ import {
   AlertDialogTrigger,
 } from "../components/ui/alert-dialog";
 import CustNavBar from "../components/CustNavBar";
+import FadeInSection from "../components/animations/FadeInSection";
 
 export default function App() {
   const [editMode, setEditMode] = useState({
@@ -192,524 +193,508 @@ export default function App() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-6">
           {/* Profile Overview Card */}
-          <Card
-            className="p-8 rounded-xl shadow-sm"
-            style={{ backgroundColor: "var(--card-bg)" }}
-          >
-            <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              {/* Avatar */}
-              <div
-                className="w-24 h-24 rounded-full flex items-center justify-center flex-shrink-0"
-                style={{ backgroundColor: "var(--bg-secondary)" }}
-              >
-                <User
-                  className="w-12 h-12"
-                  style={{ color: "var(--primary)" }}
-                />
-              </div>
-
-              {/* Patient Info */}
-              <div className="flex-1 text-center md:text-left">
-                <h2 style={{ color: "var(--text-heading)" }}>
-                  {personalInfo.fullName}
-                </h2>
-                <p className="mt-1" style={{ color: "var(--text-muted)" }}>
-                  Patient ID: P-02491
-                </p>
-
-                {/* Brief Info */}
-                <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
-                  <div className="flex items-center gap-2">
-                    <Calendar
-                      className="w-4 h-4"
-                      style={{ color: "var(--accent-teal)" }}
-                    />
-                    <span style={{ color: "var(--text-body)" }}>39 years</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users
-                      className="w-4 h-4"
-                      style={{ color: "var(--accent-teal)" }}
-                    />
-                    <span style={{ color: "var(--text-body)" }}>
-                      {personalInfo.gender}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Droplet
-                      className="w-4 h-4"
-                      style={{ color: "var(--accent-danger)" }}
-                    />
-                    <span style={{ color: "var(--text-body)" }}>
-                      {medicalInfo.bloodType}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          {/* Personal Information Card */}
-          <Card
-            className="p-6 rounded-xl shadow-sm"
-            style={{ backgroundColor: "var(--card-bg)" }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 style={{ color: "var(--text-heading)" }}>
-                Personal Information
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-                onClick={() =>
-                  setEditMode({ ...editMode, personal: !editMode.personal })
-                }
-              >
-                {editMode.personal ? "Save" : "Edit"}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
+          <FadeInSection>
+            <Card
+              className="p-8 rounded-xl shadow-sm"
+              style={{ backgroundColor: "var(--card-bg)" }}
+            >
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                {/* Avatar */}
+                <div
+                  className="w-24 h-24 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: "var(--bg-secondary)" }}
+                >
                   <User
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Full Name
-                </Label>
-                <Input
-                  value={personalInfo.fullName}
-                  onChange={(e) =>
-                    setPersonalInfo({
-                      ...personalInfo,
-                      fullName: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.personal}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Calendar
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Date of Birth
-                </Label>
-                <Input
-                  type="date"
-                  value={personalInfo.dateOfBirth}
-                  onChange={(e) =>
-                    setPersonalInfo({
-                      ...personalInfo,
-                      dateOfBirth: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.personal}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Users
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Gender
-                </Label>
-                <Input
-                  value={personalInfo.gender}
-                  onChange={(e) =>
-                    setPersonalInfo({ ...personalInfo, gender: e.target.value })
-                  }
-                  disabled={!editMode.personal}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Phone
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Phone Number
-                </Label>
-                <Input
-                  value={personalInfo.phone}
-                  onChange={(e) => handlePhoneChange(e.target.value)}
-                  disabled={!editMode.personal}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-                {validationErrors.phone && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {validationErrors.phone}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Mail
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Email Address
-                </Label>
-                <Input
-                  type="email"
-                  value={personalInfo.email}
-                  onChange={(e) => handleEmailChange(e.target.value)}
-                  disabled={!editMode.personal}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-                {validationErrors.email && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {validationErrors.email}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Home
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Home Address
-                </Label>
-                <Input
-                  value={personalInfo.address}
-                  onChange={(e) =>
-                    setPersonalInfo({
-                      ...personalInfo,
-                      address: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.personal}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-            </div>
-          </Card>
-
-          {/* Medical Information Card */}
-          <Card
-            className="p-6 rounded-xl shadow-sm"
-            style={{ backgroundColor: "var(--card-bg)" }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 style={{ color: "var(--text-heading)" }}>
-                Medical Information
-              </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-                onClick={() =>
-                  setEditMode({ ...editMode, medical: !editMode.medical })
-                }
-              >
-                {editMode.medical ? "Save" : "Edit"}
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Droplet
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--accent-danger)" }}
-                  />
-                  Blood Type
-                </Label>
-                <Input
-                  value={medicalInfo.bloodType}
-                  onChange={(e) =>
-                    setMedicalInfo({
-                      ...medicalInfo,
-                      bloodType: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.medical}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div>
-                <Label style={{ color: "var(--text-body)" }}>
-                  <AlertCircle
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--accent-warning)" }}
-                  />
-                  Allergies
-                </Label>
-                <Input
-                  value={medicalInfo.allergies}
-                  onChange={(e) =>
-                    setMedicalInfo({
-                      ...medicalInfo,
-                      allergies: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.medical}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Heart
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--accent-danger)" }}
-                  />
-                  Existing Conditions
-                </Label>
-                <Input
-                  value={medicalInfo.conditions}
-                  onChange={(e) =>
-                    setMedicalInfo({
-                      ...medicalInfo,
-                      conditions: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.medical}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div className="md:col-span-2">
-                <Label style={{ color: "var(--text-body)" }}>
-                  <Pill
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--accent-teal)" }}
-                  />
-                  Current Medications
-                </Label>
-                <Input
-                  value={medicalInfo.medications}
-                  onChange={(e) =>
-                    setMedicalInfo({
-                      ...medicalInfo,
-                      medications: e.target.value,
-                    })
-                  }
-                  disabled={!editMode.medical}
-                  className="mt-2 rounded-lg"
-                  style={{ borderColor: "var(--input-border)" }}
-                />
-              </div>
-
-              <div className="md:col-span-2 pt-4">
-                <h4 style={{ color: "var(--text-heading)" }} className="mb-4">
-                  <UserPlus
-                    className="w-4 h-4 inline mr-2"
+                    className="w-12 h-12"
                     style={{ color: "var(--primary)" }}
                   />
-                  Emergency Contact
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label style={{ color: "var(--text-body)" }}>Name</Label>
-                    <Input
-                      value={medicalInfo.emergencyName}
-                      onChange={(e) =>
-                        setMedicalInfo({
-                          ...medicalInfo,
-                          emergencyName: e.target.value,
-                        })
-                      }
-                      disabled={!editMode.medical}
-                      className="mt-2 rounded-lg"
-                      style={{ borderColor: "var(--input-border)" }}
-                    />
-                  </div>
-                  <div>
-                    <Label style={{ color: "var(--text-body)" }}>
-                      Relationship
-                    </Label>
-                    <Input
-                      value={medicalInfo.emergencyRelationship}
-                      onChange={(e) =>
-                        setMedicalInfo({
-                          ...medicalInfo,
-                          emergencyRelationship: e.target.value,
-                        })
-                      }
-                      disabled={!editMode.medical}
-                      className="mt-2 rounded-lg"
-                      style={{ borderColor: "var(--input-border)" }}
-                    />
-                  </div>
-                  <div>
-                    <Label style={{ color: "var(--text-body)" }}>
-                      Contact Number
-                    </Label>
-                    <Input
-                      value={medicalInfo.emergencyContact}
-                      onChange={(e) =>
-                        handleEmergencyContactChange(e.target.value)
-                      }
-                      disabled={!editMode.medical}
-                      className="mt-2 rounded-lg"
-                      style={{ borderColor: "var(--input-border)" }}
-                    />
-                    {validationErrors.emergencyContact && (
-                      <p className="text-red-500 text-sm mt-1">
-                        {validationErrors.emergencyContact}
-                      </p>
-                    )}
+                </div>
+
+                {/* Patient Info */}
+                <div className="flex-1 text-center md:text-left">
+                  <h2 style={{ color: "var(--text-heading)" }}>
+                    {personalInfo.fullName}
+                  </h2>
+                  <p className="mt-1" style={{ color: "var(--text-muted)" }}>
+                    Patient ID: P-02491
+                  </p>
+
+                  {/* Brief Info */}
+                  <div className="flex flex-wrap justify-center md:justify-start gap-4 mt-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar
+                        className="w-4 h-4"
+                        style={{ color: "var(--accent-teal)" }}
+                      />
+                      <span style={{ color: "var(--text-body)" }}>
+                        39 years
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users
+                        className="w-4 h-4"
+                        style={{ color: "var(--accent-teal)" }}
+                      />
+                      <span style={{ color: "var(--text-body)" }}>
+                        {personalInfo.gender}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Droplet
+                        className="w-4 h-4"
+                        style={{ color: "var(--accent-danger)" }}
+                      />
+                      <span style={{ color: "var(--text-body)" }}>
+                        {medicalInfo.bloodType}
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </FadeInSection>
 
-          {/* Account Settings Card */}
-          <Card
-            className="p-6 rounded-xl shadow-sm"
-            style={{ backgroundColor: "var(--card-bg)" }}
-          >
-            <h3 className="mb-6" style={{ color: "var(--text-heading)" }}>
-              Account Settings
-            </h3>
-
-            <div className="space-y-6">
-              {/* Change Password */}
-              <div>
-                <h4 style={{ color: "var(--text-body)" }} className="mb-3">
-                  <Lock
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Change Password
-                </h4>
+          {/* Personal Information Card */}
+          <FadeInSection delay={0.3}>
+            <Card
+              className="p-6 rounded-xl shadow-sm"
+              style={{ backgroundColor: "var(--card-bg)" }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 style={{ color: "var(--text-heading)" }}>
+                  Personal Information
+                </h3>
                 <Button
                   variant="outline"
+                  size="sm"
                   className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-                  onClick={() => setPasswordDialog(true)}
+                  onClick={() =>
+                    setEditMode({ ...editMode, personal: !editMode.personal })
+                  }
                 >
-                  Update Password
+                  {editMode.personal ? "Save" : "Edit"}
                 </Button>
               </div>
 
-              {/* Notification Preferences */}
-              <div
-                className="pt-4 border-t"
-                style={{ borderColor: "var(--input-border)" }}
-              >
-                <h4 style={{ color: "var(--text-body)" }} className="mb-4">
-                  <Bell
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <User
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                    Full Name
+                  </Label>
+                  <Input
+                    value={personalInfo.fullName}
+                    onChange={(e) =>
+                      setPersonalInfo({
+                        ...personalInfo,
+                        fullName: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.personal}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
                   />
-                  Notification Preferences
-                </h4>
-                <div className="space-y-8">
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-2">
-                      <Label style={{ color: "var(--text-body)" }}>
-                        Email Notifications
-                      </Label>
-                      <p style={{ color: "var(--text-muted)" }}>
-                        Receive updates via email
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.emailNotifications}
-                      onCheckedChange={(checked) =>
-                        setNotifications({
-                          ...notifications,
-                          emailNotifications: checked,
-                        })
-                      }
+                </div>
+
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Calendar
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
                     />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-2">
-                      <Label style={{ color: "var(--text-body)" }}>
-                        SMS Notifications
-                      </Label>
-                      <p style={{ color: "var(--text-muted)" }}>
-                        Receive text messages
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.smsNotifications}
-                      onCheckedChange={(checked) =>
-                        setNotifications({
-                          ...notifications,
-                          smsNotifications: checked,
-                        })
-                      }
+                    Date of Birth
+                  </Label>
+                  <Input
+                    type="date"
+                    value={personalInfo.dateOfBirth}
+                    onChange={(e) =>
+                      setPersonalInfo({
+                        ...personalInfo,
+                        dateOfBirth: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.personal}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Users
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
                     />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex flex-col gap-2">
-                      <Label style={{ color: "var(--text-body)" }}>
-                        Appointment Reminders
-                      </Label>
-                      <p style={{ color: "var(--text-muted)" }}>
-                        Get reminded about appointments
-                      </p>
-                    </div>
-                    <Switch
-                      checked={notifications.appointmentReminders}
-                      onCheckedChange={(checked) =>
-                        setNotifications({
-                          ...notifications,
-                          appointmentReminders: checked,
-                        })
-                      }
+                    Gender
+                  </Label>
+                  <Input
+                    value={personalInfo.gender}
+                    onChange={(e) =>
+                      setPersonalInfo({
+                        ...personalInfo,
+                        gender: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.personal}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Phone
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
                     />
+                    Phone Number
+                  </Label>
+                  <Input
+                    value={personalInfo.phone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    disabled={!editMode.personal}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                  {validationErrors.phone && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.phone}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Mail
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                    Email Address
+                  </Label>
+                  <Input
+                    type="email"
+                    value={personalInfo.email}
+                    onChange={(e) => handleEmailChange(e.target.value)}
+                    disabled={!editMode.personal}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                  {validationErrors.email && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {validationErrors.email}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Home
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                    Home Address
+                  </Label>
+                  <Input
+                    value={personalInfo.address}
+                    onChange={(e) =>
+                      setPersonalInfo({
+                        ...personalInfo,
+                        address: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.personal}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+              </div>
+            </Card>
+          </FadeInSection>
+
+          {/* Medical Information Card */}
+          <FadeInSection delay={0.6}>
+            <Card
+              className="p-6 rounded-xl shadow-sm"
+              style={{ backgroundColor: "var(--card-bg)" }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 style={{ color: "var(--text-heading)" }}>
+                  Medical Information
+                </h3>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
+                  onClick={() =>
+                    setEditMode({ ...editMode, medical: !editMode.medical })
+                  }
+                >
+                  {editMode.medical ? "Save" : "Edit"}
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Droplet
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--accent-danger)" }}
+                    />
+                    Blood Type
+                  </Label>
+                  <Input
+                    value={medicalInfo.bloodType}
+                    onChange={(e) =>
+                      setMedicalInfo({
+                        ...medicalInfo,
+                        bloodType: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.medical}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+
+                <div>
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <AlertCircle
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--accent-warning)" }}
+                    />
+                    Allergies
+                  </Label>
+                  <Input
+                    value={medicalInfo.allergies}
+                    onChange={(e) =>
+                      setMedicalInfo({
+                        ...medicalInfo,
+                        allergies: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.medical}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Heart
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--accent-danger)" }}
+                    />
+                    Existing Conditions
+                  </Label>
+                  <Input
+                    value={medicalInfo.conditions}
+                    onChange={(e) =>
+                      setMedicalInfo({
+                        ...medicalInfo,
+                        conditions: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.medical}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label style={{ color: "var(--text-body)" }}>
+                    <Pill
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--accent-teal)" }}
+                    />
+                    Current Medications
+                  </Label>
+                  <Input
+                    value={medicalInfo.medications}
+                    onChange={(e) =>
+                      setMedicalInfo({
+                        ...medicalInfo,
+                        medications: e.target.value,
+                      })
+                    }
+                    disabled={!editMode.medical}
+                    className="mt-2 rounded-lg"
+                    style={{ borderColor: "var(--input-border)" }}
+                  />
+                </div>
+
+                <div className="md:col-span-2 pt-4">
+                  <h4 style={{ color: "var(--text-heading)" }} className="mb-4">
+                    <UserPlus
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--primary)" }}
+                    />
+                    Emergency Contact
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <Label style={{ color: "var(--text-body)" }}>Name</Label>
+                      <Input
+                        value={medicalInfo.emergencyName}
+                        onChange={(e) =>
+                          setMedicalInfo({
+                            ...medicalInfo,
+                            emergencyName: e.target.value,
+                          })
+                        }
+                        disabled={!editMode.medical}
+                        className="mt-2 rounded-lg"
+                        style={{ borderColor: "var(--input-border)" }}
+                      />
+                    </div>
+                    <div>
+                      <Label style={{ color: "var(--text-body)" }}>
+                        Relationship
+                      </Label>
+                      <Input
+                        value={medicalInfo.emergencyRelationship}
+                        onChange={(e) =>
+                          setMedicalInfo({
+                            ...medicalInfo,
+                            emergencyRelationship: e.target.value,
+                          })
+                        }
+                        disabled={!editMode.medical}
+                        className="mt-2 rounded-lg"
+                        style={{ borderColor: "var(--input-border)" }}
+                      />
+                    </div>
+                    <div>
+                      <Label style={{ color: "var(--text-body)" }}>
+                        Contact Number
+                      </Label>
+                      <Input
+                        value={medicalInfo.emergencyContact}
+                        onChange={(e) =>
+                          handleEmergencyContactChange(e.target.value)
+                        }
+                        disabled={!editMode.medical}
+                        className="mt-2 rounded-lg"
+                        style={{ borderColor: "var(--input-border)" }}
+                      />
+                      {validationErrors.emergencyContact && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {validationErrors.emergencyContact}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
+            </Card>
+          </FadeInSection>
 
-              {/* Language Preference */}
-              <div
-                className="pt-4 border-t"
-                style={{ borderColor: "var(--input-border)" }}
-              >
-                <Label
-                  style={{ color: "var(--text-body)" }}
-                  className="mb-2 block"
+          {/* Account Settings Card */}
+          <FadeInSection>
+            <Card
+              className="p-6 rounded-xl shadow-sm"
+              style={{ backgroundColor: "var(--card-bg)" }}
+            >
+              <h3 className="mb-6" style={{ color: "var(--text-heading)" }}>
+                Account Settings
+              </h3>
+
+              <div className="space-y-6">
+                {/* Change Password */}
+                <div>
+                  <h4 style={{ color: "var(--text-body)" }} className="mb-3">
+                    <Lock
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                    Change Password
+                  </h4>
+                  <Button
+                    variant="outline"
+                    className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
+                    onClick={() => setPasswordDialog(true)}
+                  >
+                    Update Password
+                  </Button>
+                </div>
+
+                {/* Notification Preferences */}
+                <div
+                  className="pt-4 border-t"
+                  style={{ borderColor: "var(--input-border)" }}
                 >
-                  <Globe
-                    className="w-4 h-4 inline mr-2"
-                    style={{ color: "var(--text-muted)" }}
-                  />
-                  Language Preference
-                </Label>
-                <select
-                  className="w-full md:w-64 px-3 py-2 rounded-lg border"
-                  style={{
-                    borderColor: "var(--input-border)",
-                    color: "var(--text-body)",
-                  }}
-                >
-                  <option>English</option>
-                  <option>Spanish</option>
-                  <option>French</option>
-                  <option>German</option>
-                </select>
+                  <h4 style={{ color: "var(--text-body)" }} className="mb-4">
+                    <Bell
+                      className="w-4 h-4 inline mr-2"
+                      style={{ color: "var(--text-muted)" }}
+                    />
+                    Notification Preferences
+                  </h4>
+                  <div className="space-y-8">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2">
+                        <Label style={{ color: "var(--text-body)" }}>
+                          Email Notifications
+                        </Label>
+                        <p style={{ color: "var(--text-muted)" }}>
+                          Receive updates via email
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notifications.emailNotifications}
+                        onCheckedChange={(checked) =>
+                          setNotifications({
+                            ...notifications,
+                            emailNotifications: checked,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2">
+                        <Label style={{ color: "var(--text-body)" }}>
+                          SMS Notifications
+                        </Label>
+                        <p style={{ color: "var(--text-muted)" }}>
+                          Receive text messages
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notifications.smsNotifications}
+                        onCheckedChange={(checked) =>
+                          setNotifications({
+                            ...notifications,
+                            smsNotifications: checked,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col gap-2">
+                        <Label style={{ color: "var(--text-body)" }}>
+                          Appointment Reminders
+                        </Label>
+                        <p style={{ color: "var(--text-muted)" }}>
+                          Get reminded about appointments
+                        </p>
+                      </div>
+                      <Switch
+                        checked={notifications.appointmentReminders}
+                        onCheckedChange={(checked) =>
+                          setNotifications({
+                            ...notifications,
+                            appointmentReminders: checked,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </FadeInSection>
         </div>
       </main>
 

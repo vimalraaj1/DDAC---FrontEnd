@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { Search, Plus } from "lucide-react";
-import { AppointmentCard, Appointment } from "../components/AppointmentCard";
+import { AppointmentCard, Appointment } from "./components/AppointmentCard";
 import {
   AppointmentBookingModal,
   AppointmentFormData,
-} from "../components/AppointmentBookingModal";
-import { AppointmentDetailsModal } from "../components/AppointmentDetailsModal";
+} from "./components/AppointmentBookingModal";
+import { AppointmentDetailsModal } from "./components/AppointmentDetailsModal";
 import {
   AppointmentEditModal,
   EditFormData,
-} from "../components/AppointmentEditModal";
-import { CancelAppointmentDialog } from "../components/CancelAppointmentDialog";
+} from "./components/AppointmentEditModal";
+import { CancelAppointmentDialog } from "./components/CancelAppointmentDialog";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";

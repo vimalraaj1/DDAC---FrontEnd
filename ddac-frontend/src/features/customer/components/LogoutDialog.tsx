@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
-import { Appointment } from "./AppointmentCard";
+import { Appointment } from "../appointments/components/AppointmentCard";
 
 interface CancelAppointmentDialogProps {
   open: boolean;
