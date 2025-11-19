@@ -1,11 +1,19 @@
 import { Link, useNavigate } from "react-router-dom";
+import { LogOutDialog } from "./LogoutDialog";
+import { useState } from "react";
 
 export default function CustNavBar() {
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const confirmedLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
+  }
+
+  const handleLogout = () => {
+    setLogoutDialogOpen(true);
   };
 
   return (
@@ -13,47 +21,49 @@ export default function CustNavBar() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center space-x-1">
-            <Link 
-              to="/custDashboard" 
+            <Link
+              to="/custDashboard"
               className="text-xl font-semibold text-primary hover:text-[#3B82F6] transition-colors"
             >
               Wellspring Healthcare
             </Link>
           </div>
-          
+
           <div className="flex items-center space-x-6">
-            <Link 
-              to="/custDashboard" 
+            <Link
+              to="/custDashboard"
               className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5 "
             >
               Dashboard
             </Link>
-            <Link 
-              to="/appointments" 
+            <Link
+              to="/appointments"
               className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >
               Appointments
             </Link>
-            <Link 
-              to="/payments" 
+            <Link
+              to="/payments"
               className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >
               Payments
             </Link>
-            <Link 
-              to="/custProfile" 
+            <Link
+              to="/profile"
               className="text-gray-neutral hover:text-primary transition-colors font-medium hover:bg-[#F5F7FA] cursor-pointer px-2 py-5"
             >
               Profile
             </Link>
-            <button 
-              onClick={handleLogout}
-              className="btn-secondary text-sm"
-            >
+            <button onClick={handleLogout} className="btn-secondary text-sm">
               Logout
             </button>
           </div>
         </div>
+        <LogOutDialog
+          open={logoutDialogOpen}
+          onOpenChange={setLogoutDialogOpen}
+          onConfirmLogout={confirmedLogout}
+        />
       </div>
     </nav>
   );
