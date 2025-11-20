@@ -8,7 +8,10 @@ import {
   FaFileInvoiceDollar,
   FaFileUpload,
   FaStethoscope,
+  FaFileMedical,
+  FaUser,
 } from "react-icons/fa";
+import { MdFeedback } from "react-icons/md";
 import {
   FaUserDoctor,
   FaRightFromBracket,
@@ -28,16 +31,15 @@ export default function CustNavBar({role = "customer"}) {
 
   const menuItems = [
     { icon: FaHome, label: "Dashboard", path: "/CustDashboard" },
-    { icon: FaUserDoctor, label: "Doctors", path: "/appointments" },
-    { icon: FaUserGroup, label: "Staffs", path: "/managerStaffs" },
-    { icon: FaUserInjured, label: "Patients", path: "/managerPatients" },
     {
-      icon: FaCalendarCheck,
-      label: "Appointments",
-      path: "/managerAppointments",
+      icon: FaFileMedical,
+      label: "Medical Record",
+      path: "/medicalRecords",
     },
-    { icon: FaFileInvoiceDollar, label: "Payments", path: "/managerPayments" },
-    { icon: FaFileUpload, label: "Reports", path: "/managerReports" },
+    { icon: FaCalendarCheck, label: "Appointments", path: "/appointments" },
+    { icon: FaFileInvoiceDollar, label: "Payments", path: "/payments" },
+    { icon: MdFeedback, label: "Feedback", path: "/feedbacks" },
+    { icon: FaUser, label: "Profile", path: "/profile" },
   ];
 
   return (

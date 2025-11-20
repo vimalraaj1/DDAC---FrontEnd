@@ -193,7 +193,7 @@ export default function Appointments() {
   return (
     <Layout role="customer">
     <div className="min-h-screen">
-      <div className="max-w-4xl mx-auto mt-8 mb-8">
+      <div className="max-w-4xl mx-auto mb-8">
         {/* Header Section */}
         <div className="bg-[#dcf0fc] rounded-2xl p-8 mb-8">
           <div className="flex items-start justify-between mb-4">
