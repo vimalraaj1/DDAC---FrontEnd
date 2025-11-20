@@ -18,6 +18,7 @@ import DoctorProfile from "../features/doctor/profile/DoctorProfile";
 import DoctorPatients from "../features/doctor/patients/DoctorPatients";
 import DoctorAnalytics from "../features/doctor/analytics/DoctorAnalytics";
 import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
+import DoctorInfo from "../features/manager/DoctorInfo.jsx";
 
 export default function AppRouter() {
   return (
@@ -52,6 +53,9 @@ export default function AppRouter() {
 
         {/* Manager Routes */}
         <Route path="/managerDashboard" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
+        <Route path="/managerDoctorInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
+        <Route path="/managerStaffInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
+        <Route path="/managerPatientInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
         <Route path="/managerAppointments" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
         <Route path="/managerProfile" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
         
