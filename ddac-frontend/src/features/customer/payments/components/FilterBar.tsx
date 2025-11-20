@@ -39,9 +39,9 @@ export function FilterBar({ onFilter }: FilterBarProps) {
             borderColor: "var(--input-border)",
           }}
         >
-          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-4">
+          <div className="flex flex-nowrap items-center gap-4">
             {/* Date Range Picker */}
-            <div className="relative">
+            <div>
               <label
                 className="block mb-2 text-sm"
                 style={{ color: "var(--text-body)" }}
@@ -89,10 +89,9 @@ export function FilterBar({ onFilter }: FilterBarProps) {
             </div>
 
             {/* Payment Status Dropdown */}
-            <div>
+            <div className="w-[20%] mx-5">
               <label
                 className="block mb-2 text-sm"
-                style={{ color: "var(--text-body)" }}
               >
                 Payment Status
               </label>
@@ -155,10 +154,10 @@ export function FilterBar({ onFilter }: FilterBarProps) {
             </div>
 
             {/* Filter Button */}
-            <div className="flex items-end">
+            <div className="flex items-end mx-5">
               <Button
                 onClick={handleFilter}
-                className="w-full hover:opacity-[50%] cursor-pointer"
+                className="w-[100%] hover:opacity-[50%] cursor-pointer"
                 style={{
                   backgroundColor: "var(--btn-primary)",
                   color: "var(--text-on-dark)",

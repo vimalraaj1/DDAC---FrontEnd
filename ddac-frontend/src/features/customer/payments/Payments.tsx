@@ -10,6 +10,7 @@ import { SummaryPanel } from "./components/SummaryPanel";
 import { InvoiceDetailsModal } from "./components/InvoiceDetailsModal";
 import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
+import Layout from "../../../components/Layout";
 
 // Mock payment data
 const mockPayments: Payment[] = [
@@ -164,72 +165,76 @@ export default function Payments() {
     .reduce((sum, p) => sum + p.amount, 0);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--bg-main)" }}>
-      <CustNavBar />
-      <PageHeader />
-      <FilterBar onFilter={handleFilter} />
+    <Layout role="customer">
+      <div
+        className="min-h-screen"
+        style={{ backgroundColor: "var(--bg-main)" }}
+      >
+        <PageHeader />
+        <FilterBar onFilter={handleFilter} />
 
-      {/* Main Content */}
-      <div className="px-6 py-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex gap-6">
-            {/* Payment History Section */}
-            <div className="flex-1">
-              <FadeInSection delay={0}>
-                {/* Desktop Table View */}
-                <PaymentHistoryTable
-                  payments={payments}
-                  onViewDetails={handleViewDetails}
-                />
-              </FadeInSection>
-
-              {/* Mobile Card View */}
-              <div className="md:hidden space-y-4">
-                {payments.map((payment) => (
-                  <PaymentCard
-                    key={payment.id}
-                    payment={payment}
+        {/* Main Content */}
+        <div className="px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex gap-6">
+              {/* Payment History Section */}
+              <div className="flex-1">
+                <FadeInSection delay={0}>
+                  {/* Desktop Table View */}
+                  <PaymentHistoryTable
+                    payments={payments}
                     onViewDetails={handleViewDetails}
                   />
-                ))}
+                </FadeInSection>
+
+                {/* Mobile Card View */}
+                <div className="md:hidden space-y-4">
+                  {payments.map((payment) => (
+                    <PaymentCard
+                      key={payment.id}
+                      payment={payment}
+                      onViewDetails={handleViewDetails}
+                    />
+                  ))}
+                </div>
+
+                {/* Empty State */}
+                {payments.length === 0 && (
+                  <div
+                    className="p-12 rounded-xl text-center"
+                    style={{
+                      backgroundColor: "var(--bg-card)",
+                      borderColor: "var(--input-border)",
+                    }}
+                  >
+                    <p style={{ color: "var(--text-muted)" }}>
+                      No payments found matching your filters.
+                    </p>
+                  </div>
+                )}
               </div>
 
-              {/* Empty State */}
-              {payments.length === 0 && (
-                <div
-                  className="p-12 rounded-xl text-center"
-                  style={{
-                    backgroundColor: "var(--bg-card)",
-                    borderColor: "var(--input-border)",
-                  }}
-                >
-                  <p style={{ color: "var(--text-muted)" }}>
-                    No payments found matching your filters.
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Summary Panel - Desktop Only */}
-            <div className="hidden lg:block w-80">
-              <FadeInSection delay={0.6}>
-                <SummaryPanel
-                  totalPaidThisYear={totalPaidThisYear}
-                  outstandingAmount={outstandingAmount}
-                  overdueAmount={overdueAmount}
-                />
-              </FadeInSection>
+              {/* Summary Panel - Desktop Only */}
+              <div className="hidden lg:block w-80">
+                <FadeInSection delay={0.6}>
+                  <SummaryPanel
+                    totalPaidThisYear={totalPaidThisYear}
+                    outstandingAmount={outstandingAmount}
+                    overdueAmount={overdueAmount}
+                  />
+                </FadeInSection>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Invoice Details Modal */}
-      <InvoiceDetailsModal
-        payment={selectedPayment}
-        open={isModalOpen}
-        onClose={handleCloseModal}
-      />
-    </div>
+        {/* Invoice Details Modal */}
+        <InvoiceDetailsModal
+          payment={selectedPayment}
+          open={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      </div>
+    </Layout>
   );
 }
