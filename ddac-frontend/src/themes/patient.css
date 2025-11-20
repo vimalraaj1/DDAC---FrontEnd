@@ -6,6 +6,7 @@
 
     /* Backgrounds */
     --bg-main: #F5F7FA;
+    --bg-secondary: #dcf0fc;
     --bg-card: #FFFFFF;
     --bg-sidebar: #4EA5D9; /* if you show role-specific mini UI */
     --bg-topbar: #FAFCFF;
@@ -31,5 +32,5 @@
     --input-border: #DCEFFB;
 
     /* Borders */
-    --border-color: #E6F3FB;
+    --border-color: #7A7A7A;
 }
