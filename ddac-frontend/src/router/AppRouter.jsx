@@ -1,13 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
-import Payments from "../features/customer/payments/Payments.js";
 import ProtectedRoute from "../router/ProtectedRoute";
 import RoleBasedRedirect from "../features/RoleBasedRedirect";
 import CustDashboard from "../features/customer/CustDashboard";
 import CustProfile from "../features/customer/profile/CustProfile";
 import Appointments from "../features/customer/appointments/Appointments";
-import Feedbacks from "../features/customer/feedbacks/Feedbacks.js";
 import StaffDashboard from "../features/staff/StaffDashboard";
 import StaffProfile from "../features/staff/profile/StaffProfile";
 import StaffAppointments from "../features/staff/appointments/StaffAppointments";
@@ -20,7 +18,10 @@ import DoctorProfile from "../features/doctor/profile/DoctorProfile";
 import DoctorPatients from "../features/doctor/patients/DoctorPatients";
 import DoctorAnalytics from "../features/doctor/analytics/DoctorAnalytics";
 import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
+import DoctorInfo from "../features/manager/DoctorInfo.jsx";
+import Payments from "../../src/features/customer/payments/Payments.js";
 import MedicalRecords from "../features/customer/medicalRecords/MedicalRecords.js";
+import Feedbacks from "../features/customer/feedbacks/Feedbacks.js";
 
 export default function AppRouter() {
   return (
@@ -58,6 +59,9 @@ export default function AppRouter() {
 
         {/* Manager Routes */}
         <Route path="/managerDashboard" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
+        <Route path="/managerDoctorInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
+        <Route path="/managerStaffInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
+        <Route path="/managerPatientInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
         <Route path="/managerAppointments" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
         <Route path="/managerProfile" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
         
