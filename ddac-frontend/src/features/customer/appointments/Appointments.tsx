@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
 import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
+import Layout from "../../../components/Layout";
 
 // Mock appointment data
 const mockAppointments: Appointment[] = [
@@ -190,9 +191,8 @@ export default function Appointments() {
   const appointments = filteredAppointments;
 
   return (
+    <Layout role="customer">
     <div className="min-h-screen">
-      <CustNavBar />
-
       <div className="max-w-4xl mx-auto mt-8 mb-8">
         {/* Header Section */}
         <div className="bg-[#dcf0fc] rounded-2xl p-8 mb-8">
@@ -311,5 +311,6 @@ export default function Appointments() {
       />
       <Toaster />
     </div>
+    </Layout>
   );
 }
