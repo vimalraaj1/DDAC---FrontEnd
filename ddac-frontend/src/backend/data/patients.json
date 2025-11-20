@@ -1,26 +1,20 @@
 [
   {
     "id": 1,
-    "patientName": "Joachim Wong",
-    "gender": "male",
-    "phoneNumber": "0162613314",
-    "address": "Earth",
-    "allergies": ""
-  },
-  {
-    "id": 2,
-    "patientName": "Natalie Yee",
-    "gender": "female",
+    "patientName": "Natalie Yee Mei Yi",
+    "gender": "Female",
     "phoneNumber": "0168495615",
+    "email": "natalieyee@gmail.com",
     "address": "Kepong",
     "allergies": "Mango"
   },
   {
-    "id": 3,
+    "id": 2,
     "patientName": "Lee Jia Jun",
-    "gender": "male",
+    "gender": "Male",
     "phoneNumber": "0185474123",
+    "email": "wongchilik@gmail.com",
     "address": "Penang",
-    "allergies": ""
+    "allergies": "Peanuts"
   }
 ]

@@ -1,6 +1,6 @@
 import StaffNavBar from "../components/StaffNavBar";
 import { useState } from "react";
-import { registerPatient } from "./registerPatientService";
+import { registerPatient } from "./patientManagementService";
 import RegistrationForm from "./RegistrationForm";
 
 const RegisterPatient = () => {
