@@ -14,6 +14,8 @@ export default function Login() {
                 localStorage.setItem("userRole", result.user.role);
                 localStorage.setItem("userName", result.user.name);
                 
+                document.documentElement.className = `theme-${result.user.role}`;
+                
                 // Redirect based on role
                 switch(result.user.role) {
                     case 'doctor':
