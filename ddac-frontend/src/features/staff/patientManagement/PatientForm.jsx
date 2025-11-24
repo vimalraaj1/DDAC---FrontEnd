@@ -10,12 +10,17 @@ export default function PatientForm() {
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     dateOfBirth: "",
     address: "",
-    status: "active",
+    allergies: "",
+    status: "Active", // match backend
+    icNumber: "",
+    password: "", // optional
+    emergencyContact: "", // optional
   });
 
   useEffect(() => {
@@ -24,16 +29,34 @@ export default function PatientForm() {
     }
   }, [id]);
 
+  const icToDob = (ic) => {
+    if (!ic) return "";
+    const s = ic.substring(0, 6);
+    const yy = parseInt(s.substring(0, 2));
+    const mm = s.substring(2, 4);
+    const dd = s.substring(4, 6);
+    const fullYear =
+      yy <= new Date().getFullYear() % 100 ? 2000 + yy : 1900 + yy;
+    return `${fullYear}-${mm}-${dd}`;
+  };
+
   const loadPatient = async () => {
     try {
       const data = await patientService.getPatientById(id);
       setFormData({
-        name: data.name || data.fullName || "",
+        firstName: data.firstName || "",
+        lastName: data.lastName || "",
         email: data.email || "",
         phone: data.phone || "",
-        dateOfBirth: data.dateOfBirth ? data.dateOfBirth.split("T")[0] : "",
+        dateOfBirth: data.dateOfBirth
+          ? data.dateOfBirth.split("T")[0]
+          : icToDob(data.icNumber),
         address: data.address || "",
-        status: data.status || "active",
+        allergies: data.allergies || "None",
+        status: data.status || "Active",
+        icNumber: data.icNumber || "",
+        password: "",
+        emergencyContact: data.emergencyContact || "",
       });
     } catch (error) {
       console.error("Error loading patient:", error);
@@ -83,14 +106,17 @@ export default function PatientForm() {
           <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  Full Name *
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  First Name *
                 </label>
                 <input
                   type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
+                  id="firstName"
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
@@ -98,7 +124,28 @@ export default function PatientForm() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  name="lastName"
+                  value={formData.lastName}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Email *
                 </label>
                 <input
@@ -113,7 +160,10 @@ export default function PatientForm() {
               </div>
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="phone"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Phone *
                 </label>
                 <input
@@ -128,7 +178,10 @@ export default function PatientForm() {
               </div>
 
               <div>
-                <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="dateOfBirth"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Date of Birth *
                 </label>
                 <input
@@ -143,7 +196,10 @@ export default function PatientForm() {
               </div>
 
               <div>
-                <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="address"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Address
                 </label>
                 <textarea
@@ -156,9 +212,30 @@ export default function PatientForm() {
                 />
               </div>
 
+              <div>
+                <label
+                  htmlFor="name"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Allergies
+                </label>
+                <input
+                  type="text"
+                  id="allergies"
+                  name="allergies"
+                  value={formData.allergies}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                />
+              </div>
+
               {isEdit && (
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="status"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Status
                   </label>
                   <select
@@ -168,8 +245,8 @@ export default function PatientForm() {
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
                   </select>
                 </div>
               )}
@@ -185,7 +262,11 @@ export default function PatientForm() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => navigate(isEdit ? `/staff/patients/${id}` : "/staff/patients")}
+                  onClick={() =>
+                    navigate(
+                      isEdit ? `/staff/patients/${id}` : "/staff/patients"
+                    )
+                  }
                   className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300"
                 >
                   Cancel
@@ -198,4 +279,3 @@ export default function PatientForm() {
     </Layout>
   );
 }
-

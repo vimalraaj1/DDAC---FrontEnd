@@ -25,8 +25,8 @@ export default function PatientList() {
       console.error("Error loading patients:", error);
       // Mock data for UI
       setPatients([
-        { id: 1, name: "John Doe", email: "john@example.com", phone: "123-456-7890", dateOfBirth: "1990-01-01", status: "Active" },
-        { id: 2, name: "Jane Smith", email: "jane@example.com", phone: "123-456-7891", dateOfBirth: "1985-05-15", status: "Active" },
+        { patientId: 1, firstName: "John", lastName: "Doe", email: "john@example.com", phone: "123-456-7890", dateOfBirth: "1990-01-01", status: "Active" },
+        { patientId: 2, firstName: "Jane", lastName: "Smith", email: "jane@example.com", phone: "123-456-7891", dateOfBirth: "1985-05-15", status: "Active" },
       ]);
     } finally {
       setLoading(false);
@@ -48,8 +48,15 @@ export default function PatientList() {
 
   const columns = [
     {
-      key: "name",
-      label: "Name",
+      key: "firstName",
+      label: "First Name",
+      render: (value, row) => (
+        <div className="font-medium text-gray-900">{value || row.fullName}</div>
+      ),
+    },
+    {
+      key: "lastName",
+      label: "Last Name",
       render: (value, row) => (
         <div className="font-medium text-gray-900">{value || row.fullName}</div>
       ),
@@ -79,7 +86,7 @@ export default function PatientList() {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`/staff/patients/${row.id}`);
+          navigate(`/staff/patients/${row.patientId}`);
         }}
         className="text-blue-600 hover:text-blue-800"
         title="View Details"
@@ -89,7 +96,7 @@ export default function PatientList() {
       <button
         onClick={(e) => {
           e.stopPropagation();
-          navigate(`/staff/patients/${row.id}/edit`);
+          navigate(`/staff/patients/${row.patientId}/edit`);
         }}
         className="text-green-600 hover:text-green-800"
         title="Edit"

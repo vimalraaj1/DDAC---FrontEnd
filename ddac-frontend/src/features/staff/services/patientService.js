@@ -1,26 +1,29 @@
 import staffApi from "./staffApi";
+import api from "../../../api/axios";
 
 // Get all patients
 export const getAllPatients = async () => {
-  const response = await staffApi.get("/patients");
+  const response = await staffApi.get("/patient");
   return response.data;
 };
 
 // Get patient by ID
 export const getPatientById = async (id) => {
-  const response = await staffApi.get(`/patients/${id}`);
+  const response = await staffApi.get(`/patient/${id}`);
   return response.data;
 };
 
 // Create new patient
 export const createPatient = async (patientData) => {
-  const response = await staffApi.post("/patients", patientData);
+  const response = await staffApi.post("/patient", patientData);
   return response.data;
 };
 
 // Update patient
 export const updatePatient = async (id, patientData) => {
-  const response = await staffApi.put(`/patients/${id}`, patientData);
+  console.log("Request Body: ", patientData);
+
+  const response = await staffApi.put(`/patient/${id}`, patientData);
   return response.data;
 };
 

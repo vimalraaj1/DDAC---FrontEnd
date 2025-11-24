@@ -3,7 +3,15 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Layout from "../../../components/Layout";
 import StatusBadge from "../components/StatusBadge";
 import * as patientService from "../services/patientService";
-import { FaEdit, FaArrowLeft, FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarkerAlt } from "react-icons/fa";
+import {
+  FaEdit,
+  FaArrowLeft,
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaCalendar,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
 
 export default function PatientDetails() {
   const { id } = useParams();
@@ -15,6 +23,18 @@ export default function PatientDetails() {
     loadPatient();
   }, [id]);
 
+  const icToDob = (ic) => {
+    if (!ic || ic.length < 6) return null;
+
+    const yy = ic.substring(0, 2);
+    const mm = ic.substring(2, 4);
+    const dd = ic.substring(4, 6);
+
+    const year = parseInt(yy) < 25 ? `20${yy}` : `19${yy}`;
+
+    return `${year}-${mm}-${dd}`;
+  };
+
   const loadPatient = async () => {
     try {
       setLoading(true);
@@ -25,7 +45,8 @@ export default function PatientDetails() {
       // Mock data for UI
       setPatient({
         id: id,
-        name: "John Doe",
+        firstName: "John",
+        lastName: "Doe",
         email: "john@example.com",
         phone: "123-456-7890",
         dateOfBirth: "1990-01-01",
@@ -95,27 +116,53 @@ export default function PatientDetails() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Info */}
             <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Personal Information</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Personal Information
+              </h2>
               <div className="space-y-4">
                 <div className="flex items-start gap-3">
                   <FaUser className="text-gray-400 mt-1" />
                   <div>
-                    <p className="text-sm text-gray-500">Full Name</p>
-                    <p className="text-gray-900 font-medium">{patient.name || patient.fullName || "N/A"}</p>
+                    <p className="text-sm text-gray-500">First Name</p>
+                    <p className="text-gray-900 font-medium">
+                      {patient.firstName || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaUser className="text-gray-400 mt-1" />
+                  <div>
+                    <p className="text-sm text-gray-500">Last Name</p>
+                    <p className="text-gray-900 font-medium">
+                      {patient.lastName || "N/A"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <FaUser className="text-gray-400 mt-1" />
+                  <div>
+                    <p className="text-sm text-gray-500">IC Number</p>
+                    <p className="text-gray-900 font-medium">
+                      {patient.icNumber || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <FaEnvelope className="text-gray-400 mt-1" />
                   <div>
                     <p className="text-sm text-gray-500">Email</p>
-                    <p className="text-gray-900 font-medium">{patient.email || "N/A"}</p>
+                    <p className="text-gray-900 font-medium">
+                      {patient.email || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <FaPhone className="text-gray-400 mt-1" />
                   <div>
                     <p className="text-sm text-gray-500">Phone</p>
-                    <p className="text-gray-900 font-medium">{patient.phone || "N/A"}</p>
+                    <p className="text-gray-900 font-medium">
+                      {patient.phone || "N/A"}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
@@ -123,8 +170,10 @@ export default function PatientDetails() {
                   <div>
                     <p className="text-sm text-gray-500">Date of Birth</p>
                     <p className="text-gray-900 font-medium">
-                      {patient.dateOfBirth
-                        ? new Date(patient.dateOfBirth).toLocaleDateString()
+                      {patient.icNumber
+                        ? new Date(
+                            icToDob(patient.icNumber)
+                          ).toLocaleDateString("en-GB")
                         : "N/A"}
                     </p>
                   </div>
@@ -133,7 +182,9 @@ export default function PatientDetails() {
                   <FaMapMarkerAlt className="text-gray-400 mt-1" />
                   <div>
                     <p className="text-sm text-gray-500">Address</p>
-                    <p className="text-gray-900 font-medium">{patient.address || "N/A"}</p>
+                    <p className="text-gray-900 font-medium">
+                      {patient.address || "N/A"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -141,11 +192,17 @@ export default function PatientDetails() {
 
             {/* Additional Info */}
             <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Additional Information</h2>
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Additional Information
+              </h2>
               <div className="space-y-4">
                 <div>
                   <p className="text-sm text-gray-500">Patient ID</p>
-                  <p className="text-gray-900 font-medium">{patient.id}</p>
+                  <p className="text-gray-900 font-medium">{patient.patientId}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">Allergies</p>
+                  <p className="text-gray-900 font-medium">{patient.allergies || "None"}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Status</p>
@@ -167,4 +224,3 @@ export default function PatientDetails() {
     </Layout>
   );
 }
-
