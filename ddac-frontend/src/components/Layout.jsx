@@ -4,20 +4,19 @@ import StaffNavBar from "../features/staff/components/StaffNavBar.jsx";
 import CustNavBar from "../features/customer/components/CustNavBar.jsx";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { LogOutDialog } from "../features/customer/components/LogoutDialog.js";
 
 export default function Layout({ children, role }) {
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-
+  
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
     navigate("/login");
   };
-
   return (
     <div className="flex min-h-screen bg-main">
       <div className="fixed left-0 top-0 h-min z-11">
@@ -31,7 +30,7 @@ export default function Layout({ children, role }) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col ml-64">
         {/* Top Bar */}
-        <header className="sticky top-0 z-10 bg-card border-b border-color px-8 py-4 shadow-md">
+        <header className="sticky top-0 z-10 bg-card px-8 py-4 shadow-md">
           <div className="flex justify-end items-center gap-3">
             <div className="text-right">
               <p className="text-heading font-semibold text-sm">
@@ -62,7 +61,7 @@ export default function Layout({ children, role }) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-8 overflow-y-auto overflow-x-hidden">
+        <main className="flex-1 p-8 border-none overflow-y-auto overflow-x-hidden">
           {children}
         </main>
       </div>

@@ -12,6 +12,19 @@ import StaffAppointments from "../features/staff/appointments/StaffAppointments"
 import ManagePatients from "../features/staff/patientManagement/ManagePatients";
 import EditPatient from "../features/staff/patientManagement/EditPatientForm";
 import RegisterPatient from "../features/staff/patientManagement/RegisterPatient";
+// New staff module components
+import StaffDashboardNew from "../features/staff/dashboard/StaffDashboard";
+import PatientList from "../features/staff/patientManagement/PatientList";
+import PatientDetails from "../features/staff/patientManagement/PatientDetails";
+import PatientForm from "../features/staff/patientManagement/PatientForm";
+import AppointmentList from "../features/staff/appointments/AppointmentList";
+import AppointmentDetails from "../features/staff/appointments/AppointmentDetails";
+import PrescriptionForm from "../features/staff/prescriptions/PrescriptionForm";
+import PrescriptionList from "../features/staff/prescriptions/PrescriptionList";
+import PaymentForm from "../features/staff/payments/PaymentForm";
+import PaymentList from "../features/staff/payments/PaymentList";
+import CustomerRatings from "../features/staff/ratings/CustomerRatings";
+import StaffProfileNew from "../features/staff/profile/StaffProfile";
 import DoctorDashboard from "../features/doctor/DoctorDashboard";
 import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
 import DoctorProfile from "../features/doctor/profile/DoctorProfile";
@@ -33,13 +46,29 @@ export default function AppRouter() {
         <Route path="/register" element={<Register />}/>
         <Route path="/role-based-redirect" element={<RoleBasedRedirect />}/>
 
-        {/* Staff Routes */}
-        <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboard/></ProtectedRoute>}/>
-        <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfile/></ProtectedRoute>}/>
-        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><StaffAppointments/></ProtectedRoute>}/>
-        <Route path="/registerPatient" element={<ProtectedRoute allowedRoles={['staff']}><RegisterPatient/></ProtectedRoute>}/>
-        <Route path="/managePatients" element={<ProtectedRoute allowedRoles={["staff"]}><ManagePatients /></ProtectedRoute>}/>
-        <Route path="/editPatient/:id" element={<ProtectedRoute allowedRoles={["staff"]}><EditPatient /></ProtectedRoute>}/>
+        {/* Staff Routes - New Nested Structure */}
+        <Route path="/staff/dashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboardNew/></ProtectedRoute>}/>
+        <Route path="/staff/patients" element={<ProtectedRoute allowedRoles={['staff']}><PatientList/></ProtectedRoute>}/>
+        <Route path="/staff/patients/new" element={<ProtectedRoute allowedRoles={['staff']}><PatientForm/></ProtectedRoute>}/>
+        <Route path="/staff/patients/:id" element={<ProtectedRoute allowedRoles={['staff']}><PatientDetails/></ProtectedRoute>}/>
+        <Route path="/staff/patients/:id/edit" element={<ProtectedRoute allowedRoles={['staff']}><PatientForm/></ProtectedRoute>}/>
+        <Route path="/staff/appointments" element={<ProtectedRoute allowedRoles={['staff']}><AppointmentList/></ProtectedRoute>}/>
+        <Route path="/staff/appointments/:id" element={<ProtectedRoute allowedRoles={['staff']}><AppointmentDetails/></ProtectedRoute>}/>
+        <Route path="/staff/prescriptions" element={<ProtectedRoute allowedRoles={['staff']}><PrescriptionList/></ProtectedRoute>}/>
+        <Route path="/staff/prescriptions/new" element={<ProtectedRoute allowedRoles={['staff']}><PrescriptionForm/></ProtectedRoute>}/>
+        <Route path="/staff/payments" element={<ProtectedRoute allowedRoles={['staff']}><PaymentList/></ProtectedRoute>}/>
+        <Route path="/staff/payments/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
+        <Route path="/staff/ratings" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
+        <Route path="/staff/ratings/:customerId" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
+        <Route path="/staff/profile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfileNew/></ProtectedRoute>}/>
+
+        {/* Staff Routes - Legacy (for backward compatibility) */}
+        <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboardNew/></ProtectedRoute>}/>
+        <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfileNew/></ProtectedRoute>}/>
+        <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><AppointmentList/></ProtectedRoute>}/>
+        <Route path="/registerPatient" element={<ProtectedRoute allowedRoles={['staff']}><PatientForm/></ProtectedRoute>}/>
+        <Route path="/managePatients" element={<ProtectedRoute allowedRoles={["staff"]}><PatientList /></ProtectedRoute>}/>
+        <Route path="/editPatient/:id" element={<ProtectedRoute allowedRoles={["staff"]}><PatientForm /></ProtectedRoute>}/>
 
         {/* Customer Routes */}
         <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>

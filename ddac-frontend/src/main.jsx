@@ -1,8 +1,12 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import './themes/manager.css'
-import './index.css'
 import App from './App.jsx'
+import './themes/mng.css';
+import './themes/manager.css';
+import './themes/patient.css';
+import './themes/doctor.css';
+import './themes/staff.css';
+import './index.css';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

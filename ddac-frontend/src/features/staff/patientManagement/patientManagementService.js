@@ -1,7 +1,7 @@
 import axios from "axios";
+import api from "../../../api/axios";
 
-const BASE_URL = "http://localhost:5000/patients";
-
+const BASE_URL = api + "/patient";
 
 // GET all patients
 export const getPatients = async () => {

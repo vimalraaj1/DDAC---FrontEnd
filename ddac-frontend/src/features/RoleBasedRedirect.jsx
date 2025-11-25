@@ -6,21 +6,9 @@ const RoleBasedRedirect = () => {
     const userRole = localStorage.getItem("userRole");
 
     useEffect(() => {
-        switch(userRole) {
-            case 'manager':
-                import("../themes/manager.css");
-                break;
-            case 'doctor':
-                import("../themes/doctor.css");
-                break;
-            case 'staff':
-                import("../themes/staff.css");
-                break;
-            case 'customer':
-                import("../themes/patient.css");
-                break;
-            default:
-                break;
+        // Set theme class on HTML element
+        if (userRole) {
+            document.documentElement.className = `theme-${userRole}`;
         }
     }, [userRole]);
 

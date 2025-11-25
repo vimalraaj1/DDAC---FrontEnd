@@ -19,7 +19,7 @@ import {
   FaHospital,
 } from "react-icons/fa6";
 
-export default function CustNavBar({role = "customer"}) {
+export default function CustNavBar({ role = "customer" }) {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
 
   const navigate = useNavigate();
