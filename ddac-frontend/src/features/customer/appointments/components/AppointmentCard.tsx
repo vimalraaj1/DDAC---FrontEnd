@@ -4,7 +4,15 @@ import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Separator } from "../../components/ui/separator";
 
-export interface Appointment {
+
+interface Medication {
+  name: string;
+  dosage: string;
+  duration: string;
+  refills: number;
+}
+
+export interface  Appointment {
   id: string;
   doctorName: string;
   doctorSpecialty: string;
@@ -13,6 +21,7 @@ export interface Appointment {
   time: string;
   location: string;
   status: "Confirmed" | "Pending" | "Cancelled";
+  prescriptions: Medication[];
 }
 
 interface AppointmentCardProps {
