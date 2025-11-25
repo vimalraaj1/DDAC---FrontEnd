@@ -7,6 +7,7 @@ import {
   FileText,
   Phone,
   Mail,
+  Pill,
 } from "lucide-react";
 import {
   Dialog,
@@ -40,7 +41,7 @@ export function AppointmentDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] ">
+      <DialogContent className="sm:max-w-[600px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -60,7 +61,7 @@ export function AppointmentDetailsModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-5 py-4">
+        <div className="space-y-5 pb-4">
           {/* Doctor Information */}
           <div className="bg-[#dcf0fc] rounded-xl p-5">
             <div className="flex items-center gap-4 mb-4">
@@ -133,14 +134,50 @@ export function AppointmentDetailsModal({
                 in advance.
               </p>
             </div>
-          <div className="flex gap-3 pt-4">
-            <Button
-              onClick={() => onOpenChange(false)}
-              className="cursor-pointer flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl"
-            >
-              Close
-            </Button>
-          </div>
+
+            {/* Prescriptions */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <Pill className="size-5 text-[#4EA5D9]" />
+                <h4 className="text-gray-900">Prescription</h4>
+              </div>
+              <div className="space-y-3">
+                {appointment.prescriptions.map((medication, index) => (
+                  <div
+                    key={index}
+                    className="bg-[#4EA5D9]/10 rounded-xl p-4 space-y-2"
+                  >
+                    <h5 className="text-gray-900">{medication.name}</h5>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                      <div>
+                        <p className="text-gray-500">Dosage</p>
+                        <p className="text-gray-700">{medication.dosage}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Duration</p>
+                        <p className="text-gray-700">{medication.duration}</p>
+                      </div>
+                      <div>
+                        <p className="text-gray-500">Refills</p>
+                        <p className="text-gray-700">
+                          {medication.refills} remaining
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Button */}
+            <div className="flex gap-3 pt-4">
+              <Button
+                onClick={() => onOpenChange(false)}
+                className="cursor-pointer flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl"
+              >
+                Close
+              </Button>
+            </div>
           </div>
         </div>
       </DialogContent>

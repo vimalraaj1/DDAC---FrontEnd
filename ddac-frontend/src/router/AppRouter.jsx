@@ -41,7 +41,6 @@ export default function AppRouter() {
         <Route path="/managePatients" element={<ProtectedRoute allowedRoles={["staff"]}><ManagePatients /></ProtectedRoute>}/>
         <Route path="/editPatient/:id" element={<ProtectedRoute allowedRoles={["staff"]}><EditPatient /></ProtectedRoute>}/>
 
-
         {/* Customer Routes */}
         <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
         <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustProfile/></ProtectedRoute>}/>

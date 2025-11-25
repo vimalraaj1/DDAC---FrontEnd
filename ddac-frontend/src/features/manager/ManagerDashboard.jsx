@@ -1,12 +1,9 @@
-import { Link } from "react-router-dom";
-import ManagerNavBar from "./components/ManagerNavBar.jsx";
-import '../../themes/manager.css';
-import '../../index.css';
 import Layout from '../../components/Layout.jsx';
 import {FaCalendarCheck} from "react-icons/fa";
 import {FaUserDoctor, FaHourglassHalf} from "react-icons/fa6";
 import AppointmentsLineChart from "./components/AppointmentsLineChart.jsx";
 import DepartmentPieChart from "./components/DoctorsByDepartmentPieChart.jsx";
+import '../../themes/manager.css';
 
 const appointmentsData = [
     { date: "2025-11-10", appointments: 5 },

@@ -7,6 +7,9 @@ const RoleBasedRedirect = () => {
 
     useEffect(() => {
         switch(userRole) {
+            case 'manager':
+                import("../themes/manager.css");
+                break;
             case 'doctor':
                 import("../themes/doctor.css");
                 break;
@@ -15,9 +18,6 @@ const RoleBasedRedirect = () => {
                 break;
             case 'customer':
                 import("../themes/patient.css");
-                break;
-            case 'manager':
-                import("../themes/manager.css");
                 break;
             default:
                 break;
