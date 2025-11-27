@@ -1,15 +1,83 @@
 import DoctorSidebar from "./components/DoctorSidebar";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import appointmentService from "./appointments/appointmentService";
+import patientService from "./patients/patientService";
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
     const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
     const [showDropdown, setShowDropdown] = useState(false);
-    const [chartData] = useState({
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        values: [30, 45, 38, 52, 42, 35, 28]
+    const [loading, setLoading] = useState(true);
+    const [stats, setStats] = useState({
+        totalAppointments: 0,
+        todayAppointments: 0,
+        totalPatients: 0,
+        completedAppointments: 0
     });
+    const [recentAppointments, setRecentAppointments] = useState([]);
+    const [chartData, setChartData] = useState({
+        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+        values: [0, 0, 0, 0, 0, 0, 0]
+    });
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            setLoading(true);
+            
+            // Fetch appointments and stats
+            const [appointments, appointmentStats, patientStats] = await Promise.all([
+                appointmentService.getDoctorAppointments(),
+                appointmentService.getAppointmentStats(),
+                patientService.getPatientStats()
+            ]);
+
+            // Update stats
+            setStats({
+                totalAppointments: appointmentStats.total || 0,
+                todayAppointments: appointmentStats.today || 0,
+                totalPatients: patientStats.total || 0,
+                completedAppointments: appointmentStats.completed || 0
+            });
+
+            // Get recent appointments (last 5)
+            const recent = appointments
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .slice(0, 5);
+            setRecentAppointments(recent);
+
+            // Generate chart data from appointments (last 7 days)
+            generateChartData(appointments);
+            
+        } catch (error) {
+            console.error('Error fetching dashboard data:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const generateChartData = (appointments) => {
+        const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+        const counts = [0, 0, 0, 0, 0, 0, 0];
+        const today = new Date();
+        
+        appointments.forEach(apt => {
+            const aptDate = new Date(apt.date);
+            const diffTime = Math.abs(today - aptDate);
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            
+            if (diffDays <= 7) {
+                const dayIndex = aptDate.getDay();
+                counts[dayIndex]++;
+            }
+        });
+        
+        setChartData({ labels: days, values: counts });
+    };
 
     const handleLogout = () => {
         localStorage.removeItem("token");
@@ -132,82 +200,88 @@ export default function DoctorDashboard() {
                     </div>
                 </header>
 
-                {/* Dashboard Content */}
-                <main className="flex-1 p-8 overflow-auto">
-                    {/* Stats Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                        {/* Total Appointments */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="flex items-center space-x-2 mb-3">
-                                        <div className="p-2 bg-blue-50 rounded-lg">
-                                            <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-3xl font-bold text-gray-900">248</h3>
-                                    <p className="text-gray-500 text-sm mt-1">Total Appointments</p>
-                                </div>
-                                <span className="text-green-500 text-sm font-semibold">+12%</span>
-                            </div>
-                        </div>
-
-                        {/* Active Doctors */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="flex items-center space-x-2 mb-3">
-                                        <div className="p-2 bg-teal-50 rounded-lg">
-                                            <svg className="w-6 h-6 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-3xl font-bold text-gray-900">42</h3>
-                                    <p className="text-gray-500 text-sm mt-1">Active Doctors</p>
-                                </div>
-                                <span className="text-green-500 text-sm font-semibold">+3</span>
-                            </div>
-                        </div>
-
-                        {/* Pending Approvals */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="flex items-center space-x-2 mb-3">
-                                        <div className="p-2 bg-yellow-50 rounded-lg">
-                                            <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-3xl font-bold text-gray-900">15</h3>
-                                    <p className="text-gray-500 text-sm mt-1">Pending Approvals</p>
-                                </div>
-                                <span className="text-yellow-600 text-sm font-semibold">7 pending</span>
-                            </div>
-                        </div>
-
-                        {/* System Alerts */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <div className="flex items-start justify-between">
-                                <div>
-                                    <div className="flex items-center space-x-2 mb-3">
-                                        <div className="p-2 bg-red-50 rounded-lg">
-                                            <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                                            </svg>
-                                        </div>
-                                    </div>
-                                    <h3 className="text-3xl font-bold text-gray-900">5</h3>
-                                    <p className="text-gray-500 text-sm mt-1">System Alerts</p>
-                                </div>
-                                <span className="text-red-500 text-sm font-semibold">2 critical</span>
-                            </div>
+                {/* Loading State */}
+                {loading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="mt-4 text-gray-600">Loading dashboard...</p>
                         </div>
                     </div>
+                ) : (
+                    <>
+                        {/* Dashboard Content */}
+                        <main className="flex-1 p-8 overflow-auto">
+                            {/* Stats Cards */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                {/* Total Appointments */}
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <div className="p-2 bg-blue-50 rounded-lg">
+                                                    <svg className="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-gray-900">{stats.totalAppointments}</h3>
+                                            <p className="text-gray-500 text-sm mt-1">Total Appointments</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Today's Appointments */}
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <div className="p-2 bg-teal-50 rounded-lg">
+                                                    <svg className="w-6 h-6 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-gray-900">{stats.todayAppointments}</h3>
+                                            <p className="text-gray-500 text-sm mt-1">Today's Appointments</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Total Patients */}
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <div className="p-2 bg-green-50 rounded-lg">
+                                                    <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-gray-900">{stats.totalPatients}</h3>
+                                            <p className="text-gray-500 text-sm mt-1">Total Patients</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Completed Appointments */}
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <div className="flex items-start justify-between">
+                                        <div>
+                                            <div className="flex items-center space-x-2 mb-3">
+                                                <div className="p-2 bg-purple-50 rounded-lg">
+                                                    <svg className="w-6 h-6 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                </div>
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-gray-900">{stats.completedAppointments}</h3>
+                                            <p className="text-gray-500 text-sm mt-1">Completed</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
 
                     {/* Charts Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
@@ -385,7 +459,9 @@ export default function DoctorDashboard() {
                         </div>
                     </div>
                 </main>
+                </>
+                )}
             </div>
         </div>
-    )
+    );
 }
