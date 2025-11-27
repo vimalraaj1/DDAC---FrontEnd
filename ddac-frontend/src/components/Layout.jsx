@@ -17,7 +17,6 @@ export default function Layout({ children, role }) {
     localStorage.removeItem("userName");
     navigate("/login");
   };
-    
   return (
     <div className="flex min-h-screen bg-main">
       <div className="fixed left-0 top-0 h-min z-11">
@@ -39,12 +38,15 @@ export default function Layout({ children, role }) {
               </p>
               <p className="text-muted text-xs capitalize">{role}</p>
             </div>
-            <div
+            <button
               className="w-10 h-10 rounded-full bg-primary text-ondark
-                      flex items-center justify-center font-semibold"
+                      flex items-center justify-center font-semibold cursor-pointer"
+              onClick={() => navigate("/profile")}
             >
-              {(localStorage.getItem("userName") || "U")[0].toUpperCase()}
-            </div>
+              <span>
+                {(localStorage.getItem("userName") || "U")[0].toUpperCase()}
+              </span>
+            </button>
             <button
               onClick={() => setLogoutDialogOpen(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold

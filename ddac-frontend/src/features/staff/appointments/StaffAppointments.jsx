@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import StaffNavBar from "../components/StaffNavBar";
 import AppointmentForm from "./AppointmentForm";
 import { getAllAppointments, deleteAppointment, createAppointment, updateAppointment } from "./appointmentService";
-
+import Layout from "../../../components/Layout";
 
 export default function StaffAppointments() {
   const [appointments, setAppointments] = useState([]);
@@ -35,8 +35,8 @@ export default function StaffAppointments() {
   };
 
   return (
+    <Layout role="staff">
     <div className="min-h-screen bg-gray-soft">
-      <StaffNavBar />
       <div className="container mx-auto px-4 py-8">
         <div className="flex items-center justify-between mb-6">
           <h1 className="page-title">Appointments</h1>
@@ -116,5 +116,6 @@ export default function StaffAppointments() {
         )}
       </div>
     </div>
+    </Layout>
   );
 }

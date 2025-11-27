@@ -1,8 +1,3 @@
-import CustNavBar from "./components/CustNavBar";
-import { Link } from "react-router-dom";
-import { FaCalendarAlt, FaClock } from "react-icons/fa";
-import { FaLocationDot, FaUserDoctor } from "react-icons/fa6";
-import { MdOutlinePayments, MdFeedback } from "react-icons/md";
 import { QuickActions } from "./components/QuickActions";
 import { UpcomingAppointment } from "./components/UpcomingAppointment";
 import { HealthSummary } from "./components/HealthSummary";

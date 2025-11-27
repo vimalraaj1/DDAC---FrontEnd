@@ -1,66 +1,89 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { LogOutDialog } from "../../customer/components/LogoutDialog";
+import { useState } from "react";
+import {
+  FaHome,
+  FaCalendarCheck,
+  FaUser,
+  FaUserPlus,
+  FaUsers,
+  FaFilePrescription,
+  FaCreditCard,
+  FaStar,
+} from "react-icons/fa";
+import {
+  FaHospital,
+} from "react-icons/fa6";
 
-export default function StaffNavBar() {
+
+export default function StaffNavBar({role = "staff"}) {
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const location = useLocation();
   const navigate = useNavigate();
 
-  const handleLogout = () => {
+  const confirmedLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
+  const menuItems = [
+    { icon: FaHome, label: "Dashboard", path: "/staff/dashboard" },
+    { icon: FaUsers, label: "Patients", path: "/staff/patients" },
+    { icon: FaCalendarCheck, label: "Appointments", path: "/staff/appointments" },
+    { icon: FaFilePrescription, label: "Prescriptions", path: "/staff/prescriptions" },
+    { icon: FaCreditCard, label: "Payments", path: "/staff/payments" },
+    { icon: FaStar, label: "Ratings", path: "/staff/ratings" },
+    { icon: FaUser, label: "Profile", path: "/staff/profile" },
+  ];
+
   return (
-    <nav className="bg-white border-b border-gray-200 shadow-sm">
-      <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-1">
-            <Link 
-              to="/staffDashboard" 
-              className="text-xl font-semibold text-primary hover:text-[#3B82F6] transition-colors"
-            >
-              DDAC
-            </Link>
+    <aside className="bg-primary w-64 min-h-screen flex flex-col">
+      {/* Logo/Brand */}
+      <div className="p-6 border-b border-primary-hover">
+        <Link to="/staff/dashboard" className="flex items-center gap-3">
+          <div className="bg-white rounded-lg p-2">
+            <FaHospital className="text-primary" size={24} />
           </div>
-          
-          <div className="flex items-center space-x-6">
-            <Link 
-              to="/staffDashboard" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
-            >
-              Dashboard
-            </Link>
-            <Link 
-              to="/staffAppointments" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
-            >
-              Appointments
-            </Link>
-            <Link 
-              to="/registerPatient" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
-            >
-              Register Patient
-            </Link>
-            <Link 
-              to="/managePatients" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
-            >
-              Manage Patient
-            </Link>
-            <Link 
-              to="/staffProfile" 
-              className="text-gray-neutral hover:text-primary transition-colors font-medium"
-            >
-              Profile
-            </Link>
-            <button 
-              onClick={handleLogout}
-              className="btn-secondary text-sm"
-            >
-              Logout
-            </button>
-          </div>
-        </div>
+          <h1 className="text-ondark text-xl font-bold">
+            WellSpring Healthcare
+          </h1>
+        </Link>
       </div>
-    </nav>
+
+      {/* Navigation Menu */}
+      <nav className="flex-1 px-4 py-6">
+        <ul className="space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
+
+            return (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={`
+                                        flex items-center gap-3 px-4 py-3 rounded-lg
+                                        transition-all duration-200 font-medium
+                                        ${
+                                          isActive
+                                            ? "bg-white bg-opacity-10 text-body"
+                                            : "text-ondark text-opacity-80 bg-primary hover:bg-[var(--bg-main)] hover:text-[var(--text-body)]"
+                                        }
+                  `}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </nav>
+      <LogOutDialog
+        open={logoutDialogOpen}
+        onOpenChange={setLogoutDialogOpen}
+        onConfirmLogout={confirmedLogout}
+      />
+    </aside>
   );
 }

@@ -1,11 +1,12 @@
 import StaffNavBar from "./components/StaffNavBar";
 import { Link } from "react-router-dom";
+import Layout from "../../components/Layout";
 
 export default function CustDashboard() {
     return (
-        <div className="min-h-screen bg-gray-soft">
-            <StaffNavBar/>
+        <Layout role="staff">
 
+        <div className="min-h-screen bg-gray-soft">
             <div className="container mx-auto px-4 py-8">
                 <div className="mb-8">
                     <h1 className="page-title">Welcome to the Staff Dashboard</h1>
@@ -107,5 +108,6 @@ export default function CustDashboard() {
             </div>
         </div>
     </div>
+    </Layout>
   );
 }

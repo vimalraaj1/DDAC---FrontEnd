@@ -419,7 +419,7 @@ export default function App() {
             </FadeInSection>
 
             {/* Medical Information Card */}
-            <FadeInSection delay={0.6}>
+            <FadeInSection>
               <Card
                 className="p-6 rounded-xl shadow-sm"
                 style={{ backgroundColor: "var(--card-bg)" }}
