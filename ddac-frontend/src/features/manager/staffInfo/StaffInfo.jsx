@@ -1,102 +1,117 @@
-import '../../themes/manager.css';
-import '../../index.css';
-import Layout from '../../components/Layout.jsx';
+import '../../../index.css';
+import Layout from '../../../components/Layout.jsx';
 import { useState } from 'react';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaUserMd, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { FaSearch, FaEdit, FaTrash, FaEye, FaUserTie, FaEnvelope, FaPhone } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
-export default function DoctorInfo() {
+export default function StaffInfo() {
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterSpecialty, setFilterSpecialty] = useState('all');
+    const [filterRole, setFilterRole] = useState('all');
+    const navigate = useNavigate();
 
-    // Sample doctor data (replace with API call later)
-    const doctors = [
+    // Sample staff data (replace with API call later)
+    const staffMembers = [
         {
-            id: 1,
-            name: "Dr. Sarah Wilson",
-            specialty: "Cardiology",
-            email: "sarah.wilson@hospital.com",
-            phone: "+60 12-345 6789",
-            patients: 45,
+            id: 12489234934130,
+            firstName: "Alice",
+            lastName: "Johnson",
+            role: "Nurse",
+            email: "alice.johnson@hospital.com",
+            phone: "+60 12-111 2222",
+            department: "Emergency",
             status: "active",
-            avatar: "SW"
+            avatar: "AJ",
+            yearsOfExperience: 8
         },
         {
             id: 2,
-            name: "Dr. Michael Chen",
-            specialty: "Neurology",
-            email: "michael.chen@hospital.com",
-            phone: "+60 12-345 6790",
-            patients: 38,
+            firstName: "Bob",
+            lastName: "Martinez",
+            role: "Receptionist",
+            email: "bob.martinez@hospital.com",
+            phone: "+60 12-222 3333",
+            department: "Outpatient",
             status: "active",
-            avatar: "MC"
+            avatar: "BM",
+            yearsOfExperience: 3
         },
         {
             id: 3,
-            name: "Dr. Emily Rodriguez",
-            specialty: "Pediatrics",
-            email: "emily.rodriguez@hospital.com",
-            phone: "+60 12-345 6791",
-            patients: 52,
+            firstName: "Carol",
+            lastName: "Lee",
+            role: "Lab Technician",
+            email: "carol.lee@hospital.com",
+            phone: "+60 12-333 4444",
+            department: "Laboratory",
             status: "active",
-            avatar: "ER"
+            avatar: "CL",
+            yearsOfExperience: 5
         },
         {
             id: 4,
-            name: "Dr. James Kumar",
-            specialty: "Orthopedics",
-            email: "james.kumar@hospital.com",
-            phone: "+60 12-345 6792",
-            patients: 41,
+            firstName: "David",
+            lastName: "Kim",
+            role: "Pharmacist",
+            email: "david.kim@hospital.com",
+            phone: "+60 12-444 5555",
+            department: "Pharmacy",
             status: "on-leave",
-            avatar: "JK"
+            avatar: "DK",
+            yearsOfExperience: 6
         },
         {
             id: 5,
-            name: "Dr. Lisa Thompson",
-            specialty: "Dermatology",
-            email: "lisa.thompson@hospital.com",
-            phone: "+60 12-345 6793",
-            patients: 35,
+            firstName: "Emma",
+            lastName: "Wilson",
+            role: "Nurse",
+            email: "emma.wilson@hospital.com",
+            phone: "+60 12-555 6666",
+            department: "ICU",
             status: "active",
-            avatar: "LT"
+            avatar: "EW",
+            yearsOfExperience: 12
         },
         {
             id: 6,
-            name: "Dr. Ahmed Hassan",
-            specialty: "Cardiology",
-            email: "ahmed.hassan@hospital.com",
-            phone: "+60 12-345 6794",
-            patients: 48,
+            firstName: "Frank",
+            lastName: "Garcia",
+            role: "Administrator",
+            email: "frank.garcia@hospital.com",
+            phone: "+60 12-666 7777",
+            department: "Administration",
             status: "active",
-            avatar: "AH"
+            avatar: "FG",
+            yearsOfExperience: 15
         },
     ];
 
-    // Get unique specialties for filter
-    const specialties = [...new Set(doctors.map(doc => doc.specialty))];
+    // Get unique roles for filter
+    const roles = [...new Set(staffMembers.map(staff => staff.role))];
 
-    // Filter doctors
-    const filteredDoctors = doctors.filter(doctor => {
-        const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            doctor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            doctor.specialty.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesSpecialty = filterSpecialty === 'all' || doctor.specialty === filterSpecialty;
-        return matchesSearch && matchesSpecialty;
+    // Filter staff
+    const filteredStaff = staffMembers.filter(staff => {
+        const matchesSearch = staff.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            staff.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            staff.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            staff.department.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesRole = filterRole === 'all' || staff.role === filterRole;
+        return matchesSearch && matchesRole;
     });
 
     const handleView = (id) => {
-        console.log('View doctor:', id);
-        // Navigate to doctor detail page
+        console.log('View staff:', id);
+        navigate(`/managerViewStaff/${id}`);
     };
 
     const handleEdit = (id) => {
-        console.log('Edit doctor:', id);
-        // Navigate to edit page
+        console.log('Edit staff:', id);
+        navigate(`/managerEditStaff/${id}`);
     };
 
     const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this doctor?')) {
-            console.log('Delete doctor:', id);
+        if (window.confirm('Are you sure you want to delete this staff member?')) {
+            console.log('Delete staff:', id);
             // Call delete API
         }
     };
@@ -106,67 +121,67 @@ export default function DoctorInfo() {
             <div className="w-full max-w-full overflow-hidden">
                 {/* Page Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-heading">Doctors Information</h1>
-                    <p className="text-muted mt-1">Manage and view all doctor records</p>
+                    <h1 className="text-3xl font-bold text-heading">Staff Information</h1>
+                    <p className="text-muted mt-1">Manage and view all staff records</p>
                 </div>
 
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                    <div className="bg-card rounded-xl shadow-soft p-6 ">
+                    <div className="bg-card rounded-xl shadow-soft p-6">
                         <div className="flex items-center gap-4">
                             <div className="bg-primary bg-opacity-10 p-3 rounded-lg">
-                                <FaUserMd size={24} className="text-primary" />
+                                <FaUserTie size={24} className="text-ondark" />
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">{doctors.length}</h3>
-                                <p className="text-muted text-sm">Total Doctors</p>
+                                <h3 className="text-heading text-2xl font-bold">{staffMembers.length}</h3>
+                                <p className="text-muted text-sm">Total Staff</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-card rounded-xl shadow-soft p-6 ">
+                    <div className="bg-card rounded-xl shadow-soft p-6">
                         <div className="flex items-center gap-4">
                             <div className="bg-accent-success bg-opacity-10 p-3 rounded-lg">
-                                <FaUserMd size={24} className="text-accent-success" />
+                                <FaUserTie size={24} className="text-ondark" />
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {doctors.filter(d => d.status === 'active').length}
+                                    {staffMembers.filter(s => s.status === 'active').length}
                                 </h3>
-                                <p className="text-muted text-sm">Active Doctors</p>
+                                <p className="text-muted text-sm">Active Staff</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-card rounded-xl shadow-soft p-6 ">
+                    <div className="bg-card rounded-xl shadow-soft p-6">
                         <div className="flex items-center gap-4">
                             <div className="bg-accent-warning bg-opacity-10 p-3 rounded-lg">
-                                <FaUserMd size={24} className="text-accent-warning" />
+                                <FaUserTie size={24} className="text-ondark" />
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {doctors.filter(d => d.status === 'on-leave').length}
+                                    {staffMembers.filter(s => s.status === 'on-leave').length}
                                 </h3>
                                 <p className="text-muted text-sm">On Leave</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="bg-card rounded-xl shadow-soft p-6 ">
+                    <div className="bg-card rounded-xl shadow-soft p-6">
                         <div className="flex items-center gap-4">
                             <div className="bg-accent-sky bg-opacity-10 p-3 rounded-lg">
-                                <FaUserMd size={24} className="text-accent-sky" />
+                                <FaUserTie size={24} className="text-ondark" />
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">{specialties.length}</h3>
-                                <p className="text-muted text-sm">Specialties</p>
+                                <h3 className="text-heading text-2xl font-bold">{roles.length}</h3>
+                                <p className="text-muted text-sm">Staff Roles</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 {/* Search and Filter */}
-                <div className="bg-card rounded-xl shadow-soft p-6  mb-6">
+                <div className="bg-card rounded-xl shadow-soft p-6 mb-6">
                     <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
                         {/* Search */}
                         <div className="flex-1 min-w-0">
@@ -174,7 +189,7 @@ export default function DoctorInfo() {
                                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" size={16} />
                                 <input
                                     type="text"
-                                    placeholder="Search by name, email, or specialty..."
+                                    placeholder="Search by name, email, role, or department..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="w-full pl-10 pr-4 py-2 border border-input rounded-lg
@@ -187,127 +202,129 @@ export default function DoctorInfo() {
                         {/* Filter */}
                         <div className="flex gap-4 flex-shrink-4">
                             <select
-                                value={filterSpecialty}
-                                onChange={(e) => setFilterSpecialty(e.target.value)}
+                                value={filterRole}
+                                onChange={(e) => setFilterRole(e.target.value)}
                                 className="px-4 py-2 border border-input rounded-lg
                                          focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent
                                          text-body bg-card"
                             >
-                                <option value="all">All Specialties</option>
-                                {specialties.map(specialty => (
-                                    <option key={specialty} value={specialty}>{specialty}</option>
+                                <option value="all">All Roles</option>
+                                {roles.map(role => (
+                                    <option key={role} value={role}>{role}</option>
                                 ))}
                             </select>
 
-                            <button className="btn-primary whitespace-nowrap">
-                                + Add Doctor
+                            <button
+                                className="btn-primary whitespace-nowrap"
+                                onClick={() => navigate("/managerAddNewStaff")}
+                            >
+                                + Add Staff
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Doctors Table */}
-                <div className="bg-card rounded-xl shadow-soft border border-color overflow-hidden">
-                    <div className="overflow-x-auto"> 
+                {/* Staff Table */}
+                <div className="bg-card rounded-xl shadow-soft overflow-hidden">
+                    <div className="overflow-x-auto">
                         <table className="w-full min-w-full table-fixed">
-                            <thead className="bg-primary">
+                            <thead className="bg-primary border-b border-color">
                             <tr>
-                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm">
-                                    Doctor
+                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">
+                                    Staff Member
                                 </th>
-                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm">
-                                    Specialty
+                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">
+                                    Role
                                 </th>
-                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm hidden md:table-cell">
+                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm hidden md:table-cell break-all">
                                     Contact
                                 </th>
-                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm">
-                                    Patients
+                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">
+                                    Department
                                 </th>
-                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm">
+                                <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">
                                     Status
                                 </th>
-                                <th className="text-center py-4 px-6 text-ondark font-semibold text-sm">
+                                <th className="text-center py-4 px-6 text-ondark font-semibold text-sm break-all">
                                     Actions
                                 </th>
                             </tr>
                             </thead>
                             <tbody>
-                            {filteredDoctors.length > 0 ? (
-                                filteredDoctors.map((doctor, index) => (
+                            {filteredStaff.length > 0 ? (
+                                filteredStaff.map((staff, index) => (
                                     <tr
-                                        key={doctor.id}
-                                        className={` hover:bg-main transition-colors ${
+                                        key={staff.id}
+                                        className={`hover:bg-main border-t border-color transition-colors ${
                                             index % 2 === 0 ? '' : 'bg-main bg-opacity-30'
                                         }`}
                                     >
                                         <td className="py-4 px-4 md:px-6 align-top">
                                             <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-10 h-10 rounded-full bg-primary text-ondark flex items-center justify-center font-semibold text-sm flex-shrink-0">
-                                                    {doctor.avatar}
+                                                <div className="w-8 h-8 rounded-full bg-primary text-ondark flex items-center justify-center font-semibold text-xs flex-shrink-0">
+                                                    {staff.firstName.charAt(0).toUpperCase()}{staff.lastName.charAt(0).toUpperCase()}
                                                 </div>
                                                 <div className="min-w-0">
-                                                    <p className="text-heading font-medium truncate">{doctor.name}</p>
-                                                    <p className="text-muted text-xs truncate">{doctor.id}</p>
+                                                    <p className="text-heading text-sm font-bold">{`${staff.firstName} ${staff.lastName}`}</p>
+                                                    <p className="text-muted text-xs">{staff.id} years exp.</p>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="py-4 px-6">
                                                 <span className="inline-flex items-center gap-2 bg-primary bg-opacity-10 
                                                                text-ondark px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap">
-                                                    {doctor.specialty}
+                                                    {staff.role}
                                                 </span>
                                         </td>
                                         <td className="py-4 px-6 hidden md:table-cell md:min-w-[200px]">
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2 text-body text-sm">
                                                     <FaEnvelope className="text-muted flex-shrink-0" size={12} />
-                                                    <span className="text-xs truncate">{doctor.email}</span>
+                                                    <span className="text-xs break-all">{staff.email}</span>
                                                 </div>
                                                 <div className="flex items-center gap-2 text-body text-sm">
                                                     <FaPhone className="text-muted flex-shrink-0" size={12} />
-                                                    <span className="text-xs whitespace-nowrap">{doctor.phone}</span>
+                                                    <span className="text-xs">{staff.phone}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="py-4 px-6 whitespace-nowrap">
-                                            <span className="text-heading font-semibold">{doctor.patients}</span>
-                                            <span className="text-muted text-sm ml-1">patients</span>
+                                        <td className="py-4 px-6">
+                                            <span className="text-body text-sm font-medium">{staff.department}</span>
                                         </td>
                                         <td className="py-4 px-6">
                                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                                                    doctor.status === 'active'
+                                                    staff.status === 'active'
                                                         ? 'bg-accent-success bg-opacity-10 text-body'
                                                         : 'bg-accent-warning bg-opacity-10 text-body'
                                                 }`}>
-                                                    {doctor.status === 'active' ? 'Active' : 'On Leave'}
+                                                    {staff.status === 'active' ? 'Active' : 'On Leave'}
                                                 </span>
                                         </td>
-                                        <td className="py-4 px-6">
-                                            <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                                        <td className="py-4 px-4">
+                                            <div className="flex items-center justify-center gap-2 overflow-x-hidden lg:overflow-x-visible">
                                                 <button
-                                                    onClick={() => handleView(doctor.id)}
+                                                    onClick={() => handleView(staff.id)}
                                                     className="p-2 hover:bg-accent-sky hover:bg-opacity-10 rounded-lg
                                                                  text-accent-sky transition-colors"
                                                     title="View Details"
                                                 >
-                                                    <FaEye size={16} />
+                                                    <FaEye size={22} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleEdit(doctor.id)}
+                                                    onClick={() => handleEdit(staff.id)}
                                                     className="p-2 hover:bg-primary hover:bg-opacity-10 rounded-lg
                                                                  text-primary transition-colors"
                                                     title="Edit"
                                                 >
-                                                    <FaEdit size={16} />
+                                                    <FaEdit size={22} />
                                                 </button>
                                                 <button
-                                                    onClick={() => handleDelete(doctor.id)}
+                                                    onClick={() => handleDelete(staff.id)}
                                                     className="p-2 hover:bg-accent-danger hover:bg-opacity-10 rounded-lg
                                                                  text-accent-danger transition-colors"
                                                     title="Delete"
                                                 >
-                                                    <FaTrash size={16} />
+                                                    <FaTrash size={22} />
                                                 </button>
                                             </div>
                                         </td>
@@ -317,8 +334,8 @@ export default function DoctorInfo() {
                                 <tr>
                                     <td colSpan="6" className="py-12 text-center">
                                         <div className="flex flex-col items-center gap-3">
-                                            <FaUserMd size={48} className="text-muted opacity-50" />
-                                            <p className="text-muted text-lg">No doctors found</p>
+                                            <FaUserTie size={48} className="text-muted opacity-50" />
+                                            <p className="text-muted text-lg">No staff members found</p>
                                             <p className="text-muted text-sm">Try adjusting your search or filter</p>
                                         </div>
                                     </td>
@@ -329,13 +346,12 @@ export default function DoctorInfo() {
                     </div>
                 </div>
 
-                {/* Pagination (Optional) */}
+                {/* Pagination */}
                 <div className="mt-6 flex items-center justify-between">
                     <p className="text-muted text-sm">
-                        Showing <span className="font-semibold text-heading">{filteredDoctors.length}</span> of{' '}
-                        <span className="font-semibold text-heading">{doctors.length}</span> doctors
+                        Showing <span className="font-semibold text-heading">{filteredStaff.length}</span> of{' '}
+                        <span className="font-semibold text-heading">{staffMembers.length}</span> staff members
                     </p>
-                    {/* Add pagination controls here if needed */}
                 </div>
             </div>
         </Layout>

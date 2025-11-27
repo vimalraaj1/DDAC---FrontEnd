@@ -1,5 +1,4 @@
 import React, { useMemo } from "react";
-import '../../../themes/manager.css';
 import '../../../index.css';
 import {
     ResponsiveContainer,
