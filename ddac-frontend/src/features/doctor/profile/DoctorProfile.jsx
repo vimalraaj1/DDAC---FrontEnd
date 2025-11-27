@@ -1,23 +1,49 @@
 import DoctorSidebar from "../components/DoctorSidebar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import doctorService from "../services/doctorService";
 
 export default function DoctorProfile() {
     const navigate = useNavigate();
     const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
     const [isEditing, setIsEditing] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
-        name: "Dr. Sarah Wilson",
-        email: "doctor@gmail.com",
-        phone: "+1 234 567 8900",
-        specialization: "Internal Medicine",
-        licenseNumber: "MD123456",
-        experience: "10 years",
-        address: "123 Medical Center Dr, Healthcare City",
-        department: "Cardiology",
-        bio: "Experienced internal medicine physician dedicated to providing comprehensive healthcare."
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        dateOfBirth: "",
+        gender: "",
+        address: "",
+        bloodGroup: "",
+        emergencyContact: "",
+        licenseNumber: "",
+        specialization: "",
+        department: "",
+        joiningDate: "",
+        yearsOfExperience: 0,
+        salary: 0,
+        status: ""
     });
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    const fetchProfile = async () => {
+        try {
+            setLoading(true);
+            const profile = await doctorService.getCurrentDoctorProfile();
+            setFormData(profile);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+            alert('Failed to load profile. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -27,13 +53,18 @@ export default function DoctorProfile() {
         }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // Here you would typically save to backend
-        console.log("Saving profile:", formData);
-        setIsEditing(false);
-        // Show success message
-        alert("Profile updated successfully!");
+        try {
+            await doctorService.updateCurrentDoctorProfile(formData);
+            setIsEditing(false);
+            alert("Profile updated successfully!");
+            // Refresh profile data
+            fetchProfile();
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile. Please try again.');
+        }
     };
 
     const handleLogout = () => {
@@ -150,43 +181,55 @@ export default function DoctorProfile() {
                     </div>
                 </header>
 
-                {/* Page Content */}
-                <main className="flex-1 p-8 overflow-auto">
-                    {/* Profile Header Card */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
-                        <div className="p-6">
-                            <div className="flex items-start justify-between">
-                                <div className="flex items-center space-x-6">
-                                    <img
-                                        src="https://ui-avatars.com/api/?name=Sarah+Wilson&background=4f46e5&color=fff&size=128"
-                                        alt="Profile"
-                                        className="w-24 h-24 rounded-full"
-                                    />
-                                    <div>
-                                        <h2 className="text-2xl font-bold text-gray-900">{formData.name}</h2>
-                                        <p className="text-gray-500 mt-1">{formData.specialization}</p>
-                                        <p className="text-gray-500 text-sm">{formData.department} Department</p>
-                                        <div className="flex items-center space-x-4 mt-3">
-                                            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                Active
-                                            </span>
-                                            <span className="text-sm text-gray-500">{formData.experience} experience</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button 
-                                    onClick={() => setIsEditing(!isEditing)}
-                                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                                        isEditing 
-                                            ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
-                                            : "bg-blue-500 text-white hover:bg-blue-600"
-                                    }`}
-                                >
-                                    {isEditing ? "Cancel" : "Edit Profile"}
-                                </button>
-                            </div>
+                {/* Loading State */}
+                {loading ? (
+                    <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center">
+                            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="mt-4 text-gray-600">Loading profile...</p>
                         </div>
                     </div>
+                ) : (
+                    <>
+                        {/* Page Content */}
+                        <main className="flex-1 p-8 overflow-auto">
+                            {/* Profile Header Card */}
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+                                <div className="p-6">
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex items-center space-x-6">
+                                            <img
+                                                src={`https://ui-avatars.com/api/?name=${formData.firstName}+${formData.lastName}&background=4f46e5&color=fff&size=128`}
+                                                alt="Profile"
+                                                className="w-24 h-24 rounded-full"
+                                            />
+                                            <div>
+                                                <h2 className="text-2xl font-bold text-gray-900">{formData.firstName} {formData.lastName}</h2>
+                                                <p className="text-gray-500 mt-1">{formData.specialization}</p>
+                                                <p className="text-gray-500 text-sm">{formData.department} Department</p>
+                                                <div className="flex items-center space-x-4 mt-3">
+                                                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
+                                                        formData.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                                                    }`}>
+                                                        {formData.status}
+                                                    </span>
+                                                    <span className="text-sm text-gray-500">{formData.yearsOfExperience} years experience</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={() => setIsEditing(!isEditing)}
+                                            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                                isEditing 
+                                                    ? "bg-gray-100 text-gray-700 hover:bg-gray-200" 
+                                                    : "bg-blue-500 text-white hover:bg-blue-600"
+                                            }`}
+                                        >
+                                            {isEditing ? "Cancel" : "Edit Profile"}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
 
                     {/* Profile Information */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
@@ -198,14 +241,32 @@ export default function DoctorProfile() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                                            Full Name
+                                            First Name
                                         </label>
                                         <input
                                             type="text"
-                                            name="name"
-                                            value={formData.name}
+                                            name="firstName"
+                                            value={formData.firstName}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
+                                            required
+                                            className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                                                !isEditing ? 'bg-gray-50 text-gray-600' : 'bg-white'
+                                            }`}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                                            Last Name
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleInputChange}
+                                            disabled={!isEditing}
+                                            required
                                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                                 !isEditing ? 'bg-gray-50 text-gray-600' : 'bg-white'
                                             }`}
@@ -222,6 +283,7 @@ export default function DoctorProfile() {
                                             value={formData.email}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
+                                            required
                                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                                 !isEditing ? 'bg-gray-50 text-gray-600' : 'bg-white'
                                             }`}
@@ -238,6 +300,7 @@ export default function DoctorProfile() {
                                             value={formData.phone}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
+                                            required
                                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                                 !isEditing ? 'bg-gray-50 text-gray-600' : 'bg-white'
                                             }`}
@@ -254,6 +317,7 @@ export default function DoctorProfile() {
                                             value={formData.specialization}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
+                                            required
                                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                                 !isEditing ? 'bg-gray-50 text-gray-600' : 'bg-white'
                                             }`}
@@ -267,7 +331,7 @@ export default function DoctorProfile() {
                                         <input
                                             type="text"
                                             name="department"
-                                            value={formData.department}
+                                            value={formData.department || ''}
                                             onChange={handleInputChange}
                                             disabled={!isEditing}
                                             className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
@@ -362,6 +426,8 @@ export default function DoctorProfile() {
                         </div>
                     </div>
                 </main>
+                </>
+                )}
             </div>
         </div>
     );

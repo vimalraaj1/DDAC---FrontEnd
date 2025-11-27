@@ -1,6 +1,7 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import patientService from "./patientService";
 
 export default function DoctorPatients() {
     const navigate = useNavigate();
@@ -12,86 +13,60 @@ export default function DoctorPatients() {
     const [showDropdown, setShowDropdown] = useState(false);
 
     useEffect(() => {
-        // Mock data for patients
-        const mockPatients = [
-            {
-                id: 1,
-                patientId: "#1247",
-                name: "John Smith",
-                age: 45,
-                gender: "Male",
-                bloodType: "O+",
-                phone: "+1 234 567 8900",
-                email: "john.smith@email.com",
-                lastVisit: "2025-11-15",
-                nextAppointment: "2025-11-20",
-                status: "active",
-                condition: "Hypertension"
-            },
-            {
-                id: 2,
-                patientId: "#1156",
-                name: "Sarah Johnson",
-                age: 32,
-                gender: "Female",
-                bloodType: "A+",
-                phone: "+1 234 567 8901",
-                email: "sarah.j@email.com",
-                lastVisit: "2025-11-10",
-                nextAppointment: "2025-11-25",
-                status: "active",
-                condition: "Regular Checkup"
-            },
-            {
-                id: 3,
-                patientId: "#1089",
-                name: "Mike Davis",
-                age: 58,
-                gender: "Male",
-                bloodType: "B+",
-                phone: "+1 234 567 8902",
-                email: "mike.d@email.com",
-                lastVisit: "2025-11-12",
-                nextAppointment: "2025-11-22",
-                status: "active",
-                condition: "Diabetes"
-            },
-            {
-                id: 4,
-                patientId: "#1302",
-                name: "Emily Brown",
-                age: 28,
-                gender: "Female",
-                bloodType: "AB+",
-                phone: "+1 234 567 8903",
-                email: "emily.b@email.com",
-                lastVisit: "2025-11-08",
-                nextAppointment: "2025-11-28",
-                status: "active",
-                condition: "Allergies"
-            },
-            {
-                id: 5,
-                patientId: "#0987",
-                name: "Robert Wilson",
-                age: 62,
-                gender: "Male",
-                bloodType: "O-",
-                phone: "+1 234 567 8904",
-                email: "robert.w@email.com",
-                lastVisit: "2025-10-30",
-                nextAppointment: null,
-                status: "inactive",
-                condition: "Post-surgery"
-            }
-        ];
-
-        // Simulate API call
-        setTimeout(() => {
-            setPatients(mockPatients);
-            setLoading(false);
-        }, 800);
+        fetchPatients();
     }, []);
+
+    const fetchPatients = async () => {
+        try {
+            setLoading(true);
+            const data = await patientService.getDoctorPatients();
+            // Calculate age from dateOfBirth and add full name
+            const patientsWithDetails = data.map(patient => ({
+                ...patient,
+                name: `${patient.firstName} ${patient.lastName}`,
+                age: calculateAge(patient.dateOfBirth),
+                status: 'active' // Default status
+            }));
+            setPatients(patientsWithDetails);
+        } catch (error) {
+            console.error('Error fetching patients:', error);
+            alert('Failed to load patients. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const calculateAge = (dateOfBirth) => {
+        if (!dateOfBirth) return 0;
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+        if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    };
+
+    const handleSearch = async (term) => {
+        setSearchTerm(term);
+        if (term.trim() === '') {
+            fetchPatients();
+        } else {
+            try {
+                const results = await patientService.searchPatients(term);
+                const patientsWithDetails = results.map(patient => ({
+                    ...patient,
+                    name: `${patient.firstName} ${patient.lastName}`,
+                    age: calculateAge(patient.dateOfBirth),
+                    status: 'active'
+                }));
+                setPatients(patientsWithDetails);
+            } catch (error) {
+                console.error('Error searching patients:', error);
+            }
+        }
+    };
 
     const getStatusBadge = (status) => {
         const statusClasses = {
@@ -305,27 +280,31 @@ export default function DoctorPatients() {
                     {/* Patients Table */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                         <div className="px-6 py-4 border-b border-gray-100">
-                            <div className="flex items-center justify-between">
+                            <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-lg font-semibold text-gray-900">Patient Records</h2>
                                 <div className="flex items-center space-x-3">
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            placeholder="Search patients..."
+                                            value={searchTerm}
+                                            onChange={(e) => handleSearch(e.target.value)}
+                                            className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-64"
+                                        />
+                                        <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                        </svg>
+                                    </div>
                                     <select 
                                         value={filterStatus}
                                         onChange={(e) => setFilterStatus(e.target.value)}
-                                        className="text-sm border border-gray-300 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="all">All Status</option>
                                         <option value="active">Active</option>
                                         <option value="inactive">Inactive</option>
                                         <option value="critical">Critical</option>
                                     </select>
-                                    <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm">
-                                        <span className="flex items-center space-x-2">
-                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                            </svg>
-                                            <span>Add Patient</span>
-                                        </span>
-                                    </button>
                                 </div>
                             </div>
                         </div>

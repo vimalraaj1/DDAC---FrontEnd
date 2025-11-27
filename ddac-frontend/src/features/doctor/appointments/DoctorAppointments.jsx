@@ -1,6 +1,7 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import appointmentService from "./appointmentService";
 
 export default function DoctorAppointments() {
     const navigate = useNavigate();
@@ -10,56 +11,49 @@ export default function DoctorAppointments() {
     const [showDropdown, setShowDropdown] = useState(false);
 
     useEffect(() => {
-        // Mock data for doctor appointments
-        const mockAppointments = [
-            {
-                id: 1,
-                patientName: "John Smith",
-                patientId: "#1247",
-                date: "2025-11-18",
-                time: "09:00 AM",
-                status: "scheduled",
-                type: "Consultation",
-                department: "Cardiology"
-            },
-            {
-                id: 2,
-                patientName: "Sarah Johnson",
-                patientId: "#1156",
-                date: "2025-11-18",
-                time: "10:30 AM",
-                status: "completed",
-                type: "Follow-up",
-                department: "Neurology"
-            },
-            {
-                id: 3,
-                patientName: "Mike Davis",
-                patientId: "#1089",
-                date: "2025-11-18",
-                time: "02:00 PM",
-                status: "scheduled",
-                type: "Check-up",
-                department: "General"
-            },
-            {
-                id: 4,
-                patientName: "Emily Brown",
-                patientId: "#1302",
-                date: "2025-11-18",
-                time: "03:30 PM",
-                status: "scheduled",
-                type: "Consultation",
-                department: "Pediatrics"
-            }
-        ];
-
-        // Simulate API call
-        setTimeout(() => {
-            setAppointments(mockAppointments);
-            setLoading(false);
-        }, 800);
+        fetchAppointments();
     }, []);
+
+    const fetchAppointments = async () => {
+        try {
+            setLoading(true);
+            const data = await appointmentService.getDoctorAppointments();
+            setAppointments(data);
+        } catch (error) {
+            console.error('Error fetching appointments:', error);
+            // Show error message to user
+            alert('Failed to load appointments. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleApprove = async (appointmentId) => {
+        try {
+            await appointmentService.approveAppointment(appointmentId);
+            // Refresh appointments list
+            fetchAppointments();
+            alert('Appointment approved successfully!');
+        } catch (error) {
+            console.error('Error approving appointment:', error);
+            alert('Failed to approve appointment. Please try again.');
+        }
+    };
+
+    const handleReject = async (appointmentId) => {
+        const reason = prompt('Please enter rejection reason:');
+        if (reason) {
+            try {
+                await appointmentService.rejectAppointment(appointmentId, reason);
+                // Refresh appointments list
+                fetchAppointments();
+                alert('Appointment rejected successfully!');
+            } catch (error) {
+                console.error('Error rejecting appointment:', error);
+                alert('Failed to reject appointment. Please try again.');
+            }
+        }
+    };
 
     const getStatusBadge = (status) => {
         const statusClasses = {
