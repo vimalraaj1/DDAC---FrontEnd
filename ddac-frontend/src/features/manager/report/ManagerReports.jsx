@@ -1,7 +1,15 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
 import { useNavigate } from 'react-router-dom';
-import { FaDollarSign, FaCalendarAlt, FaChartLine, FaFileInvoiceDollar, FaChartBar, FaArrowRight } from 'react-icons/fa';
+import {
+    FaDollarSign,
+    FaCalendarAlt,
+    FaChartLine,
+    FaFileInvoiceDollar,
+    FaChartBar,
+    FaArrowRight,
+    FaUserMd
+} from 'react-icons/fa';
 
 export default function ManagerReports() {
     const navigate = useNavigate();
@@ -34,17 +42,17 @@ export default function ManagerReports() {
             path: '/managerAppointmentReport'
         },
         {
-            id: 'revenue-trends',
-            title: 'Revenue Trends Analysis',
-            description: 'Monthly revenue comparison and payment method analysis',
-            icon: FaChartLine,
+            id: 'doctor-staff-activity',
+            title: 'Doctor & Staff Activity Report',
+            description: 'Performance metrics, workload distribution, and top performers',
+            icon: FaUserMd,
             color: 'bg-accent-sky',
             stats: [
-                { label: 'Avg Transaction', value: 'RM 186.50' },
-                { label: 'Growth Rate', value: '+12%' },
-                { label: 'Top Method', value: 'Card' }
+                { label: 'Active Doctors', value: '42' },
+                { label: 'Avg Appointments', value: '18/doctor' },
+                { label: 'Top Performer', value: 'Dr. Sarah W.' }
             ],
-            path: '/managerRevenueTrendsReport'
+            path: '/managerDoctorStaffReport'
         }
     ];
 

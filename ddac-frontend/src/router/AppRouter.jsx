@@ -58,6 +58,8 @@ import ManagerReports from "../features/manager/report/ManagerReports.jsx";
 import FinancialReport from "../features/manager/report/FInancialReport.jsx";
 import ManagerProfile from "../features/manager/profile/ManagerProfile.jsx";
 import EditManagerProfile from "../features/manager/profile/EditManagerProfile.jsx";
+import AppointmentReport from "../features/manager/report/AppointmentReport.jsx";
+import DoctorStaffReport from "../features/manager/report/DoctorStaffReport.jsx";
 
 export default function AppRouter() {
   return (
@@ -132,6 +134,8 @@ export default function AppRouter() {
         <Route path="/managerViewComments/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewComments/></ProtectedRoute>}/>
         <Route path="/managerReports" element={<ProtectedRoute allowedRoles={['manager']}><ManagerReports/></ProtectedRoute>}/>
         <Route path="/managerFinancialReport" element={<ProtectedRoute allowedRoles={['manager']}><FinancialReport/></ProtectedRoute>}/>
+        <Route path="/managerAppointmentReport" element={<ProtectedRoute allowedRoles={['manager']}><AppointmentReport/></ProtectedRoute>}/>
+        <Route path="/managerDoctorStaffReport" element={<ProtectedRoute allowedRoles={['manager']}><DoctorStaffReport/></ProtectedRoute>}/>
         <Route path="/managerProfile" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProfile/></ProtectedRoute>}/>
         <Route path="/managerEditProfile/:id" element={<ProtectedRoute allowedRoles={['manager']}><EditManagerProfile/></ProtectedRoute>}/>
 
