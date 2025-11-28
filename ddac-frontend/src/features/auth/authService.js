@@ -13,7 +13,8 @@ export const login = async (email, password) => {
             email: "customer@gmail.com",
             name: "Mr Sick",
             role: "customer",
-            password: "123456"
+            password: "123456",
+            id: "PT000001",
         },
         "staff@gmail.com": {
             email: "staff@gmail.com", 
@@ -37,7 +38,8 @@ export const login = async (email, password) => {
             user: {
                 email: user.email,
                 name: user.name,
-                role: user.role
+                role: user.role,
+                id: user.id,
             }
         };
     }

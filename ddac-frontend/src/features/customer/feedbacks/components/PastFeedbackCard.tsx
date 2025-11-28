@@ -1,67 +1,128 @@
 import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { StarRating } from "./StarRating";
 import { Button } from "../../components/ui/button";
+import { Calendar, Stethoscope } from "lucide-react";
 
 interface PastFeedbackCardProps {
   id: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  appointmentDate: string;
+  appointmentTime: string;
   patientName: string;
-  date: string;
-  rating: number;
+  commentTime: string;
+  overallRating: number;
+  staffRating: number;
+  doctorRating: number;
   feedback: string;
   onViewMore: () => void;
+  onGiveFeedback: () => void;
 }
 
-export function PastFeedbackCard({ 
-  patientName, 
-  date, 
-  rating, 
-  feedback, 
-  onViewMore 
+export function PastFeedbackCard({
+  doctorName,
+  doctorSpecialty,
+  appointmentDate,
+  appointmentTime,
+  patientName,
+  commentTime,
+  overallRating,
+  staffRating,
+  doctorRating,
+  feedback,
+  onViewMore,
+  onGiveFeedback,
 }: PastFeedbackCardProps) {
-  const initials = patientName === "Anonymous"
-    ? "A"
-    : patientName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const initials =
+    patientName === "Anonymous"
+      ? "A"
+      : patientName
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2);
 
   return (
-    <div 
+    <div
       className="p-4 rounded-xl border"
-      style={{ 
-        backgroundColor: 'var(--bg-card)',
-        borderColor: 'var(--border-color)'
+      style={{
+        backgroundColor: "var(--bg-card)",
+        borderColor: "var(--border-color)",
       }}
     >
       <div className="flex items-start gap-3">
         <Avatar className="w-10 h-10">
-          <AvatarFallback style={{ backgroundColor: 'var(--accent-teal)', color: 'white' }}>
+          <AvatarFallback
+            style={{ backgroundColor: "var(--accent-teal)", color: "white" }}
+          >
             {initials}
           </AvatarFallback>
         </Avatar>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between mb-1">
-            <p style={{ color: 'var(--text-heading)' }}>{patientName}</p>
-            <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{date}</p>
+            <p style={{ color: "var(--text-heading)" }}>{patientName}</p>
+            <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+              {commentTime}
+            </p>
           </div>
 
-          <div className="mb-2">
-            <StarRating rating={rating} interactive={false} size="sm" />
+          <div className="space-y-3 mt-2 mb-2">
+            <div className="flex items-center gap-3 text-[#3D3D3D]">
+              <Stethoscope className="h-4 w-4 text-[#4EA5D9]" />
+              <span className="text-sm text-muted">
+                {doctorName} ({doctorSpecialty})
+              </span>
+            </div>
           </div>
-          
-          <p 
-            className="text-sm mb-3 line-clamp-2" 
-            style={{ color: 'var(--text-body)' }}
+          <div className="space-y-3 mt-2 mb-2">
+            <div className="flex items-center gap-3 text-[#3D3D3D]">
+              <Calendar className="h-4 w-4 text-[#4EA5D9]" />
+              <span className="text-sm text-muted">
+                {appointmentDate} • {appointmentTime}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-2 flex flex-row gap-2">
+            <p className="text-sm text-gray-400 w-25">Overall Rating: </p>
+            <StarRating rating={overallRating} interactive={false} size="sm" />
+          </div>
+          <div className="mb-2 flex flex-row gap-2">
+            <p className="text-sm text-gray-400 w-25">Doctor Rating: </p>
+            <StarRating rating={doctorRating} interactive={false} size="sm" />
+          </div>
+          <div className="mb-2 flex flex-row gap-2">
+            <p className="text-sm text-gray-400 w-25">Staff Rating: </p>
+            <StarRating rating={staffRating} interactive={false} size="sm" />
+          </div>
+
+          <p
+            className="text-sm mb-3 line-clamp-2"
+            style={{ color: "var(--text-body)" }}
           >
             {feedback}
           </p>
-          
-          <Button
-            variant="link"
-            onClick={onViewMore}
-            className="p-0 h-auto cursor-pointer"
-            style={{ color: 'var(--btn-secondary-text)' }}
-          >
-            View More →
-          </Button>
+
+          {overallRating === 0 ? (
+
+            <Button
+              onClick={onGiveFeedback}
+              className="px-4 py-2 rounded-xl h-auto cursor-pointer bg-[#4EA5D9] text-white hover:opacity-[50%]"
+            >
+              Give Feedback
+            </Button>
+          ) : (
+            <Button
+              variant="link"
+              onClick={onViewMore}
+              className="p-0 h-auto cursor-pointer"
+              style={{ color: "var(--btn-secondary-text)" }}
+            >
+              View More →
+            </Button>
+          )}
         </div>
       </div>
     </div>

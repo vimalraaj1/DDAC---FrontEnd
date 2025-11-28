@@ -4,17 +4,25 @@ import { HealthSummary } from "./components/HealthSummary";
 import FadeInSection from "./components/animations/FadeInSection";
 import "../../themes/patient.css";
 import Layout from "../../components/Layout";
+import { useContext } from "react";
+import { CustomerContext } from "./CustomerContext";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 export default function CustDashboard() {
-  const name = localStorage.getItem("userName") || "Customer";
+  const { patient, loading } = useContext(CustomerContext);
+
+  if(loading) return <LoadingSpinner />
 
   return (
-      <Layout role="customer">
+    <Layout role="customer">
       <div className="min-h-screen">
         <div className="bg-secondary py-8">
           <div className="container mx-auto px-4">
             <h1 className="page-title">
-              Welcome back, <span className="text-primary">{name}</span>
+              Welcome back,{" "}
+              {patient && (
+                <span className="text-primary">{patient.firstName}</span>
+              )}
             </h1>
 
             <p className="text-gray-neutral text-lg">

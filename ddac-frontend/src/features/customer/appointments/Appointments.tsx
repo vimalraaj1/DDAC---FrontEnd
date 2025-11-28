@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { Search, Plus, Loader2 } from "lucide-react";
 import { AppointmentCard, Appointment } from "./components/AppointmentCard";
 import {
   AppointmentBookingModal,
@@ -18,130 +18,17 @@ import { Toaster } from "../components/ui/sonner";
 import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
 import Layout from "../../../components/Layout";
+import { CustomerContext } from "../CustomerContext";
+import LoadingSpinner from "../components/LoadingSpinner";
+import {
+  getAppointmentsByPatientId,
+  registerAppointments,
+} from "../../../services/appointmentManagementService";
+import {
+  formatDate,
+  reverseFormatDate,
+} from "../../../../../utils/DateConversion";
 
-// Mock appointment data
-const mockAppointments: Appointment[] = [
-  {
-    id: "1",
-    doctorName: "Dr. Sarah Johnson",
-    doctorSpecialty: "Cardiologist",
-    doctorInitials: "SJ",
-    date: "Monday, November 25, 2025",
-    time: "10:00 AM - 10:30 AM",
-    location: "Cardiac Care Center, Room 305",
-    status: "Confirmed",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-  {
-    id: "2",
-    doctorName: "Dr. Michael Chen",
-    doctorSpecialty: "General Practitioner",
-    doctorInitials: "MC",
-    date: "Thursday, November 28, 2025",
-    time: "2:00 PM - 2:30 PM",
-    location: "Main Clinic, Room 102",
-    status: "Confirmed",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-  {
-    id: "3",
-    doctorName: "Dr. Emily Williams",
-    doctorSpecialty: "Dermatologist",
-    doctorInitials: "EW",
-    date: "Friday, November 29, 2025",
-    time: "11:00 AM - 11:45 AM",
-    location: "Dermatology Wing, Room 201",
-    status: "Pending",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-  {
-    id: "4",
-    doctorName: "Dr. Robert Martinez",
-    doctorSpecialty: "Orthopedic Surgeon",
-    doctorInitials: "RM",
-    date: "Monday, December 2, 2025",
-    time: "9:00 AM - 9:30 AM",
-    location: "Orthopedic Center, Room 408",
-    status: "Confirmed",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-];
 
 const pastAppointments: Appointment[] = [
   {
@@ -152,7 +39,7 @@ const pastAppointments: Appointment[] = [
     date: "Monday, October 21, 2025",
     time: "10:00 AM - 10:30 AM",
     location: "Cardiac Care Center, Room 305",
-    status: "Confirmed",
+    status: "Approved",
     prescriptions: [
       {
         name: "Atorvastatin 20mg",
@@ -182,7 +69,7 @@ const pastAppointments: Appointment[] = [
     date: "Wednesday, October 9, 2025",
     time: "3:00 PM - 3:45 PM",
     location: "Neurology Department, Room 501",
-    status: "Confirmed",
+    status: "Approved",
     prescriptions: [
       {
         name: "Atorvastatin 20mg",
@@ -249,10 +136,12 @@ type AppointmentType = {
   doctorSpecialty: string;
   location: string;
   date: string;
-  status: "Confirmed" | "Pending" | "Cancelled";
+  status: "Approved" | "Pending" | "Cancelled";
 };
 
 export default function Appointments() {
+  const { patient, loading } = useContext(CustomerContext);
+
   const [activeTab, setActiveTab] = useState<TabType>("upcoming");
   const [searchQuery, setSearchQuery] = useState("");
   const [bookingModalOpen, setBookingModalOpen] = useState(false);
@@ -262,17 +151,77 @@ export default function Appointments() {
   const [selectedAppointment, setSelectedAppointment] =
     useState<Appointment | null>(null);
 
+  const [appointmentsData, setAppointmentsData] = useState<Appointment[]>([]);
+  const [loadingAppointment, setLoadingAppointment] = useState(true);
+  const [loadingBooking, setLoadingBooking] = useState(false);
+
+  // get appointments data from db
+  useEffect(() => {
+    if (patient?.id) {
+      fetchAppointmentDataDB(patient.id);
+    }
+  }, [patient?.id]);
+
+  if (loading || !patient) return <LoadingSpinner />;
+
+  const getInitials = (firstName: string, lastName: string) => {
+    return firstName[0] + lastName[0];
+  };
+
+  const convertTime = (time24: string) => {
+    const [hour, minute] = time24.split(":");
+    const date = new Date();
+    date.setHours(parseInt(hour), parseInt(minute));
+
+    return date.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const fetchAppointmentDataDB = async (id: any) => {
+    try {
+      setLoadingAppointment(true);
+      const datas = await getAppointmentsByPatientId(id);
+
+      const formattedAppointments = datas.map((data: any) => ({
+        id: data.appointmentId,
+        doctorName: data.doctorFirstName + " " + data.doctorLastName,
+        doctorSpecialty: data.doctorSpecialization,
+        doctorInitials: getInitials(data.doctorFirstName, data.doctorLastName),
+        date: formatDate(data.date),
+        time: convertTime(data.time),
+        location: "",
+        status: data.status,
+        prescriptions: [],
+      }));
+
+      setAppointmentsData(formattedAppointments); // single state update
+      console.log(formattedAppointments);
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } finally {
+      setLoadingAppointment(false);
+    }
+  };
+
   const handleViewDetails = (id: string) => {
-    const appointment = getAppointments().find((a) => a.id === id);
+    const appointment = getAppointments()?.find((a) => a.id === id);
     if (appointment) {
       setSelectedAppointment(appointment);
       setDetailsModalOpen(true);
     }
-    toast.success("Opening appointment details...");
   };
 
   const handleEdit = (id: string) => {
-    const appointment = getAppointments().find((a) => a.id === id);
+    const appointment = getAppointments()?.find((a) => a.id === id);
     if (appointment) {
       setSelectedAppointment(appointment);
       setEditModalOpen(true);
@@ -280,16 +229,50 @@ export default function Appointments() {
   };
 
   const handleCancel = (id: string) => {
-    const appointment = getAppointments().find((a) => a.id === id);
+    const appointment = getAppointments()?.find((a) => a.id === id);
     if (appointment) {
       setSelectedAppointment(appointment);
       setCancelDialogOpen(true);
     }
   };
 
-  const handleBookAppointment = (appointmentData: AppointmentFormData) => {
-    console.log("Booking new appointment:", appointmentData);
-    toast.success("Appointment booked successfully!");
+  const handleBookAppointment = async (
+    appointmentData: AppointmentFormData
+  ) => {
+    setLoadingBooking(true);
+
+    const payload = {
+      ...appointmentData,
+      date: reverseFormatDate(appointmentData.date),
+      patientId: patient.id,
+      status: "Pending",
+      staffId: "ST000001", // hard coded for now
+      cancellationReason: null,
+    };
+
+    try {
+      await registerAppointments(payload);
+
+      toast.success("Appointment booked successfully!", {
+        style: {
+          background: "#2ECC71",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } catch (err) {
+      console.log("Error: ", err);
+      toast.error("Booking failed!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } finally {
+      setLoadingBooking(false);
+      fetchAppointmentDataDB(patient.id);
+    }
   };
 
   const handleUpdateAppointment = (
@@ -297,29 +280,41 @@ export default function Appointments() {
     updatedData: EditFormData
   ) => {
     console.log("Updating appointment:", appointmentId, updatedData);
-    toast.success("Appointment updated successfully!");
+    toast.success("Appointment updated successfully!", {
+      style: {
+        background: "var(--accent-success)",
+        color: "#ffffff",
+        borderRadius: "10px",
+      },
+    });
   };
 
   const handleConfirmCancel = (appointmentId: string) => {
     console.log("Cancelling appointment:", appointmentId);
-    toast.error("Appointment has been cancelled");
+    toast.success("Appointment has been cancelled!", {
+      style: {
+        background: "var(--accent-success)",
+        color: "#ffffff",
+        borderRadius: "10px",
+      },
+    });
   };
 
   const getAppointments = () => {
     switch (activeTab) {
       case "upcoming":
-        return mockAppointments;
+        return appointmentsData;
       case "past":
         return pastAppointments;
       case "cancelled":
         return cancelledAppointments;
       default:
-        return mockAppointments;
+        return [];
     }
   };
 
   // Filter appointments based on search query
-  const filteredAppointments = getAppointments().filter((appointment) => {
+  const filteredAppointments = getAppointments()?.filter((appointment) => {
     const query = searchQuery.toLowerCase();
     return (
       appointment.doctorName.toLowerCase().includes(query) ||
@@ -402,7 +397,11 @@ export default function Appointments() {
           {/* Appointment List Section */}
           <FadeInSection>
             <div className="space-y-5">
-              {appointments.length > 0 ? (
+              {loadingAppointment ? (
+                <div className="bg-white rounded-2xl p-12 text-center border border-[#DCEFFB]">
+                  <p className="text-[#7A7A7A]">Retrieving appointments...</p>
+                </div>
+              ) : appointments && appointments.length > 0 ? (
                 appointments.map((appointment) => (
                   <AppointmentCard
                     key={appointment.id}
@@ -450,6 +449,17 @@ export default function Appointments() {
           onConfirmCancel={handleConfirmCancel}
         />
         <Toaster />
+
+        {loadingBooking && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
+            <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center gap-3">
+              <Loader2 className="h-6 w-6 animate-spin text-[#4EA5D9]" />
+              <p className="text-sm font-medium text-gray-700">
+                Booking your appointment...
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

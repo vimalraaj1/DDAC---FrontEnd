@@ -4,13 +4,16 @@ import StaffNavBar from "../features/staff/components/StaffNavBar.jsx";
 import CustNavBar from "../features/customer/components/CustNavBar.jsx";
 import { useNavigate } from "react-router-dom";
 import { FaArrowRightFromBracket } from "react-icons/fa6";
-import {useEffect, useState} from "react";
+import { useContext, useState } from "react";
 import { LogOutDialog } from "../features/customer/components/LogoutDialog.js";
+import { CustomerContext } from "../features/customer/CustomerContext.js";
 
 export default function Layout({ children, role }) {
+  const { patient } = useContext(CustomerContext);
+
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
-  
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userRole");
@@ -34,7 +37,9 @@ export default function Layout({ children, role }) {
           <div className="flex justify-end items-center gap-3">
             <div className="text-right">
               <p className="text-heading font-semibold text-sm">
-                {localStorage.getItem("userName") || "User"}
+                {role === "customer"
+                   ? `${patient?.firstName || "Customer"} ${patient?.lastName || ""}`
+                  : localStorage.getItem("userName") || "User"}
               </p>
               <p className="text-muted text-xs capitalize">{role}</p>
             </div>
@@ -44,7 +49,9 @@ export default function Layout({ children, role }) {
               onClick={() => navigate("/profile")}
             >
               <span>
-                {(localStorage.getItem("userName") || "U")[0].toUpperCase()}
+                {role === "customer"
+                  ? (patient?.firstName || "U")[0].toUpperCase()
+                  : (localStorage.getItem("userName") || "U")[0].toUpperCase()}
               </span>
             </button>
             <button
