@@ -8,8 +8,7 @@ export default function DoctorInfo() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialty, setFilterSpecialty] = useState('all');
     const navigate = useNavigate();
-
-    // Sample doctor data (replace with API call later)
+    
     const doctors = [
         {
             id: 12457245972459724579,
@@ -72,6 +71,10 @@ export default function DoctorInfo() {
             status: "active",
         },
     ];
+    
+    const getDoctors = async () => {
+        
+    }
 
     // Get unique specialties for filter
     const specialties = [...new Set(doctors.map(doc => doc.specialization))];
