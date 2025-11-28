@@ -9,7 +9,8 @@ import { LogOutDialog } from "../features/customer/components/LogoutDialog.js";
 import { CustomerContext } from "../features/customer/CustomerContext.js";
 
 export default function Layout({ children, role }) {
-  const { patient } = useContext(CustomerContext);
+    const context = role === "customer" ? useContext(CustomerContext) : null;
+    const patient = context?.patient;
 
   const navigate = useNavigate();
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
