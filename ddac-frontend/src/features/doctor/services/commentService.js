@@ -1,0 +1,152 @@
+import api from '../../../services/api';
+
+/**
+ * Comment API Service
+ * Handles all comment and rating-related API calls
+ */
+
+// Mock doctor ID for testing
+const MOCK_DOCTOR_ID = 'DR000001';
+
+const commentService = {
+    /**
+     * Get all comments
+     * GET /api/comments
+     */
+    getAllComments: async () => {
+        try {
+            const response = await api.get('/comments');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching comments:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get comment by ID
+     * GET /api/comments/{id}
+     */
+    getCommentById: async (id) => {
+        try {
+            const response = await api.get(`/comments/${id}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching comment ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get comments for current doctor
+     * Filters comments by doctor ID from localStorage
+     * Falls back to mock doctor ID (DR000001) for testing without auth
+     */
+    getDoctorComments: async () => {
+        try {
+            // Try to get userId from localStorage, fallback to mock ID for testing
+            const userId = localStorage.getItem('userId') || MOCK_DOCTOR_ID;
+            
+            console.log('Fetching comments for doctor:', userId);
+            
+            const response = await api.get('/comments');
+            // Filter comments for current doctor
+            const doctorComments = response.data.filter(
+                comment => comment.doctorId === userId
+            );
+            
+            // Sort by time (most recent first)
+            return doctorComments.sort((a, b) => new Date(b.time) - new Date(a.time));
+        } catch (error) {
+            console.error('Error fetching doctor comments:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Get comments for a specific appointment
+     * GET /api/comments/appointment/{appointmentId}
+     */
+    getCommentsByAppointmentId: async (appointmentId) => {
+        try {
+            const response = await api.get(`/comments/appointment/${appointmentId}`);
+            return response.data;
+        } catch (error) {
+            console.error(`Error fetching comments for appointment ${appointmentId}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Create new comment
+     * POST /api/comments
+     */
+    createComment: async (commentData) => {
+        try {
+            const response = await api.post('/comments', commentData);
+            return response.data;
+        } catch (error) {
+            console.error('Error creating comment:', error);
+            throw error;
+        }
+    },
+
+    /**
+     * Update comment
+     * PUT /api/comments/{id}
+     */
+    updateComment: async (id, commentData) => {
+        try {
+            const response = await api.put(`/comments/${id}`, commentData);
+            return response.data;
+        } catch (error) {
+            console.error(`Error updating comment ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Delete comment
+     * DELETE /api/comments/{id}
+     */
+    deleteComment: async (id) => {
+        try {
+            await api.delete(`/comments/${id}`);
+            return true;
+        } catch (error) {
+            console.error(`Error deleting comment ${id}:`, error);
+            throw error;
+        }
+    },
+
+    /**
+     * Calculate average ratings for doctor
+     */
+    getDoctorRatingStats: async () => {
+        try {
+            const comments = await commentService.getDoctorComments();
+            
+            if (comments.length === 0) {
+                return {
+                    averageDoctorRating: 0,
+                    averageOverallRating: 0,
+                    totalComments: 0
+                };
+            }
+            
+            const totalDoctorRating = comments.reduce((sum, c) => sum + (c.doctorRating || 0), 0);
+            const totalOverallRating = comments.reduce((sum, c) => sum + (c.overallRating || 0), 0);
+            
+            return {
+                averageDoctorRating: (totalDoctorRating / comments.length).toFixed(1),
+                averageOverallRating: (totalOverallRating / comments.length).toFixed(1),
+                totalComments: comments.length
+            };
+        } catch (error) {
+            console.error('Error calculating rating stats:', error);
+            throw error;
+        }
+    },
+};
+
+export default commentService;

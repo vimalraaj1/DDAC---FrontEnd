@@ -15,6 +15,7 @@ export default function DoctorAnalytics() {
             setLoading(false);
         }, 1000);
     }, []);
+    
 
     const handleLogout = () => {
         localStorage.removeItem("token");

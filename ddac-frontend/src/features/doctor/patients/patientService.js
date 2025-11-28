@@ -5,6 +5,9 @@ import api from '../../../services/api';
  * Handles all patient-related API calls for doctors
  */
 
+// Mock doctor ID for testing
+const MOCK_DOCTOR_ID = 'DR000001';
+
 const patientService = {
     /**
      * Get all patients

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import appointmentService from "./appointments/appointmentService";
 import patientService from "./patients/patientService";
+import commentService from "./services/commentService";
 
 export default function DoctorDashboard() {
     const navigate = useNavigate();
@@ -16,6 +17,12 @@ export default function DoctorDashboard() {
         completedAppointments: 0
     });
     const [recentAppointments, setRecentAppointments] = useState([]);
+    const [comments, setComments] = useState([]);
+    const [ratingStats, setRatingStats] = useState({
+        averageDoctorRating: 0,
+        averageOverallRating: 0,
+        totalComments: 0
+    });
     const [chartData, setChartData] = useState({
         labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
         values: [0, 0, 0, 0, 0, 0, 0]
@@ -29,11 +36,13 @@ export default function DoctorDashboard() {
         try {
             setLoading(true);
             
-            // Fetch appointments and stats
-            const [appointments, appointmentStats, patientStats] = await Promise.all([
+            // Fetch appointments, stats, and comments
+            const [appointments, appointmentStats, patientStats, doctorComments, ratings] = await Promise.all([
                 appointmentService.getDoctorAppointments(),
                 appointmentService.getAppointmentStats(),
-                patientService.getPatientStats()
+                patientService.getPatientStats(),
+                commentService.getDoctorComments(),
+                commentService.getDoctorRatingStats()
             ]);
 
             // Update stats
@@ -49,6 +58,10 @@ export default function DoctorDashboard() {
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .slice(0, 5);
             setRecentAppointments(recent);
+
+            // Set comments and ratings
+            setComments(doctorComments.slice(0, 5)); // Get last 5 comments
+            setRatingStats(ratings);
 
             // Generate chart data from appointments (last 7 days)
             generateChartData(appointments);
@@ -86,6 +99,60 @@ export default function DoctorDashboard() {
         navigate("/login");
     };
 
+    const renderStars = (rating) => {
+        const stars = [];
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 !== 0;
+        
+        for (let i = 0; i < 5; i++) {
+            if (i < fullStars) {
+                stars.push(
+                    <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                    </svg>
+                );
+            } else if (i === fullStars && hasHalfStar) {
+                stars.push(
+                    <svg key={i} className="w-4 h-4 text-yellow-400" viewBox="0 0 20 20">
+                        <defs>
+                            <linearGradient id="half-star">
+                                <stop offset="50%" stopColor="currentColor" stopOpacity="1"/>
+                                <stop offset="50%" stopColor="currentColor" stopOpacity="0.2"/>
+                            </linearGradient>
+                        </defs>
+                        <path fill="url(#half-star)" d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                    </svg>
+                );
+            } else {
+                stars.push(
+                    <svg key={i} className="w-4 h-4 text-gray-300 fill-current" viewBox="0 0 20 20">
+                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z"/>
+                    </svg>
+                );
+            }
+        }
+        return stars;
+    };
+
+    const formatTimeAgo = (timeString) => {
+        const date = new Date(timeString);
+        const now = new Date();
+        const diffInMs = now - date;
+        const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+        const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+
+        if (diffInMinutes < 60) {
+            return `${diffInMinutes} minute${diffInMinutes !== 1 ? 's' : ''} ago`;
+        } else if (diffInHours < 24) {
+            return `${diffInHours} hour${diffInHours !== 1 ? 's' : ''} ago`;
+        } else if (diffInDays < 7) {
+            return `${diffInDays} day${diffInDays !== 1 ? 's' : ''} ago`;
+        } else {
+            return date.toLocaleDateString();
+        }
+    };
+
     const departments = [
         { name: 'Cardiology', percentage: 30, color: '#60a5fa' },
         { name: 'Neurology', percentage: 25, color: '#5ebbbb' },
@@ -106,7 +173,7 @@ export default function DoctorDashboard() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-2xl font-bold text-gray-900">Doctor Dashboard</h1>
-                            <p className="text-gray-500 text-sm">Healthcare Management Overview</p>
+                            <p className="text-gray-500 text-sm">Welcome, {userName}!</p>
                         </div>
                         <div className="flex items-center space-x-4">
                             {/* Search Bar
@@ -421,41 +488,97 @@ export default function DoctorDashboard() {
                         </div>
                     </div>
 
-                    {/* Recent Activity */}
+                    {/* Patient Feedback & Ratings */}
                     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
+                            <h2 className="text-lg font-semibold text-gray-900">Patient Feedback & Ratings</h2>
                             <button className="text-blue-500 text-sm hover:text-blue-600">View All</button>
                         </div>
-                        <div className="space-y-4">
-                            <div className="flex items-start space-x-3 pb-4 border-b border-gray-100">
-                                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                                <div className="flex-1">
-                                    <p className="text-gray-900 text-sm">Dr. Johnson completed appointment with Patient #1247</p>
-                                    <p className="text-gray-500 text-xs mt-1">2 minutes ago</p>
+
+                        {/* Overall Rating Summary */}
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 mb-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm text-gray-600 mb-1">Overall Doctor Rating</p>
+                                    <div className="flex items-center space-x-2">
+                                        <span className="text-3xl font-bold text-gray-900">{ratingStats.averageDoctorRating}</span>
+                                        <div className="flex items-center">
+                                            {renderStars(parseFloat(ratingStats.averageDoctorRating))}
+                                        </div>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-1">Based on {ratingStats.totalComments} reviews</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="text-sm text-gray-600 mb-1">Overall Experience</p>
+                                    <div className="flex items-center space-x-2 justify-end">
+                                        <span className="text-2xl font-bold text-blue-600">{ratingStats.averageOverallRating}</span>
+                                        <div className="flex items-center">
+                                            {renderStars(parseFloat(ratingStats.averageOverallRating))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex items-start space-x-3 pb-4 border-b border-gray-100">
-                                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                                <div className="flex-1">
-                                    <p className="text-gray-900 text-sm">New appointment scheduled for Cardiology Department</p>
-                                    <p className="text-gray-500 text-xs mt-1">15 minutes ago</p>
+                        </div>
+
+                        {/* Individual Comments */}
+                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                            {comments.length > 0 ? (
+                                comments.map((comment) => (
+                                    <div key={comment.id} className="border border-gray-100 rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center space-x-3">
+                                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
+                                                    {comment.patientId.substring(2, 4)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-gray-900">Patient {comment.patientId}</p>
+                                                    <p className="text-xs text-gray-500">{formatTimeAgo(comment.time)}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex flex-col items-end space-y-1">
+                                                <div className="flex items-center space-x-1">
+                                                    {renderStars(comment.doctorRating)}
+                                                    <span className="text-sm font-semibold text-gray-700 ml-1">{comment.doctorRating.toFixed(1)}</span>
+                                                </div>
+                                                <span className="text-xs text-gray-500">Doctor Rating</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                                            {comment.commentText}
+                                        </p>
+                                        
+                                        <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                                            <div className="flex items-center space-x-4 text-xs text-gray-500">
+                                                <span className="flex items-center space-x-1">
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                                    </svg>
+                                                    <span>Appointment: {comment.appointmentId}</span>
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center space-x-2 text-xs">
+                                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                                                    Overall: {comment.overallRating}/5
+                                                </span>
+                                                {comment.staffRating && (
+                                                    <span className="px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                                                        Staff: {comment.staffRating}/5
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="text-center py-8">
+                                    <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                                    </svg>
+                                    <p className="mt-4 text-gray-500">No patient feedback yet.</p>
+                                    <p className="text-sm text-gray-400 mt-1">Patient reviews will appear here after appointments.</p>
                                 </div>
-                            </div>
-                            <div className="flex items-start space-x-3 pb-4 border-b border-gray-100">
-                                <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
-                                <div className="flex-1">
-                                    <p className="text-gray-900 text-sm">Patient #1156 checked in for appointment</p>
-                                    <p className="text-gray-500 text-xs mt-1">32 minutes ago</p>
-                                </div>
-                            </div>
-                            <div className="flex items-start space-x-3">
-                                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                                <div className="flex-1">
-                                    <p className="text-gray-900 text-sm">Dr. Smith updated patient medical records</p>
-                                    <p className="text-gray-500 text-xs mt-1">1 hour ago</p>
-                                </div>
-                            </div>
+                            )}
                         </div>
                     </div>
                 </main>
