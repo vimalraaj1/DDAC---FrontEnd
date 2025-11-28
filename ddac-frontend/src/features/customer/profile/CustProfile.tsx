@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Settings,
   User,
@@ -48,30 +48,42 @@ import {
 import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
 import Layout from "../../../components/Layout";
+import { CustomerContext } from "../CustomerContext";
+import { updatePatient } from "../../../services/patientManagementService";
+import LoadingSpinner from "../components/LoadingSpinner";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner";
 
 export default function App() {
+  const { patient, loading } = useContext(CustomerContext);
+
+  // Ensure patient is not null
+  if (loading || !patient) return <LoadingSpinner />;
+
+  const [saving, setSaving] = useState(false);
+
   const [editMode, setEditMode] = useState({
     personal: false,
     medical: false,
   });
 
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: "Sarah Johnson",
-    dateOfBirth: "1985-03-15",
-    gender: "Female",
-    phone: "+1 (555) 123-4567",
-    email: "sarah.johnson@email.com",
-    address: "123 Oak Street, Apt 4B, Boston, MA 02101",
+    fullName: patient.firstName + " " + patient.lastName,
+    dateOfBirth: patient.dateOfBirth,
+    gender: patient.gender,
+    phone: patient.phone,
+    email: patient.email,
+    address: patient.address,
   });
 
   const [medicalInfo, setMedicalInfo] = useState({
     bloodType: "A+",
-    allergies: "Penicillin, Peanuts",
+    allergies: patient.allergies,
     conditions: "Hypertension, Type 2 Diabetes",
     medications: "Metformin 500mg, Lisinopril 10mg",
     emergencyName: "Michael Johnson",
     emergencyRelationship: "Spouse",
-    emergencyContact: "+1 (555) 987-6543",
+    emergencyContact: patient.emergencyContact,
   });
 
   const [notifications, setNotifications] = useState({
@@ -100,6 +112,17 @@ export default function App() {
     confirm: "",
   });
   const [passwordError, setPasswordError] = useState("");
+  const [disableSave, setDisableSave] = useState(false);
+
+  useEffect(() => {
+    const hasErrors = Object.values(validationErrors).some((err) => err !== "");
+    const hasEmptyFields =
+      !personalInfo.email ||
+      !personalInfo.phone ||
+      !medicalInfo.emergencyContact;
+
+    setDisableSave(hasErrors || hasEmptyFields);
+  }, [validationErrors, personalInfo, medicalInfo]);
 
   // Validation functions
   const validateEmail = (email: string) => {
@@ -182,6 +205,71 @@ export default function App() {
     setPasswordError("");
   };
 
+  const handlePersonalBtnClick = async () => {
+    if (!editMode.personal) {
+      // switch to edit mode
+      setEditMode({ ...editMode, personal: true });
+      return;
+    }
+
+    setSaving(true);
+    toast.info("Saving...", {
+      style: {
+        background: "var(--text-body)",
+        color: "#ffffff",
+        borderRadius: "10px",
+      },
+    });
+
+    const patientJSON = {
+      ...patient,
+      firstName: personalInfo.fullName.split(" ")[0] || patient.firstName,
+      lastName: personalInfo.fullName.split(" ")[1] || patient.lastName,
+      email: personalInfo.email || patient.email,
+      phone: personalInfo.phone || patient.phone,
+      address: personalInfo.address || patient.address,
+      gender: personalInfo.gender || patient.gender,
+      dateOfBirth: personalInfo.dateOfBirth || patient.dateOfBirth,
+    };
+
+    if (editMode.personal) {
+      try {
+        await updatePatient(patient.patientId, patientJSON);
+        setSaving(false);
+        toast.success("Details have been successfully saved!", {
+          style: {
+            background: "var(--accent-success)",
+            color: "#ffffff",
+            borderRadius: "10px",
+          },
+        });
+      } catch (error: any) {
+        if (error.response?.status === 400) {
+          console.log("Validation errors:", error.response.data);
+          toast.error("Validation error!", {
+            style: {
+              background: "var(--accent-danger)",
+              color: "#ffffff",
+              borderRadius: "10px",
+            },
+          });
+        } else {
+          console.error("Failed to save personal info: ", error);
+          toast.error("Failed to save personal info!", {
+            style: {
+              background: "var(--accent-danger)",
+              color: "#ffffff",
+              borderRadius: "10px",
+            },
+          });
+          return;
+        }
+      }
+    }
+
+    setEditMode({ ...editMode, personal: !editMode.personal });
+  };
+
   const handleDeactivateAccount = () => {
     // In real app, this would call an API
     alert("Account deactivated");
@@ -220,7 +308,7 @@ export default function App() {
                       {personalInfo.fullName}
                     </h2>
                     <p className="mt-1" style={{ color: "var(--text-muted)" }}>
-                      Patient ID: P-02491
+                      Patient ID: <span>{patient.patientId}</span>
                     </p>
 
                     {/* Brief Info */}
@@ -272,11 +360,10 @@ export default function App() {
                     variant="outline"
                     size="sm"
                     className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-                    onClick={() =>
-                      setEditMode({ ...editMode, personal: !editMode.personal })
-                    }
+                    disabled={disableSave || saving}
+                    onClick={handlePersonalBtnClick}
                   >
-                    {editMode.personal ? "Save" : "Edit"}
+                    {saving ? "Saving..." : editMode.personal ? "Save" : "Edit"}
                   </Button>
                 </div>
 
@@ -864,6 +951,7 @@ export default function App() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <Toaster />
       </div>
     </Layout>
   );

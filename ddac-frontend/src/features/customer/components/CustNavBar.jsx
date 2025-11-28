@@ -45,7 +45,7 @@ export default function CustNavBar({ role = "customer" }) {
   return (
     <aside className="bg-primary w-64 min-h-screen flex flex-col">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-primary-hover">
+      <div className="p-6">
         <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
           <div className="bg-white rounded-lg p-2">
             <FaHospital className="text-primary" size={24} />

@@ -20,7 +20,7 @@ export interface  Appointment {
   date: string;
   time: string;
   location: string;
-  status: "Confirmed" | "Pending" | "Cancelled";
+  status: "Approved" | "Pending" | "Cancelled";
   prescriptions: Medication[];
 }
 
@@ -38,7 +38,7 @@ export function AppointmentCard({
   onCancel,
 }: AppointmentCardProps) {
   const statusStyles = {
-    Confirmed: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
+    Approved: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
     Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
   };
@@ -74,10 +74,6 @@ export function AppointmentCard({
         <div className="flex items-center gap-3 text-[#3D3D3D]">
           <Clock className="h-4 w-4 text-[#4EA5D9]" />
           <span className="text-sm">{appointment.time}</span>
-        </div>
-        <div className="flex items-center gap-3 text-[#3D3D3D]">
-          <MapPin className="h-4 w-4 text-[#4EA5D9]" />
-          <span className="text-sm">{appointment.location}</span>
         </div>
       </div>
 

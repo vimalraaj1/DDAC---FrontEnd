@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Search, Bell, Smile, Meh, Frown } from "lucide-react";
+import {
+  Search,
+  Bell,
+  Smile,
+  Meh,
+  Frown,
+  Filter,
+  Stethoscope,
+  Calendar,
+  ArrowDownUp,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Textarea } from "../components/ui/textarea";
 import { Button } from "../components/ui/button";
@@ -15,12 +25,29 @@ import { PastFeedbackCard } from "./components/PastFeedbackCard";
 import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
 import Layout from "../../../components/Layout";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import { Input } from "../components/ui/input";
+import { Separator } from "../components/ui/separator";
+import { toast } from "sonner";
+import { Toaster } from "../components/ui/sonner";
 
 interface PastFeedback {
   id: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  appointmentDate: string;
+  appointmentTime: string;
   patientName: string;
-  date: string;
-  rating: number;
+  commentTime: string;
+  overallRating: number;
+  staffRating: number;
+  doctorRating: number;
   feedback: string;
   tags: string[];
 }
@@ -28,30 +55,47 @@ interface PastFeedback {
 const mockPastFeedback: PastFeedback[] = [
   {
     id: "1",
-    patientName: "John Smith",
-    date: "Nov 15, 2025",
-    rating: 5,
+    patientName: "Joachim Wong",
+    doctorName: "Tristen Chris",
+    doctorSpecialty: "Cardiology",
+    appointmentDate: "November 26, 2025",
+    appointmentTime: "11:30 AM",
+    commentTime: "Nov 15, 2025",
+    overallRating: 4,
+    staffRating: 5,
+    doctorRating: 5,
     feedback:
       "Dr. Johnson was extremely professional and took the time to explain my condition thoroughly. The care I received was exceptional.",
     tags: ["Friendly", "Professional"],
   },
   {
     id: "2",
-    patientName: "Anonymous",
-    date: "Nov 12, 2025",
-    rating: 4,
-    feedback:
-      "Nurse Davis was very caring and attentive. However, the waiting time was a bit longer than expected.",
-    tags: ["Friendly", "Waiting time was long"],
+    patientName: "Joachim Wong",
+    doctorName: "Tristen Chris",
+    doctorSpecialty: "Cardiology",
+    appointmentDate: "November 26, 2025",
+    appointmentTime: "11:30 AM",
+    commentTime: "",
+    overallRating: 0,
+    staffRating: 0,
+    doctorRating: 0,
+    feedback: "",
+    tags: ["Friendly", "Professional"],
   },
   {
     id: "3",
-    patientName: "Maria Garcia",
-    date: "Nov 10, 2025",
-    rating: 5,
+    patientName: "Joachim Wong",
+    doctorName: "Tristen Chris",
+    doctorSpecialty: "Cardiology",
+    appointmentDate: "November 26, 2025",
+    appointmentTime: "11:30 AM",
+    commentTime: "Nov 15, 2025",
+    overallRating: 4,
+    staffRating: 5,
+    doctorRating: 5,
     feedback:
-      "Excellent service! Dr. Chen explained everything clearly and made me feel comfortable during my procedure.",
-    tags: ["Professional", "Clean environment"],
+      "Dr. Johnson was extremely professional and took the time to explain my condition thoroughly. The care I received was exceptional.",
+    tags: ["Friendly", "Professional"],
   },
 ];
 
@@ -66,7 +110,11 @@ const feedbackTagOptions = [
 const ratingLabels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
 
 export default function Feedbacks() {
-  const [rating, setRating] = useState(0);
+  const [recordTypeFilter, setRecordTypeFilter] = useState("all");
+  const [dateRangeFilter, setDateRangeFilter] = useState("all");
+  const [overallRating, setOverallRating] = useState(0);
+  const [doctorRating, setDoctorRating] = useState(0);
+  const [staffRating, setStaffRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -74,6 +122,7 @@ export default function Feedbacks() {
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isAddFeedbackDialogOpen, setIsAddFeedbackDialogOpen] = useState(false);
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) =>
@@ -82,18 +131,39 @@ export default function Feedbacks() {
   };
 
   const handleSubmit = () => {
-    if (rating === 0) {
-      alert("Please provide a rating.");
+    if (overallRating === 0 || doctorRating === 0 || staffRating === 0) {
+      toast.error("Please provide a rating for overall, doctor and staff!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
       return;
     }
 
-    // Mock submission
-    alert("Feedback submitted successfully!");
+    toast.success("Feedback submitted successfully!", {
+      style: {
+        background: "#2ECC71",
+        color: "#ffffff",
+        borderRadius: "10px",
+      },
+    });
 
     // Reset form
-    setRating(0);
+    setOverallRating(0);
+    setDoctorRating(0);
+    setStaffRating(0);
+
     setFeedbackText("");
     setSelectedTags([]);
+
+    setIsAddFeedbackDialogOpen(false);
+  };
+
+  const handleAddFeedback = (feedback: PastFeedback) => {
+    setSelectedFeedback(feedback);
+    setIsAddFeedbackDialogOpen(true);
   };
 
   const handleViewMore = (feedback: PastFeedback) => {
@@ -101,7 +171,7 @@ export default function Feedbacks() {
     setIsDialogOpen(true);
   };
 
-  const getMoodIcon = () => {
+  const getMoodIcon = (rating: number) => {
     if (rating === 0) return null;
     if (rating <= 2)
       return (
@@ -124,103 +194,76 @@ export default function Feedbacks() {
       >
         {/* Main Content */}
         <main className="max-w-5xl mx-auto px-4 md:px-6 space-y-6">
-          {/* Rating Section */}
-          <FadeInSection>
-            <section
-              className="p-6 rounded-xl shadow-sm"
-              style={{ backgroundColor: "var(--bg-card)" }}
-            >
-              <h3 className="mb-4" style={{ color: "var(--text-heading)" }}>
-                Rate Your Experience
-              </h3>
-
-              <div className="flex items-center gap-4 mb-4">
-                <StarRating
-                  rating={rating}
-                  onRatingChange={setRating}
-                  size="lg"
-                />
-                {getMoodIcon()}
+          {/* Search + Filter Bar */}
+          <div className="p-6 rounded-xl mb-6 shadow-sm bg-[#dcf0fc]">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+              {/* Filter Dropdown */}
+              <div className="md:col-span-3 bg-white">
+                <Select
+                  value={recordTypeFilter}
+                  onValueChange={setRecordTypeFilter}
+                >
+                  <SelectTrigger className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl hover:bg-[#F5F7FA] cursor-pointer">
+                    <ArrowDownUp className="w-1 h-4 text-[#4EA5D9]" />
+                    <SelectValue placeholder="Record Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-[#DCEFFB] rounded-xl">
+                    <SelectItem
+                      className="hover:bg-[#F5F7FA] cursor-pointer"
+                      value="all"
+                    >
+                      All Past Appointments
+                    </SelectItem>
+                    <SelectItem
+                      className="hover:bg-[#F5F7FA] cursor-pointer"
+                      value="lab"
+                    >
+                      Feedback Given
+                    </SelectItem>
+                    <SelectItem
+                      className="hover:bg-[#F5F7FA] cursor-pointer"
+                      value="prescriptions"
+                    >
+                      Feedback Pending
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              {rating > 0 && (
-                <p style={{ color: "var(--text-body)" }}>
-                  {rating} / 5 – {ratingLabels[rating]}
-                </p>
-              )}
-            </section>
-          </FadeInSection>
-
-          {/* Feedback Text */}
-          <FadeInSection delay={0.3}>
-            <section
-              className="p-6 rounded-xl shadow-sm"
-              style={{ backgroundColor: "var(--bg-card)" }}
-            >
-              <h3 className="mb-4" style={{ color: "var(--text-heading)" }}>
-                Share Your Feedback
-              </h3>
-              <Textarea
-                placeholder="Describe your experience..."
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                className="min-h-32 border-2 rounded-xl resize-none"
-                style={{
-                  borderColor: "var(--input-border)",
-                  backgroundColor: "white",
-                }}
-              />
-            </section>
-          </FadeInSection>
-
-          {/* Feedback Tags */}
-          <FadeInSection delay={0.6}>
-            <section
-              className="p-6 rounded-xl shadow-sm"
-              style={{ backgroundColor: "var(--bg-card)" }}
-            >
-              <h3 className="mb-4" style={{ color: "var(--text-heading)" }}>
-                Quick Tags (Optional)
-              </h3>
-              <div className="flex flex-wrap gap-3">
-                {feedbackTagOptions.map((tag) => (
-                  <FeedbackTag
-                    key={tag}
-                    label={tag}
-                    isSelected={selectedTags.includes(tag)}
-                    onClick={() => handleTagToggle(tag)}
-                  />
-                ))}
+              {/* Sorting Dropdown */}
+              <div className="md:col-span-3 bg-white">
+                <Select
+                  value={dateRangeFilter}
+                  onValueChange={setDateRangeFilter}
+                >
+                  <SelectTrigger className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl hover:bg-[#F5F7FA] cursor-pointer">
+                    <Filter className="w-1 h-4 text-[#4EA5D9]" />
+                    <SelectValue placeholder="Date Range" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-[#DCEFFB] rounded-xl">
+                    <SelectItem
+                      className="hover:bg-[#F5F7FA] cursor-pointer"
+                      value="all"
+                    >
+                      Most Recent
+                    </SelectItem>
+                    <SelectItem
+                      className="hover:bg-[#F5F7FA] cursor-pointer"
+                      value="week"
+                    >
+                      Oldest First
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-            </section>
-          </FadeInSection>
-
-          {/* Submit Button */}
-          <FadeInSection delay={0.6}>
-            <Button
-              onClick={handleSubmit}
-              className="cursor-pointer w-full py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
-              style={{
-                backgroundColor: "var(--btn-primary)",
-                color: "white",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor =
-                  "var(--btn-primary-hover)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = "var(--btn-primary)";
-              }}
-            >
-              Submit Feedback
-            </Button>
-          </FadeInSection>
+            </div>
+          </div>
 
           {/* Past Feedback */}
           <FadeInSection delay={0.9}>
             <section>
               <h3 className="mb-4" style={{ color: "var(--text-heading)" }}>
-                Your Past Feedback
+                Your Past Appointments
               </h3>
               <div className="space-y-4">
                 {mockPastFeedback.map((feedback) => (
@@ -228,6 +271,7 @@ export default function Feedbacks() {
                     key={feedback.id}
                     {...feedback}
                     onViewMore={() => handleViewMore(feedback)}
+                    onGiveFeedback={() => handleAddFeedback(feedback)}
                   />
                 ))}
               </div>
@@ -235,7 +279,149 @@ export default function Feedbacks() {
           </FadeInSection>
         </main>
 
-        {/* Feedback Detail Modal */}
+        {/* Add Feedback Modal */}
+        <Dialog
+          open={isAddFeedbackDialogOpen}
+          onOpenChange={setIsAddFeedbackDialogOpen}
+        >
+          <DialogContent className="w-full max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add Feedback Details</DialogTitle>
+            </DialogHeader>
+
+            <div className="max-w-md">
+              {selectedFeedback && (
+                <div className="space-y-4">
+                  <div className="space-y-3 mt-2 mb-2">
+                    <div className="flex items-center gap-3 text-[#3D3D3D]">
+                      <Stethoscope className="h-4 w-4 text-[#4EA5D9]" />
+                      <span className="text-sm text-black">
+                        {selectedFeedback.doctorName} (
+                        {selectedFeedback.doctorSpecialty})
+                      </span>
+                    </div>
+                  </div>
+                  <div className="space-y-3 mt-2 mb-2">
+                    <div className="flex items-center gap-3 text-[#3D3D3D]">
+                      <Calendar className="h-4 w-4 text-[#4EA5D9]" />
+                      <span className="text-sm text-black">
+                        {selectedFeedback.appointmentDate} •{" "}
+                        {selectedFeedback.appointmentTime}
+                      </span>
+                    </div>
+                  </div>
+
+                  <Separator className="mb-4 bg-[#DCEFFB] " />
+
+                  <div className="flex flex-row gap-2 items-center">
+                    <p
+                      className="text-sm w-25"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Overall Rating:
+                    </p>
+
+                    <StarRating
+                      rating={overallRating}
+                      onRatingChange={setOverallRating}
+                      size="md"
+                    />
+                    {getMoodIcon(overallRating)}
+                  </div>
+                  <div className="flex flex-row gap-2 items-center">
+                    <p
+                      className="text-sm w-25"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Doctor Rating:
+                    </p>
+                    <StarRating
+                      rating={doctorRating}
+                      onRatingChange={setDoctorRating}
+                      size="md"
+                    />
+                    {getMoodIcon(doctorRating)}
+                  </div>
+                  <div className="flex flex-row gap-2 items-center">
+                    <p
+                      className="text-sm w-25"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Staff Rating:
+                    </p>
+                    <StarRating
+                      rating={staffRating}
+                      onRatingChange={setStaffRating}
+                      size="md"
+                    />
+                    {getMoodIcon(staffRating)}
+                  </div>
+
+                  <div>
+                    <p
+                      className="text-sm mb-2"
+                      style={{ color: "var(--text-muted)" }}
+                    >
+                      Give Overall Comment:
+                    </p>
+                    <p style={{ color: "var(--text-body)" }}>
+                      {selectedFeedback.feedback}
+                    </p>
+                  </div>
+
+                  <div className="w-full">
+                    <Textarea
+                      placeholder="Describe your experience..."
+                      value={feedbackText}
+                      onChange={(e) => setFeedbackText(e.target.value)}
+                      className="min-h-32 border-2 rounded-xl w-full"
+                      style={{
+                        borderColor: "var(--input-border)",
+                        backgroundColor: "white",
+                      }}
+                    />
+                  </div>
+                  <p
+                    className="text-sm mb-2"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Optional Tags:
+                  </p>
+                  <div className="flex flex-wrap gap-3 text-xs">
+                    {feedbackTagOptions.map((tag) => (
+                      <FeedbackTag
+                        key={tag}
+                        label={tag}
+                        isSelected={selectedTags.includes(tag)}
+                        onClick={() => handleTagToggle(tag)}
+                      />
+                    ))}
+                  </div>
+                  <Button
+                    onClick={handleSubmit}
+                    className="cursor-pointer w-full py-6 rounded-xl shadow-md hover:shadow-lg transition-all"
+                    style={{
+                      backgroundColor: "var(--btn-primary)",
+                      color: "white",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "var(--btn-primary-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        "var(--btn-primary)";
+                    }}
+                  >
+                    Submit Feedback
+                  </Button>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Additional Detail Modal */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogContent className="max-w-lg">
             <DialogHeader>
@@ -270,20 +456,67 @@ export default function Feedbacks() {
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      {selectedFeedback.date}
+                      Commented at: {selectedFeedback.commentTime}
                     </p>
                   </div>
                 </div>
 
-                <div>
+                <div className="space-y-3 mt-2 mb-2">
+                  <div className="flex items-center gap-3 text-[#3D3D3D]">
+                    <Stethoscope className="h-4 w-4 text-[#4EA5D9]" />
+                    <span className="text-sm text-black">
+                      {selectedFeedback.doctorName} (
+                      {selectedFeedback.doctorSpecialty})
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-3 mt-2 mb-2">
+                  <div className="flex items-center gap-3 text-[#3D3D3D]">
+                    <Calendar className="h-4 w-4 text-[#4EA5D9]" />
+                    <span className="text-sm text-black">
+                      {selectedFeedback.appointmentDate} •{" "}
+                      {selectedFeedback.appointmentTime}
+                    </span>
+                  </div>
+                </div>
+
+                <Separator className="mb-4 bg-[#DCEFFB] " />
+
+                <div className="flex flex-row gap-2 items-center">
                   <p
-                    className="text-sm mb-2"
+                    className="text-sm w-25"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    Rating:
+                    Overall Rating:
                   </p>
                   <StarRating
-                    rating={selectedFeedback.rating}
+                    rating={selectedFeedback.overallRating}
+                    interactive={false}
+                    size="md"
+                  />
+                </div>
+                <div className="flex flex-row gap-2 items-center">
+                  <p
+                    className="text-sm w-25"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Doctor Rating:
+                  </p>
+                  <StarRating
+                    rating={selectedFeedback.overallRating}
+                    interactive={false}
+                    size="md"
+                  />
+                </div>
+                <div className="flex flex-row gap-2 items-center">
+                  <p
+                    className="text-sm w-25"
+                    style={{ color: "var(--text-muted)" }}
+                  >
+                    Staff Rating:
+                  </p>
+                  <StarRating
+                    rating={selectedFeedback.overallRating}
                     interactive={false}
                     size="md"
                   />
@@ -294,7 +527,7 @@ export default function Feedbacks() {
                     className="text-sm mb-2"
                     style={{ color: "var(--text-muted)" }}
                   >
-                    Feedback:
+                    Comment:
                   </p>
                   <p style={{ color: "var(--text-body)" }}>
                     {selectedFeedback.feedback}
@@ -329,6 +562,7 @@ export default function Feedbacks() {
             )}
           </DialogContent>
         </Dialog>
+        <Toaster />
       </div>
     </Layout>
   );

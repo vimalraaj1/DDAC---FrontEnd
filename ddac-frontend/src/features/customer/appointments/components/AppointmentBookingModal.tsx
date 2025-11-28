@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, Clock, User, FileText } from "lucide-react";
 import {
   Dialog,
@@ -18,6 +18,13 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import { Textarea } from "../../components/ui/textarea";
+import { getDoctors } from "../../../../services/doctorManagementService";
+import { toast } from "sonner";
+import { getAvailabilitiesByDoctorId } from "../../../../services/availabilityManagementService";
+import {
+  formatDate,
+  reverseFormatDate,
+} from "../../../../../../utils/DateConversion";
 
 interface AppointmentBookingModalProps {
   open: boolean;
@@ -29,49 +36,119 @@ export interface AppointmentFormData {
   doctorId: string;
   date: string;
   time: string;
-  reason: string;
+  purpose: string;
 }
 
-const doctors = [
-  { id: "1", name: "Dr. Sarah Johnson", specialty: "Cardiologist" },
-  { id: "2", name: "Dr. Michael Chen", specialty: "General Practitioner" },
-  { id: "3", name: "Dr. Emily Williams", specialty: "Dermatologist" },
-  { id: "4", name: "Dr. Robert Martinez", specialty: "Orthopedic Surgeon" },
-  { id: "5", name: "Dr. James Thompson", specialty: "Neurologist" },
-  { id: "6", name: "Dr. Lisa Anderson", specialty: "Pediatrician" },
-];
+interface DoctorDropdown {
+  id: string;
+  name: string;
+  specialty: string;
+}
 
-const availableDates = [
-  "Monday, November 25, 2025",
-  "Tuesday, November 26, 2025",
-  "Wednesday, November 27, 2025",
-  "Thursday, November 28, 2025",
-  "Friday, November 29, 2025",
-  "Monday, December 2, 2025",
-  "Tuesday, December 3, 2025",
-];
-
-const availableTimes = [
-  "9:00 AM - 9:30 AM",
-  "10:00 AM - 10:30 AM",
-  "11:00 AM - 11:30 AM",
-  "1:00 PM - 1:30 PM",
-  "2:00 PM - 2:30 PM",
-  "3:00 PM - 3:30 PM",
-  "4:00 PM - 4:30 PM",
-];
+interface DoctorAvailability {
+  date: string;
+  time: string;
+  isBooked: boolean;
+}
 
 export function AppointmentBookingModal({
   open,
   onOpenChange,
   onBookAppointment,
 }: AppointmentBookingModalProps) {
+  const [doctorAvailability, setDoctorAvailability] = useState<
+    DoctorAvailability[]
+  >([]);
+  const [doctorDropdown, setDoctorDropdown] = useState<DoctorDropdown[]>([]);
+  const [availableDates, setAvailableDates] = useState<string[]>([]);
+  const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [formData, setFormData] = useState<AppointmentFormData>({
     doctorId: "",
     date: "",
     time: "",
-    reason: "",
+    purpose: "",
   });
+  const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+  const [isLoadingTimeSlot, setIsLoadingTimeSlot] = useState(false);
+
+  useEffect(() => {
+    fetchDoctorDataDB();
+  }, []);
+
+  const fetchDoctorDataDB = async () => {
+    try {
+      const datas = await getDoctors();
+
+      const formattedDoctors = datas.map((data: any) => ({
+        id: data.id,
+        name: data.firstName + " " + data.lastName,
+        specialty: data.specialization,
+      }));
+
+      setDoctorDropdown(formattedDoctors); // single state update
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    }
+  };
+
+  // Retrieve for date and time when patient choose doctor
+  const retrieveDoctorAppointment = async (doctorId: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      doctorId: doctorId,
+      date: "",
+      time: "",
+    }));
+
+    setAvailableDates([]); // reset the date list
+    setAvailableTimes([]); // reset the time list
+
+    setIsLoadingAvailability(true);
+
+    try {
+      const datas: DoctorAvailability[] = await getAvailabilitiesByDoctorId(
+        doctorId
+      );
+
+      const filteredAvailability = datas.filter((slot) => !slot.isBooked);
+      setDoctorAvailability(filteredAvailability);
+
+      const dates = filteredAvailability.map((slot) => slot.date);
+
+      const formattedDates = dates.map((d) => formatDate(d));
+      const uniqueDates = Array.from(new Set(formattedDates));
+
+      setAvailableDates(uniqueDates);
+    } catch (err) {
+      console.log(err);
+    }
+    setIsLoadingAvailability(false);
+  };
+
+  const retrieveTimeSlot = (date: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      date: date,
+      time: "",
+    }));
+
+    setAvailableTimes([]);
+
+    const rawDate = reverseFormatDate(date);
+
+    const timeSlots: string[] = doctorAvailability
+      .filter((d) => d.date === rawDate)
+      .map((d) => d.time);
+
+    setAvailableTimes(timeSlots);
+  };
 
   const handleSubmit = () => {
     if (formData.doctorId && formData.date && formData.time) {
@@ -81,7 +158,7 @@ export function AppointmentBookingModal({
         doctorId: "",
         date: "",
         time: "",
-        reason: "",
+        purpose: "",
       });
       onOpenChange(false);
     }
@@ -102,15 +179,17 @@ export function AppointmentBookingModal({
         <div className="space-y-5 py-4">
           {/* Doctor Selection */}
           <div className="space-y-2">
-            <Label htmlFor="doctor" className="text-[#1A1A1A] flex items-center gap-2">
+            <Label
+              htmlFor="doctor"
+              className="text-[#1A1A1A] flex items-center gap-2"
+            >
               <User className="h-4 w-4 text-[#4EA5D9]" />
               Select Doctor
+              <span className="text-red-500">*</span>
             </Label>
             <Select
               value={formData.doctorId}
-              onValueChange={(value) =>
-                setFormData({ ...formData, doctorId: value })
-              }
+              onValueChange={(value) => retrieveDoctorAppointment(value)}
             >
               <SelectTrigger
                 id="doctor"
@@ -119,8 +198,12 @@ export function AppointmentBookingModal({
                 <SelectValue placeholder="Choose a doctor..." />
               </SelectTrigger>
               <SelectContent className="bg-white border-[#DCEFFB] rounded-xl">
-                {doctors.map((doctor) => (
-                  <SelectItem key={doctor.id} value={doctor.id} className="hover:bg-[#F5F7FA] cursor-pointer">
+                {doctorDropdown.map((doctor) => (
+                  <SelectItem
+                    key={doctor.id}
+                    value={doctor.id}
+                    className="hover:bg-[#F5F7FA] cursor-pointer"
+                  >
                     {doctor.name} - {doctor.specialty}
                   </SelectItem>
                 ))}
@@ -130,39 +213,65 @@ export function AppointmentBookingModal({
 
           {/* Date Selection */}
           <div className="space-y-2">
-            <Label htmlFor="date" className="text-[#1A1A1A] flex items-center gap-2">
+            <Label
+              htmlFor="date"
+              className="text-[#1A1A1A] flex items-center gap-2"
+            >
               <Calendar className="h-4 w-4 text-[#4EA5D9]" />
               Appointment Date
+              <span className="text-red-500">*</span>
             </Label>
             <Select
+              disabled={isLoadingAvailability || availableDates.length === 0}
               value={formData.date}
-              onValueChange={(value) =>
-                setFormData({ ...formData, date: value })
-              }
+              onValueChange={(value) => retrieveTimeSlot(value)}
             >
               <SelectTrigger
                 id="date"
                 className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl hover:bg-[#F5F7FA] cursor-pointer"
               >
-                <SelectValue placeholder="Select a date..." />
+                <SelectValue
+                  placeholder={
+                    isLoadingAvailability
+                      ? "Loading dates..."
+                      : formData.date === ""
+                      ? "Select a date..." // show placeholder when date is cleared
+                      : formData.date
+                  }
+                />
               </SelectTrigger>
               <SelectContent className="bg-white border-[#DCEFFB] rounded-xl">
-                {availableDates.map((date) => (
-                  <SelectItem key={date} value={date} className="hover:bg-[#F5F7FA] cursor-pointer">
-                    {date}
-                  </SelectItem>
-                ))}
+                {isLoadingAvailability ? (
+                  <div className="p-3 text-sm text-gray-500">
+                    Loading available dates...
+                  </div>
+                ) : (
+                  availableDates.map((date) => (
+                    <SelectItem
+                      key={date}
+                      value={date}
+                      className="hover:bg-[#F5F7FA] cursor-pointer"
+                    >
+                      {date}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
 
           {/* Time Selection */}
           <div className="space-y-2">
-            <Label htmlFor="time" className="text-[#1A1A1A] flex items-center gap-2">
+            <Label
+              htmlFor="time"
+              className="text-[#1A1A1A] flex items-center gap-2"
+            >
               <Clock className="h-4 w-4 text-[#4EA5D9]" />
               Appointment Time
+              <span className="text-red-500">*</span>
             </Label>
             <Select
+              disabled={isLoadingTimeSlot || availableTimes.length === 0}
               value={formData.time}
               onValueChange={(value) =>
                 setFormData({ ...formData, time: value })
@@ -172,11 +281,23 @@ export function AppointmentBookingModal({
                 id="time"
                 className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl hover:bg-[#F5F7FA] cursor-pointer"
               >
-                <SelectValue placeholder="Select a time..." />
+                <SelectValue
+                  placeholder={
+                    isLoadingTimeSlot
+                      ? "Loading time slots..."
+                      : formData.time === ""
+                      ? "Select a time slot..." // show placeholder when date is cleared
+                      : formData.time
+                  }
+                />
               </SelectTrigger>
               <SelectContent className="bg-white border-[#DCEFFB] rounded-xl">
                 {availableTimes.map((time) => (
-                  <SelectItem key={time} value={time} className="hover:bg-[#F5F7FA] cursor-pointer">
+                  <SelectItem
+                    key={time}
+                    value={time}
+                    className="hover:bg-[#F5F7FA] cursor-pointer"
+                  >
                     {time}
                   </SelectItem>
                 ))}
@@ -186,16 +307,19 @@ export function AppointmentBookingModal({
 
           {/* Reason for Visit */}
           <div className="space-y-2">
-            <Label htmlFor="reason" className="text-[#1A1A1A] flex items-center gap-2">
+            <Label
+              htmlFor="reason"
+              className="text-[#1A1A1A] flex items-center gap-2"
+            >
               <FileText className="h-4 w-4 text-[#4EA5D9]" />
               Reason for Visit (Optional)
             </Label>
             <Textarea
               id="reason"
               placeholder="Briefly describe the reason for your visit..."
-              value={formData.reason}
+              value={formData.purpose}
               onChange={(e) =>
-                setFormData({ ...formData, reason: e.target.value })
+                setFormData({ ...formData, purpose: e.target.value })
               }
               className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl min-h-[100px] resize-none"
             />

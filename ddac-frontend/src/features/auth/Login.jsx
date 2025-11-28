@@ -13,7 +13,7 @@ export default function Login() {
                 localStorage.setItem("token", result.token);
                 localStorage.setItem("userRole", result.user.role);
                 localStorage.setItem("userName", result.user.name);
-                localStorage.setItem("userId", result.user.userId);
+                localStorage.setItem("id", result.user.id);
                 
                 document.documentElement.className = `theme-${result.user.role}`;
                 

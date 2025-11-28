@@ -34,6 +34,7 @@ import DoctorSettings from "../features/doctor/settings/DoctorSettings";
 import Payments from "../../src/features/customer/payments/Payments.js";
 import MedicalRecords from "../features/customer/medicalRecords/MedicalRecords.js";
 import Feedbacks from "../features/customer/feedbacks/Feedbacks.js";
+import { CustomerProvider } from "../features/customer/CustomerProvider.jsx";
 import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
 import DoctorInfo from "../features/manager/doctorInfo/DoctorInfo.jsx";
 import AddNewDoctor from "../features/manager/doctorInfo/AddNewDoctor.jsx";
@@ -96,23 +97,80 @@ export default function AppRouter() {
           <Route path="/managePatients" element={<ProtectedRoute allowedRoles={["staff"]}><PatientList /></ProtectedRoute>}/>
           <Route path="/editPatient/:id" element={<ProtectedRoute allowedRoles={["staff"]}><PatientForm /></ProtectedRoute>}/>
 
-          {/* Customer Routes */}
-          <Route path="/custDashboard" element={ <ProtectedRoute allowedRoles={['customer']}><CustDashboard/></ProtectedRoute>}/>
-          <Route path="/profile" element={<ProtectedRoute allowedRoles={['customer']}><CustProfile/></ProtectedRoute>}/>
-          <Route path="/appointments" element={<ProtectedRoute allowedRoles={['customer']}><Appointments/></ProtectedRoute>}/>
-          <Route path="/payments" element={<ProtectedRoute allowedRoles={['customer']}><Payments/></ProtectedRoute>}/>
-          <Route path="/medicalRecords" element={<ProtectedRoute allowedRoles={['customer']}><MedicalRecords/></ProtectedRoute>}/>
-          <Route path="/feedbacks" element={<ProtectedRoute allowedRoles={['customer']}><Feedbacks/></ProtectedRoute>}/>
+        {/* Customer Routes */}
+        <Route
+          path="/custDashboard"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProvider>
+                <CustDashboard />
+              </CustomerProvider>
+            </ProtectedRoute>
+          }
+        />
 
-          {/* Doctor Routes */}
-          <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>
-          <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
-          <Route path="/doctorPatients" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorPatients/></ProtectedRoute>}/>
-          <Route path="/doctorAnalytics" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAnalytics/></ProtectedRoute>}/>
-          <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
-          <Route path="/doctorSettings" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorSettings/></ProtectedRoute>}/>
-        
-          {/* Manager Routes */}
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProvider>
+                <CustProfile />
+              </CustomerProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/appointments"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProvider>
+                <Appointments />
+              </CustomerProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/payments"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProvider>
+                <Payments />
+              </CustomerProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/medicalRecords"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProvider>
+                <MedicalRecords />
+              </CustomerProvider>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/feedbacks"
+          element={
+            <ProtectedRoute allowedRoles={['customer']}>
+              <CustomerProvider>
+                <Feedbacks />
+              </CustomerProvider>
+            </ProtectedRoute>
+          }
+        />
+        {/* Doctor Routes */}
+        <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>
+        <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
+        <Route path="/doctorPatients" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorPatients/></ProtectedRoute>}/>
+        <Route path="/doctorAnalytics" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAnalytics/></ProtectedRoute>}/>
+        <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
+
+        {/* Manager Routes */}
         <Route path="/managerDashboard" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
         <Route path="/managerDoctorInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
         <Route path="/managerAddNewDoctor" element={<ProtectedRoute allowedRoles={['manager']}><AddNewDoctor/></ProtectedRoute>}/>
