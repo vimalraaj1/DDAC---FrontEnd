@@ -5,9 +5,9 @@ import {
     FaCalendarCheck,
     FaFileInvoiceDollar,
     FaFileUpload,
-    FaStethoscope,
+    FaStethoscope, FaUserCircle,
 } from "react-icons/fa";
-import {FaUserDoctor, FaRightFromBracket, FaUserGroup, FaHospital} from "react-icons/fa6";
+import {FaUserDoctor, FaUserGroup, FaHospital, FaMessage} from "react-icons/fa6";
 
 export default function ManagerNavBar({ role = "manager" }) {
     const location = useLocation();
@@ -22,12 +22,14 @@ export default function ManagerNavBar({ role = "manager" }) {
     
     const menuItems = [
         { icon: FaHome, label: "Dashboard", path: "/managerDashboard" },
-        { icon: FaUserDoctor, label: "Doctors", path: "/managerDoctors" },
-        { icon: FaUserGroup, label: "Staffs", path: "/managerStaffs" },
-        { icon: FaUserInjured, label: "Patients", path: "/managerPatients" },
-        { icon: FaCalendarCheck, label: "Appointments", path: "/managerAppointments" },
-        { icon: FaFileInvoiceDollar, label: "Payments", path: "/managerPayments" },
+        { icon: FaUserDoctor, label: "Doctors", path: "/managerDoctorInfo" },
+        { icon: FaUserGroup, label: "Staffs", path: "/managerStaffInfo" },
+        { icon: FaUserInjured, label: "Patients", path: "/managerPatientInfo" },
+        { icon: FaCalendarCheck, label: "Appointments", path: "/managerAppointmentInfo" },
+        { icon: FaFileInvoiceDollar, label: "Payments", path: "/managerTransactionInfo" },
+        { icon: FaMessage, label: "Comments", path: "/managerCommentsInfo" },
         { icon: FaFileUpload, label: "Reports", path: "/managerReports" },
+        { icon: FaUserCircle, label: "Profile", path: "/managerProfile" },
     ];
 
     //const items = menuItems;
@@ -35,7 +37,7 @@ export default function ManagerNavBar({ role = "manager" }) {
     return (
         <aside className="bg-primary w-64 min-h-screen flex flex-col">
             {/* Logo/Brand */}
-            <div className="p-6 border-b border-primary-hover">
+            <div className="p-6 border-primary-hover">
                 <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
                     <div className="bg-white rounded-lg p-2">
                         <FaHospital className="text-primary" size={24} />

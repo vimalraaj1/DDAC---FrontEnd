@@ -55,14 +55,14 @@ export default function DoctorSidebar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="w-52 bg-linear-to-b from-[#06923E] to-[#29ff52] min-h-screen text-white flex flex-col">
+    <div className="w-52 bg-[#06923E] min-h-screen text-white flex flex-col">
       {/* Logo */}
       <div className="p-6 border-b border-white/10">
         <div className="flex items-center space-x-2">
           <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
           </svg>
-          <span className="text-xl font-semibold">Vimal 😘</span>
+          <span className="text-xl font-semibold">Wellspring</span>
         </div>
       </div>
 

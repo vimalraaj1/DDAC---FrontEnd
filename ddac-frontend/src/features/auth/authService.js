@@ -7,25 +7,28 @@ export const login = async (email, password) => {
             email: "manager@gmail.com",
             name: "Manager User",
             role: "manager",
+            userId: "MG000001",
             password: "123456"
         },
         "customer@gmail.com": {
             email: "customer@gmail.com",
             name: "Mr Sick",
             role: "customer",
-            password: "123456",
-            id: "PT000001",
+            userId: "PT000001",
+            password: "123456"
         },
         "staff@gmail.com": {
             email: "staff@gmail.com", 
             name: "Staff User",
             role: "staff",
+            userId: "ST000001",
             password: "123456"
         },
         "doctor@gmail.com": {
             email: "doctor@gmail.com",
             name: "Doctor User", 
             role: "doctor",
+            userId: "DR000001",
             password: "123456"
         }
     };

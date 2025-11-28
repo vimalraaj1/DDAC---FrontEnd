@@ -1,9 +1,12 @@
+import { Link } from "react-router-dom";
+import ManagerNavBar from "./components/ManagerNavBar.jsx";
+import '../../themes/mng.css';
+import '../../index.css';
 import Layout from '../../components/Layout.jsx';
 import {FaCalendarCheck} from "react-icons/fa";
 import {FaUserDoctor, FaHourglassHalf} from "react-icons/fa6";
 import AppointmentsLineChart from "./components/AppointmentsLineChart.jsx";
 import DepartmentPieChart from "./components/DoctorsByDepartmentPieChart.jsx";
-import '../../themes/manager.css';
 
 const appointmentsData = [
     { date: "2025-11-10", appointments: 5 },
@@ -37,7 +40,7 @@ export default function ManagerDashboard() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Card 1 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6 hover:shadow-md transition-shadow">
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-primary bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaCalendarCheck size={24} className="text-ondark"/>
@@ -49,7 +52,7 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Card 2 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow">
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-accent-success bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaUserDoctor size={24} className="text-ondark"/>
@@ -61,7 +64,7 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Card 3 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow">
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-accent-warning bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaHourglassHalf size={24} className="text-ondark"/>
@@ -73,7 +76,7 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Card 4 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow">
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-accent-danger bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaCalendarCheck size={24} className="text-ondark"/>
@@ -88,7 +91,7 @@ export default function ManagerDashboard() {
                 {/* Charts Row */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     {/* Chart 1 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
+                    <div className="bg-card rounded-xl shadow-soft p-6 ">
                         <h3 className="text-heading text-lg font-semibold mb-4">Appointments Overview</h3>
                         <div className="h-64">
                             <AppointmentsLineChart data={appointmentsData} />
@@ -96,7 +99,7 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Chart 2 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
+                    <div className="bg-card rounded-xl shadow-soft p-6 ">
                         <h3 className="text-heading text-lg font-semibold mb-4">Department Distribution</h3>
                         <div className="h-64">
                             <DepartmentPieChart data={doctorsByDept} />

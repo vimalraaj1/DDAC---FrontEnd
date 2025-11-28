@@ -1,6 +1,8 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import appointmentService from "./appointmentService";
+import consultationService from "../consultations/consultationService";
 
 export default function DoctorAppointments() {
     const navigate = useNavigate();
@@ -8,58 +10,117 @@ export default function DoctorAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [showConsultationModal, setShowConsultationModal] = useState(false);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [consultationForm, setConsultationForm] = useState({
+        feedbackNotes: '',
+        prescriptions: [{ medication: '', dosage: '', frequency: '', duration: '' }]
+    });
 
     useEffect(() => {
-        // Mock data for doctor appointments
-        const mockAppointments = [
-            {
-                id: 1,
-                patientName: "John Smith",
-                patientId: "#1247",
-                date: "2025-11-18",
-                time: "09:00 AM",
-                status: "scheduled",
-                type: "Consultation",
-                department: "Cardiology"
-            },
-            {
-                id: 2,
-                patientName: "Sarah Johnson",
-                patientId: "#1156",
-                date: "2025-11-18",
-                time: "10:30 AM",
-                status: "completed",
-                type: "Follow-up",
-                department: "Neurology"
-            },
-            {
-                id: 3,
-                patientName: "Mike Davis",
-                patientId: "#1089",
-                date: "2025-11-18",
-                time: "02:00 PM",
-                status: "scheduled",
-                type: "Check-up",
-                department: "General"
-            },
-            {
-                id: 4,
-                patientName: "Emily Brown",
-                patientId: "#1302",
-                date: "2025-11-18",
-                time: "03:30 PM",
-                status: "scheduled",
-                type: "Consultation",
-                department: "Pediatrics"
-            }
-        ];
-
-        // Simulate API call
-        setTimeout(() => {
-            setAppointments(mockAppointments);
-            setLoading(false);
-        }, 800);
+        fetchAppointments();
     }, []);
+
+    const fetchAppointments = async () => {
+        try {
+            setLoading(true);
+            const data = await appointmentService.getDoctorAppointments();
+            setAppointments(data);
+        } catch (error) {
+            console.error('Error fetching appointments:', error);
+            // Show error message to user
+            alert('Failed to load appointments. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleApprove = async (appointmentId) => {
+        try {
+            await appointmentService.approveAppointment(appointmentId);
+            // Refresh appointments list
+            fetchAppointments();
+            alert('Appointment approved successfully!');
+        } catch (error) {
+            console.error('Error approving appointment:', error);
+            alert('Failed to approve appointment. Please try again.');
+        }
+    };
+
+    const handleReject = async (appointmentId) => {
+        const reason = prompt('Please enter rejection reason:');
+        if (reason) {
+            try {
+                await appointmentService.rejectAppointment(appointmentId, reason);
+                // Refresh appointments list
+                fetchAppointments();
+                alert('Appointment rejected successfully!');
+            } catch (error) {
+                console.error('Error rejecting appointment:', error);
+                alert('Failed to reject appointment. Please try again.');
+            }
+        }
+    };
+
+    const handleViewAppointment = (appointment) => {
+        setSelectedAppointment(appointment);
+        setShowConsultationModal(true);
+    };
+
+    const addPrescriptionRow = () => {
+        setConsultationForm({
+            ...consultationForm,
+            prescriptions: [...consultationForm.prescriptions, { medication: '', dosage: '', frequency: '', duration: '' }]
+        });
+    };
+
+    const removePrescriptionRow = (index) => {
+        const newPrescriptions = consultationForm.prescriptions.filter((_, i) => i !== index);
+        setConsultationForm({ ...consultationForm, prescriptions: newPrescriptions });
+    };
+
+    const updatePrescription = (index, field, value) => {
+        const newPrescriptions = [...consultationForm.prescriptions];
+        newPrescriptions[index][field] = value;
+        setConsultationForm({ ...consultationForm, prescriptions: newPrescriptions });
+    };
+
+    const handleSubmitConsultation = async () => {
+        try {
+            // Format prescriptions: "MedicationName Dosage, frequency, duration | ..."
+            const prescriptionNotes = consultationForm.prescriptions
+                .filter(p => p.medication && p.dosage)
+                .map(p => `${p.medication}, ${p.dosage}, ${p.frequency}, ${p.duration}`)
+                .join(' | ');
+
+            const consultationData = {
+                appointmentId: selectedAppointment.id,
+                feedbackNotes: consultationForm.feedbackNotes,
+                prescriptionNotes: prescriptionNotes
+            };
+
+            await consultationService.createConsultation(consultationData);
+            alert('Consultation notes saved successfully!');
+            setShowConsultationModal(false);
+            setConsultationForm({
+                feedbackNotes: '',
+                prescriptions: [{ medication: '', dosage: '', frequency: '', duration: '' }]
+            });
+            fetchAppointments();
+        } catch (error) {
+            console.error('Error saving consultation:', error);
+            alert('Failed to save consultation notes. Please try again.');
+        }
+    };
+
+    const closeModal = () => {
+        setShowConsultationModal(false);
+        setSelectedAppointment(null);
+        setConsultationForm({
+            feedbackNotes: '',
+            prescriptions: [{ medication: '', dosage: '', frequency: '', duration: '' }]
+        });
+    };
 
     const getStatusBadge = (status) => {
         const statusClasses = {
@@ -266,14 +327,14 @@ export default function DoctorAppointments() {
                         <div className="px-6 py-4 border-b border-gray-100">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-lg font-semibold text-gray-900">Today's Appointments</h2>
-                                <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm">
+                                {/* <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm">
                                     <span className="flex items-center space-x-2">
                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                                         </svg>
                                         <span>Add Appointment</span>
                                     </span>
-                                </button>
+                                </button> */}
                             </div>
                         </div>
 
@@ -339,7 +400,10 @@ export default function DoctorAppointments() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <button className="text-blue-600 hover:text-blue-800 font-medium mr-3">
+                                                <button 
+                                                    onClick={() => handleViewAppointment(appointment)}
+                                                    className="text-blue-600 hover:text-blue-800 font-medium mr-3"
+                                                >
                                                     View
                                                 </button>
                                                 {appointment.status === 'scheduled' && (
@@ -365,6 +429,188 @@ export default function DoctorAppointments() {
                     </div>
                 </main>
             </div>
+
+            {/* Consultation Modal */}
+            {showConsultationModal && selectedAppointment && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                        {/* Modal Header */}
+                        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-900">Consultation Notes</h2>
+                                <p className="text-sm text-gray-500 mt-1">
+                                    Patient: {selectedAppointment.patientName} | Date: {selectedAppointment.date} {selectedAppointment.time}
+                                </p>
+                            </div>
+                            <button
+                                onClick={closeModal}
+                                className="text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-6">
+                            {/* Appointment Details */}
+                            <div className="bg-blue-50 rounded-lg p-4">
+                                <h3 className="font-semibold text-gray-900 mb-2">Appointment Details</h3>
+                                <div className="grid grid-cols-2 gap-4 text-sm">
+                                    <div>
+                                        <span className="text-gray-600">Appointment ID:</span>
+                                        <span className="ml-2 font-medium">{selectedAppointment.id}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Patient ID:</span>
+                                        <span className="ml-2 font-medium">{selectedAppointment.patientId}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Type:</span>
+                                        <span className="ml-2 font-medium">{selectedAppointment.type}</span>
+                                    </div>
+                                    <div>
+                                        <span className="text-gray-600">Department:</span>
+                                        <span className="ml-2 font-medium">{selectedAppointment.department}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Feedback Notes */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-900 mb-2">
+                                    Feedback Notes
+                                </label>
+                                <textarea
+                                    value={consultationForm.feedbackNotes}
+                                    onChange={(e) => setConsultationForm({ ...consultationForm, feedbackNotes: e.target.value })}
+                                    rows="4"
+                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Enter feedback notes for the patient (e.g., lifestyle recommendations, follow-up advice...)"
+                                />
+                            </div>
+
+                            {/* Prescriptions */}
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <label className="block text-sm font-semibold text-gray-900">
+                                        Prescriptions
+                                    </label>
+                                    <button
+                                        onClick={addPrescriptionRow}
+                                        className="flex items-center space-x-1 px-3 py-1.5 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors"
+                                    >
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        <span>Add Medication</span>
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    {consultationForm.prescriptions.map((prescription, index) => (
+                                        <div key={index} className="border border-gray-200 rounded-lg p-4 relative">
+                                            {consultationForm.prescriptions.length > 1 && (
+                                                <button
+                                                    onClick={() => removePrescriptionRow(index)}
+                                                    className="absolute top-2 right-2 text-red-500 hover:text-red-700"
+                                                >
+                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            )}
+                                            
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                        Medication Name *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={prescription.medication}
+                                                        onChange={(e) => updatePrescription(index, 'medication', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                        placeholder="e.g., Atorvastatin"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                        Dosage *
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={prescription.dosage}
+                                                        onChange={(e) => updatePrescription(index, 'dosage', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                        placeholder="e.g., 20mg"
+                                                        required
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                        Frequency
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={prescription.frequency}
+                                                        onChange={(e) => updatePrescription(index, 'frequency', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                        placeholder="e.g., 1 tablet after dinner"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-medium text-gray-700 mb-1">
+                                                        Duration
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        value={prescription.duration}
+                                                        onChange={(e) => updatePrescription(index, 'duration', e.target.value)}
+                                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                                                        placeholder="e.g., 30 days"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Preview of formatted prescription */}
+                            {consultationForm.prescriptions.some(p => p.medication && p.dosage) && (
+                                <div className="bg-gray-50 rounded-lg p-4">
+                                    <h4 className="text-sm font-semibold text-gray-900 mb-2">Prescription Preview:</h4>
+                                    <p className="text-sm text-gray-700 font-mono">
+                                        {consultationForm.prescriptions
+                                            .filter(p => p.medication && p.dosage)
+                                            .map(p => `${p.medication} ${p.dosage}, ${p.frequency}, ${p.duration}`)
+                                            .join(' | ')}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
+                            <button
+                                onClick={closeModal}
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitConsultation}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                            >
+                                Save Consultation
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
