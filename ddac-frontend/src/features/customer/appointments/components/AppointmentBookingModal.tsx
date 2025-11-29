@@ -75,6 +75,9 @@ export function AppointmentBookingModal({
     fetchDoctorDataDB();
   }, []);
 
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
   const fetchDoctorDataDB = async () => {
     try {
       const datas = await getDoctors();
@@ -117,7 +120,13 @@ export function AppointmentBookingModal({
         doctorId
       );
 
-      const filteredAvailability = datas.filter((slot) => !slot.isBooked);
+      const filteredAvailability = datas.filter((slot) => {
+        const slotDate = new Date(slot.date);
+        slotDate.setHours(0, 0, 0, 0);
+
+        return !slot.isBooked && slotDate > today;
+      });
+
       setDoctorAvailability(filteredAvailability);
 
       const dates = filteredAvailability.map((slot) => slot.date);

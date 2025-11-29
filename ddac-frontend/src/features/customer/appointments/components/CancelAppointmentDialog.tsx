@@ -1,4 +1,4 @@
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, FileText } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,12 +10,15 @@ import {
   AlertDialogTitle,
 } from "../../components/ui/alert-dialog";
 import { Appointment } from "./AppointmentCard";
+import { Label } from "../../components/ui/label";
+import { Textarea } from "../../components/ui/textarea";
+import { useEffect, useState } from "react";
 
 interface CancelAppointmentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   appointment: Appointment | null;
-  onConfirmCancel: (appointmentId: string) => void;
+  onConfirmCancel: (appointmentId: string, cancellationReason: string) => void;
 }
 
 export function CancelAppointmentDialog({
@@ -24,10 +27,21 @@ export function CancelAppointmentDialog({
   appointment,
   onConfirmCancel,
 }: CancelAppointmentDialogProps) {
+  const [cancellationReason, setCancellationReason] = useState<string>("");
+  const [isDisableButton, setIsDisableButton] = useState<boolean>(false);
+
+  useEffect(() => {
+    const isEmpty =
+      cancellationReason === null || cancellationReason.trim() === "";
+
+    setIsDisableButton(isEmpty);
+  }, [cancellationReason]);
+
   if (!appointment) return null;
 
   const handleConfirm = () => {
-    onConfirmCancel(appointment.id);
+    onConfirmCancel(appointment.id, cancellationReason);
+    setCancellationReason("");
     onOpenChange(false);
   };
 
@@ -51,17 +65,35 @@ export function CancelAppointmentDialog({
           </AlertDialogDescription>
           <div className="mt-4 bg-[#FEF3F2] border border-[#E74C3C]/20 rounded-xl p-4">
             <p className="text-[#E74C3C] text-sm">
-              <strong>Note:</strong> Please cancel at least 24 hours in advance to avoid 
-              cancellation fees. You will receive a confirmation email once the cancellation 
-              is processed.
+              <strong>Note:</strong> Please cancel at least 24 hours in advance
+              to avoid cancellation fees. You will receive a confirmation email
+              once the cancellation is processed.
             </p>
           </div>
+          <div className="space-y-4 mt-2">
+            <Label
+              htmlFor="reason"
+              className="text-[#1A1A1A] flex items-center gap-2"
+            >
+              <FileText className="h-4 w-4 text-[#4EA5D9]" />
+              Reason for Cancellation
+              <span className="text-red-500">*</span>
+            </Label>
+            <Textarea
+              id="reason"
+              placeholder="Briefly describe the reason for your visit..."
+              value={cancellationReason}
+              onChange={(e) => setCancellationReason(e.target.value)}
+              className="border-gray focus:ring-[#4EA5D9] rounded-xl min-h-[100px] resize-none"
+            />
+          </div>
         </AlertDialogHeader>
-        <AlertDialogFooter className="gap-3 sm:gap-3 mt-4">
+        <AlertDialogFooter className="gap-3 sm:gap-3 mt-2">
           <AlertDialogCancel className="border-[#DCEFFB] text-[#7A7A7A] hover:bg-[#F5F7FA] rounded-xl cursor-pointer">
             Keep Appointment
           </AlertDialogCancel>
           <AlertDialogAction
+            disabled={isDisableButton}
             onClick={handleConfirm}
             className="bg-[#E74C3C] hover:bg-[#d43f2f] text-white rounded-xl cursor-pointer"
           >
