@@ -528,10 +528,10 @@ export default function DoctorDashboard() {
                                         <div className="flex items-start justify-between mb-3">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white font-semibold">
-                                                    {comment.patientId.substring(2, 4)}
+                                                    {comment.patientName.split(' ').map(n => n[0]).join('').substring(0, 2)}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-semibold text-gray-900">Patient {comment.patientId}</p>
+                                                    <p className="text-sm font-semibold text-gray-900">{comment.patientName}</p>
                                                     <p className="text-xs text-gray-500">{formatTimeAgo(comment.time)}</p>
                                                 </div>
                                             </div>
@@ -544,9 +544,11 @@ export default function DoctorDashboard() {
                                             </div>
                                         </div>
                                         
-                                        <p className="text-sm text-gray-700 leading-relaxed mb-3">
-                                            {comment.commentText}
-                                        </p>
+                                        {comment.commentText && (
+                                            <p className="text-sm text-gray-700 leading-relaxed mb-3">
+                                                {comment.commentText}
+                                            </p>
+                                        )}
                                         
                                         <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                                             <div className="flex items-center space-x-4 text-xs text-gray-500">

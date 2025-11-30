@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import appointmentService from "./appointmentService";
 import consultationService from "../consultations/consultationService";
+import commentService from "../services/commentService";
 
 export default function DoctorAppointments() {
     const navigate = useNavigate();
@@ -99,8 +100,27 @@ export default function DoctorAppointments() {
                 prescriptionNotes: prescriptionNotes
             };
 
+            // Save consultation
             await consultationService.createConsultation(consultationData);
-            alert('Consultation notes saved successfully!');
+
+            // Create empty comment entry for patient feedback
+            const userId = localStorage.getItem('userId') || 'DR000001';
+            const commentData = {
+                patientId: selectedAppointment.patientId,
+                doctorId: userId,
+                staffId: selectedAppointment.staffId || 'ST000001',
+                appointmentId: selectedAppointment.id,
+                commentText: null,
+                doctorRating: null,
+                staffRating: null,
+                overallRating: null,
+                time: new Date().toISOString(),
+                tags: null
+            };
+
+            await commentService.createComment(commentData);
+
+            alert('Consultation notes saved successfully! Patient can now provide feedback.');
             setShowConsultationModal(false);
             setConsultationForm({
                 feedbackNotes: '',
