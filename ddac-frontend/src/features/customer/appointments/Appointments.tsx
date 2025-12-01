@@ -68,8 +68,6 @@ const pastAppointments: Appointment[] = [
   },
 ];
 
-const cancelledAppointments: Appointment[] = [];
-
 type TabType = "upcoming" | "past" | "cancelled";
 
 export default function Appointments() {
@@ -198,7 +196,7 @@ export default function Appointments() {
       setDetailsModalOpen(true);
     }
   };
-  
+
   const handleCancel = (id: string) => {
     const appointment = getAppointments()?.find((a) => a.id === id);
     if (appointment) {

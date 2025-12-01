@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   Search,
   Bell,
@@ -36,68 +36,30 @@ import { Input } from "../components/ui/input";
 import { Separator } from "../components/ui/separator";
 import { toast } from "sonner";
 import { Toaster } from "../components/ui/sonner";
+import { CustomerContext } from "../CustomerContext";
+import {
+  addComment,
+  getCommentsByPatientId,
+} from "../../../services/commentManagementService";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 interface PastFeedback {
   id: string;
+  doctorId: string;
+  staffId: string;
+  appointmentId: string;
   doctorName: string;
   doctorSpecialty: string;
   appointmentDate: string;
   appointmentTime: string;
   patientName: string;
   commentTime: string;
-  overallRating: number;
-  staffRating: number;
-  doctorRating: number;
-  feedback: string;
-  tags: string[];
+  overallRating: number | null;
+  staffRating: number | null;
+  doctorRating: number | null;
+  feedback: string | null;
+  tags: string | null;
 }
-
-const mockPastFeedback: PastFeedback[] = [
-  {
-    id: "1",
-    patientName: "Joachim Wong",
-    doctorName: "Tristen Chris",
-    doctorSpecialty: "Cardiology",
-    appointmentDate: "November 26, 2025",
-    appointmentTime: "11:30 AM",
-    commentTime: "Nov 15, 2025",
-    overallRating: 4,
-    staffRating: 5,
-    doctorRating: 5,
-    feedback:
-      "Dr. Johnson was extremely professional and took the time to explain my condition thoroughly. The care I received was exceptional.",
-    tags: ["Friendly", "Professional"],
-  },
-  {
-    id: "2",
-    patientName: "Joachim Wong",
-    doctorName: "Tristen Chris",
-    doctorSpecialty: "Cardiology",
-    appointmentDate: "November 26, 2025",
-    appointmentTime: "11:30 AM",
-    commentTime: "",
-    overallRating: 0,
-    staffRating: 0,
-    doctorRating: 0,
-    feedback: "",
-    tags: ["Friendly", "Professional"],
-  },
-  {
-    id: "3",
-    patientName: "Joachim Wong",
-    doctorName: "Tristen Chris",
-    doctorSpecialty: "Cardiology",
-    appointmentDate: "November 26, 2025",
-    appointmentTime: "11:30 AM",
-    commentTime: "Nov 15, 2025",
-    overallRating: 4,
-    staffRating: 5,
-    doctorRating: 5,
-    feedback:
-      "Dr. Johnson was extremely professional and took the time to explain my condition thoroughly. The care I received was exceptional.",
-    tags: ["Friendly", "Professional"],
-  },
-];
 
 const feedbackTagOptions = [
   "Friendly",
@@ -107,22 +69,71 @@ const feedbackTagOptions = [
   "Communication issues",
 ];
 
-const ratingLabels = ["", "Poor", "Fair", "Good", "Very Good", "Excellent"];
-
 export default function Feedbacks() {
+  const [comments, setComments] = useState<PastFeedback[]>([]);
+
   const [recordTypeFilter, setRecordTypeFilter] = useState("all");
   const [dateRangeFilter, setDateRangeFilter] = useState("all");
+  
   const [overallRating, setOverallRating] = useState(0);
   const [doctorRating, setDoctorRating] = useState(0);
   const [staffRating, setStaffRating] = useState(0);
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedFeedback, setSelectedFeedback] = useState<PastFeedback | null>(
+  const [selectedComment, setSelectedComment] = useState<PastFeedback | null>(
     null
   );
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isAddFeedbackDialogOpen, setIsAddFeedbackDialogOpen] = useState(false);
+  const [isLoadingFeedback, setIsLoadingFeedback] = useState(false);
+  const [loadingSubmittingComment, setLoadingSubmittingComment] =
+    useState(false);
+
+  const { patient, loading } = useContext(CustomerContext);
+
+  useEffect(() => {
+    if (patient?.id) {
+      fetchCommentsFromDB(patient.id);
+    }
+  }, [patient?.id]);
+
+  const fetchCommentsFromDB = async (patientId: string) => {
+    setIsLoadingFeedback(true);
+    try {
+      const datas = await getCommentsByPatientId(patientId);
+
+      const formattedComments = datas.map((comment: any) => ({
+        id: comment.id,
+        doctorId: comment.doctorId,
+        staffId: comment.staffId,
+        appointmentId: comment.appointmentId,
+        doctorName: comment.doctorFirstName + " " + comment.doctorLastName,
+        doctorSpecialty: comment.doctorSpecialization,
+        appointmentDate: comment.appointmentDate,
+        appointmentTime: comment.appointmentTime,
+        patientName: comment.patientFirstName + " " + comment.patientLastName,
+        commentTime: comment.commentTime,
+        overallRating: comment.overallRating,
+        staffRating: comment.staffRating,
+        doctorRating: comment.doctorRating,
+        feedback: comment.commentText,
+        tags: comment.tags,
+      }));
+
+      setComments(formattedComments);
+    } catch (err) {
+      console.log("Error: ", err);
+      toast.error("Error retrieving feedback!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } finally {
+      setIsLoadingFeedback(false);
+    }
+  };
 
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) =>
@@ -130,7 +141,8 @@ export default function Feedbacks() {
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    // If user didn't put rating
     if (overallRating === 0 || doctorRating === 0 || staffRating === 0) {
       toast.error("Please provide a rating for overall, doctor and staff!", {
         style: {
@@ -142,33 +154,70 @@ export default function Feedbacks() {
       return;
     }
 
-    toast.success("Feedback submitted successfully!", {
-      style: {
-        background: "#2ECC71",
-        color: "#ffffff",
-        borderRadius: "10px",
-      },
-    });
-
-    // Reset form
-    setOverallRating(0);
-    setDoctorRating(0);
-    setStaffRating(0);
-
-    setFeedbackText("");
-    setSelectedTags([]);
+    // Add comment in DB
 
     setIsAddFeedbackDialogOpen(false);
+    setLoadingSubmittingComment(true);
+
+    try {
+      const payload = {
+        commentText: feedbackText,
+        doctorRating: doctorRating,
+        staffRating: staffRating,
+        overallRating: overallRating,
+        time: new Date().toISOString(),
+        tags: selectedTags.join(", "),
+      };
+
+      console.log(selectedComment?.id, payload);
+
+      await addComment(selectedComment?.id, payload);
+
+      toast.success("Feedback submitted successfully!", {
+        style: {
+          background: "#2ECC71",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } catch (err) {
+      console.log("Error: ", err);
+      toast.error("Error submitting feedback!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } finally {
+      setLoadingSubmittingComment(false);
+      setOverallRating(0);
+      setDoctorRating(0);
+      setStaffRating(0);
+
+      setFeedbackText("");
+      setSelectedTags([]);
+      fetchCommentsFromDB(patient.id);
+    }
+
+    // Reset form
   };
 
   const handleAddFeedback = (feedback: PastFeedback) => {
-    setSelectedFeedback(feedback);
+    console.log("HandleADDMORE: ", feedback);
+    setSelectedComment(feedback);
     setIsAddFeedbackDialogOpen(true);
   };
 
   const handleViewMore = (feedback: PastFeedback) => {
-    setSelectedFeedback(feedback);
-    setIsDialogOpen(true);
+    console.log("handleViewMore CALLED", feedback); // <--- ADD THIS
+
+    try {
+      setSelectedComment(feedback);
+      setIsDialogOpen(true);
+    } catch (err) {
+      console.log("Error: ", err);
+    }
   };
 
   const getMoodIcon = (rating: number) => {
@@ -266,14 +315,20 @@ export default function Feedbacks() {
                 Your Past Appointments
               </h3>
               <div className="space-y-4">
-                {mockPastFeedback.map((feedback) => (
-                  <PastFeedbackCard
-                    key={feedback.id}
-                    {...feedback}
-                    onViewMore={() => handleViewMore(feedback)}
-                    onGiveFeedback={() => handleAddFeedback(feedback)}
-                  />
-                ))}
+                {isLoadingFeedback ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-[#DCEFFB]">
+                    <p className="text-[#7A7A7A]">Retrieving Feedbacks...</p>
+                  </div>
+                ) : (
+                  comments.map((comment) => (
+                    <PastFeedbackCard
+                      key={comment.id}
+                      {...comment}
+                      onViewMore={() => handleViewMore(comment)}
+                      onGiveFeedback={() => handleAddFeedback(comment)}
+                    />
+                  ))
+                )}
               </div>
             </section>
           </FadeInSection>
@@ -290,14 +345,14 @@ export default function Feedbacks() {
             </DialogHeader>
 
             <div className="max-w-md">
-              {selectedFeedback && (
+              {selectedComment && (
                 <div className="space-y-4">
                   <div className="space-y-3 mt-2 mb-2">
                     <div className="flex items-center gap-3 text-[#3D3D3D]">
                       <Stethoscope className="h-4 w-4 text-[#4EA5D9]" />
                       <span className="text-sm text-black">
-                        {selectedFeedback.doctorName} (
-                        {selectedFeedback.doctorSpecialty})
+                        {selectedComment?.doctorName} (
+                        {selectedComment?.doctorSpecialty})
                       </span>
                     </div>
                   </div>
@@ -305,8 +360,8 @@ export default function Feedbacks() {
                     <div className="flex items-center gap-3 text-[#3D3D3D]">
                       <Calendar className="h-4 w-4 text-[#4EA5D9]" />
                       <span className="text-sm text-black">
-                        {selectedFeedback.appointmentDate} •{" "}
-                        {selectedFeedback.appointmentTime}
+                        {selectedComment?.appointmentDate} •{" "}
+                        {selectedComment?.appointmentTime}
                       </span>
                     </div>
                   </div>
@@ -364,9 +419,7 @@ export default function Feedbacks() {
                     >
                       Give Overall Comment:
                     </p>
-                    <p style={{ color: "var(--text-body)" }}>
-                      {selectedFeedback.feedback}
-                    </p>
+                    <p style={{ color: "var(--text-body)" }}></p>
                   </div>
 
                   <div className="w-full">
@@ -374,7 +427,7 @@ export default function Feedbacks() {
                       placeholder="Describe your experience..."
                       value={feedbackText}
                       onChange={(e) => setFeedbackText(e.target.value)}
-                      className="min-h-32 border-2 rounded-xl w-full"
+                      className="min-h-32 border-2 rounded-xl w-full focus:ring-[#4EA5D9]"
                       style={{
                         borderColor: "var(--input-border)",
                         backgroundColor: "white",
@@ -428,7 +481,7 @@ export default function Feedbacks() {
               <DialogTitle>Feedback Details</DialogTitle>
             </DialogHeader>
 
-            {selectedFeedback && (
+            {selectedComment && (
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Avatar className="w-12 h-12">
@@ -438,11 +491,11 @@ export default function Feedbacks() {
                         color: "white",
                       }}
                     >
-                      {selectedFeedback.patientName === "Anonymous"
+                      {patient.firstName === "Anonymous"
                         ? "A"
-                        : selectedFeedback.patientName
+                        : patient.firstName
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join("")
                             .toUpperCase()
                             .slice(0, 2)}
@@ -450,13 +503,13 @@ export default function Feedbacks() {
                   </Avatar>
                   <div>
                     <p style={{ color: "var(--text-heading)" }}>
-                      {selectedFeedback.patientName}
+                      {patient.firstName}
                     </p>
                     <p
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      Commented at: {selectedFeedback.commentTime}
+                      Commented at: {selectedComment.commentTime}
                     </p>
                   </div>
                 </div>
@@ -465,8 +518,8 @@ export default function Feedbacks() {
                   <div className="flex items-center gap-3 text-[#3D3D3D]">
                     <Stethoscope className="h-4 w-4 text-[#4EA5D9]" />
                     <span className="text-sm text-black">
-                      {selectedFeedback.doctorName} (
-                      {selectedFeedback.doctorSpecialty})
+                      {selectedComment.doctorName} (
+                      {selectedComment.doctorSpecialty})
                     </span>
                   </div>
                 </div>
@@ -474,8 +527,8 @@ export default function Feedbacks() {
                   <div className="flex items-center gap-3 text-[#3D3D3D]">
                     <Calendar className="h-4 w-4 text-[#4EA5D9]" />
                     <span className="text-sm text-black">
-                      {selectedFeedback.appointmentDate} •{" "}
-                      {selectedFeedback.appointmentTime}
+                      {selectedComment.appointmentDate} •{" "}
+                      {selectedComment.appointmentTime}
                     </span>
                   </div>
                 </div>
@@ -490,7 +543,7 @@ export default function Feedbacks() {
                     Overall Rating:
                   </p>
                   <StarRating
-                    rating={selectedFeedback.overallRating}
+                    rating={selectedComment.overallRating ?? 0}
                     interactive={false}
                     size="md"
                   />
@@ -503,7 +556,7 @@ export default function Feedbacks() {
                     Doctor Rating:
                   </p>
                   <StarRating
-                    rating={selectedFeedback.overallRating}
+                    rating={selectedComment.overallRating ?? 0}
                     interactive={false}
                     size="md"
                   />
@@ -516,7 +569,7 @@ export default function Feedbacks() {
                     Staff Rating:
                   </p>
                   <StarRating
-                    rating={selectedFeedback.overallRating}
+                    rating={selectedComment.overallRating ?? 0}
                     interactive={false}
                     size="md"
                   />
@@ -530,39 +583,46 @@ export default function Feedbacks() {
                     Comment:
                   </p>
                   <p style={{ color: "var(--text-body)" }}>
-                    {selectedFeedback.feedback}
+                    {selectedComment.feedback ?? "No comment"}
                   </p>
                 </div>
 
-                {selectedFeedback.tags.length > 0 && (
-                  <div>
-                    <p
-                      className="text-sm mb-2"
-                      style={{ color: "var(--text-muted)" }}
-                    >
-                      Tags:
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedFeedback.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-3 py-1 rounded-full text-sm"
-                          style={{
-                            backgroundColor: "var(--btn-secondary)",
-                            color: "var(--btn-secondary-text)",
-                          }}
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                {selectedComment?.tags &&
+                  selectedComment.tags.trim() !== "" && (
+                    <div>
+                      <p
+                        className="text-sm mb-2"
+                        style={{ color: "var(--text-muted)" }}
+                      >
+                        Tags:
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {selectedComment.tags.split(", ").map((tag) => (
+                          <span
+                            key={tag}
+                            className="px-3 py-1 rounded-full text-sm"
+                            style={{
+                              backgroundColor: "var(--btn-secondary)",
+                              color: "var(--btn-secondary-text)",
+                            }}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </div>
             )}
           </DialogContent>
         </Dialog>
         <Toaster />
+
+        <LoadingOverlay
+          isLoading={loadingSubmittingComment}
+          message="Submitting feedback..."
+        />
       </div>
     </Layout>
   );
