@@ -43,6 +43,23 @@ export function PastFeedbackCard({
           .toUpperCase()
           .slice(0, 2);
 
+  const formatReadableDate = (isoString: string) => {
+    const date = new Date(isoString);
+
+    const day = date.getDate();
+    const year = date.getFullYear();
+
+    const month = date.toLocaleString("en-US", {month: "long"});
+
+    const time = date.toLocaleString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    return `${day} ${month} ${year}, ${time}`;
+  } 
+
   return (
     <div
       className="p-4 rounded-xl border"
@@ -64,7 +81,7 @@ export function PastFeedbackCard({
           <div className="flex items-center justify-between mb-1">
             <p style={{ color: "var(--text-heading)" }}>{patientName}</p>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {commentTime}
+              {formatReadableDate(commentTime)}
             </p>
           </div>
 

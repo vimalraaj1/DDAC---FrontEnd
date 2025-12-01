@@ -71,10 +71,11 @@ const feedbackTagOptions = [
 
 export default function Feedbacks() {
   const [comments, setComments] = useState<PastFeedback[]>([]);
+  const [allComments, setAllComments] = useState<PastFeedback[]>([]);
 
-  const [recordTypeFilter, setRecordTypeFilter] = useState("all");
-  const [dateRangeFilter, setDateRangeFilter] = useState("all");
-  
+  const [sorting, setSorting] = useState("all");
+  const [timeFilter, setTimeFilter] = useState("mostRecent");
+
   const [overallRating, setOverallRating] = useState(0);
   const [doctorRating, setDoctorRating] = useState(0);
   const [staffRating, setStaffRating] = useState(0);
@@ -96,6 +97,32 @@ export default function Feedbacks() {
       fetchCommentsFromDB(patient.id);
     }
   }, [patient?.id]);
+
+  useEffect(() => {
+    let filtered = [...allComments];
+
+    // Rating filter
+    if (sorting === "feedbackGiven") {
+      filtered = filtered.filter((a) => a.overallRating != null);
+    } else if (sorting === "feedbackPending") {
+      filtered = filtered.filter((a) => a.overallRating === null);
+    }
+
+    // Time sorting
+    if (timeFilter === "mostRecent") {
+      filtered.sort(
+        (a, b) =>
+          new Date(b.commentTime).getTime() - new Date(a.commentTime).getTime()
+      );
+    } else if (timeFilter === "oldestFirst") {
+      filtered.sort(
+        (a, b) =>
+          new Date(a.commentTime).getTime() - new Date(b.commentTime).getTime()
+      );
+    }
+
+    setComments(filtered);
+  }, [sorting, timeFilter, allComments]);
 
   const fetchCommentsFromDB = async (patientId: string) => {
     setIsLoadingFeedback(true);
@@ -120,7 +147,7 @@ export default function Feedbacks() {
         tags: comment.tags,
       }));
 
-      setComments(formattedComments);
+      setAllComments(formattedComments);
     } catch (err) {
       console.log("Error: ", err);
       toast.error("Error retrieving feedback!", {
@@ -142,7 +169,6 @@ export default function Feedbacks() {
   };
 
   const handleSubmit = async () => {
-    // If user didn't put rating
     if (overallRating === 0 || doctorRating === 0 || staffRating === 0) {
       toast.error("Please provide a rating for overall, doctor and staff!", {
         style: {
@@ -155,7 +181,6 @@ export default function Feedbacks() {
     }
 
     // Add comment in DB
-
     setIsAddFeedbackDialogOpen(false);
     setLoadingSubmittingComment(true);
 
@@ -190,6 +215,7 @@ export default function Feedbacks() {
         },
       });
     } finally {
+      // Reset form
       setLoadingSubmittingComment(false);
       setOverallRating(0);
       setDoctorRating(0);
@@ -199,19 +225,14 @@ export default function Feedbacks() {
       setSelectedTags([]);
       fetchCommentsFromDB(patient.id);
     }
-
-    // Reset form
   };
 
   const handleAddFeedback = (feedback: PastFeedback) => {
-    console.log("HandleADDMORE: ", feedback);
     setSelectedComment(feedback);
     setIsAddFeedbackDialogOpen(true);
   };
 
   const handleViewMore = (feedback: PastFeedback) => {
-    console.log("handleViewMore CALLED", feedback); // <--- ADD THIS
-
     try {
       setSelectedComment(feedback);
       setIsDialogOpen(true);
@@ -248,10 +269,7 @@ export default function Feedbacks() {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               {/* Filter Dropdown */}
               <div className="md:col-span-3 bg-white">
-                <Select
-                  value={recordTypeFilter}
-                  onValueChange={setRecordTypeFilter}
-                >
+                <Select value={sorting} onValueChange={setSorting}>
                   <SelectTrigger className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl hover:bg-[#F5F7FA] cursor-pointer">
                     <ArrowDownUp className="w-1 h-4 text-[#4EA5D9]" />
                     <SelectValue placeholder="Record Type" />
@@ -265,13 +283,13 @@ export default function Feedbacks() {
                     </SelectItem>
                     <SelectItem
                       className="hover:bg-[#F5F7FA] cursor-pointer"
-                      value="lab"
+                      value="feedbackGiven"
                     >
                       Feedback Given
                     </SelectItem>
                     <SelectItem
                       className="hover:bg-[#F5F7FA] cursor-pointer"
-                      value="prescriptions"
+                      value="feedbackPending"
                     >
                       Feedback Pending
                     </SelectItem>
@@ -281,10 +299,7 @@ export default function Feedbacks() {
 
               {/* Sorting Dropdown */}
               <div className="md:col-span-3 bg-white">
-                <Select
-                  value={dateRangeFilter}
-                  onValueChange={setDateRangeFilter}
-                >
+                <Select value={timeFilter} onValueChange={setTimeFilter}>
                   <SelectTrigger className="border-[#DCEFFB] focus:ring-[#4EA5D9] rounded-xl hover:bg-[#F5F7FA] cursor-pointer">
                     <Filter className="w-1 h-4 text-[#4EA5D9]" />
                     <SelectValue placeholder="Date Range" />
@@ -292,13 +307,13 @@ export default function Feedbacks() {
                   <SelectContent className="bg-white border-[#DCEFFB] rounded-xl">
                     <SelectItem
                       className="hover:bg-[#F5F7FA] cursor-pointer"
-                      value="all"
+                      value="mostRecent"
                     >
                       Most Recent
                     </SelectItem>
                     <SelectItem
                       className="hover:bg-[#F5F7FA] cursor-pointer"
-                      value="week"
+                      value="oldestFirst"
                     >
                       Oldest First
                     </SelectItem>
@@ -319,7 +334,7 @@ export default function Feedbacks() {
                   <div className="bg-white rounded-2xl p-12 text-center border border-[#DCEFFB]">
                     <p className="text-[#7A7A7A]">Retrieving Feedbacks...</p>
                   </div>
-                ) : (
+                ) : comments.length > 0 ? (
                   comments.map((comment) => (
                     <PastFeedbackCard
                       key={comment.id}
@@ -328,6 +343,10 @@ export default function Feedbacks() {
                       onGiveFeedback={() => handleAddFeedback(comment)}
                     />
                   ))
+                ) : (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-[#DCEFFB]">
+                    <p className="text-[#7A7A7A]">No results found</p>
+                  </div>
                 )}
               </div>
             </section>
@@ -556,7 +575,7 @@ export default function Feedbacks() {
                     Doctor Rating:
                   </p>
                   <StarRating
-                    rating={selectedComment.overallRating ?? 0}
+                    rating={selectedComment.doctorRating ?? 0}
                     interactive={false}
                     size="md"
                   />
@@ -569,7 +588,7 @@ export default function Feedbacks() {
                     Staff Rating:
                   </p>
                   <StarRating
-                    rating={selectedComment.overallRating ?? 0}
+                    rating={selectedComment.staffRating ?? 0}
                     interactive={false}
                     size="md"
                   />
