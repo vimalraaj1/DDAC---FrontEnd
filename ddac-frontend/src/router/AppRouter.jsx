@@ -6,25 +6,26 @@ import RoleBasedRedirect from "../features/RoleBasedRedirect";
 import CustDashboard from "../features/customer/CustDashboard";
 import CustProfile from "../features/customer/profile/CustProfile";
 import Appointments from "../features/customer/appointments/Appointments";
-import StaffDashboard from "../features/staff/StaffDashboard";
-import StaffProfile from "../features/staff/profile/StaffProfile";
-import StaffAppointments from "../features/staff/appointments/StaffAppointments";
-import ManagePatients from "../features/staff/patientManagement/ManagePatients";
-import EditPatient from "../features/staff/patientManagement/EditPatientForm";
-import RegisterPatient from "../features/staff/patientManagement/RegisterPatient";
-// New staff module components
 import StaffDashboardNew from "../features/staff/dashboard/StaffDashboard";
 import PatientList from "../features/staff/patientManagement/PatientList";
 import PatientDetails from "../features/staff/patientManagement/PatientDetails";
 import PatientForm from "../features/staff/patientManagement/PatientForm";
 import AppointmentList from "../features/staff/appointments/AppointmentList";
 import AppointmentDetails from "../features/staff/appointments/AppointmentDetails";
+import CreateAppointment from "../features/staff/appointments/CreateAppointment";
 import PrescriptionForm from "../features/staff/prescriptions/PrescriptionForm";
 import PrescriptionList from "../features/staff/prescriptions/PrescriptionList";
 import PaymentForm from "../features/staff/payments/PaymentForm";
 import PaymentList from "../features/staff/payments/PaymentList";
+import PaymentListNew from "../features/staff/payment/PaymentList";
+import PaymentDetails from "../features/staff/payment/PaymentDetails";
+import PaymentSuccess from "../features/staff/payment/PaymentSuccess";
+import PaymentFailed from "../features/staff/payment/PaymentFailed";
+import DoctorList from "../features/staff/doctorManagement/DoctorList";
+import DoctorDetails from "../features/staff/doctorManagement/DoctorDetails";
 import CustomerRatings from "../features/staff/ratings/CustomerRatings";
 import StaffProfileNew from "../features/staff/profile/StaffProfile";
+import EditStaffProfile from "../features/staff/profile/EditStaffProfile";
 import DoctorDashboard from "../features/doctor/DoctorDashboard";
 import DoctorAppointments from "../features/doctor/appointments/DoctorAppointments";
 import DoctorProfile from "../features/doctor/profile/DoctorProfile";
@@ -81,13 +82,21 @@ export default function AppRouter() {
           <Route path="/staff/patients/:id/edit" element={<ProtectedRoute allowedRoles={['staff']}><PatientForm/></ProtectedRoute>}/>
           <Route path="/staff/appointments" element={<ProtectedRoute allowedRoles={['staff']}><AppointmentList/></ProtectedRoute>}/>
           <Route path="/staff/appointments/:id" element={<ProtectedRoute allowedRoles={['staff']}><AppointmentDetails/></ProtectedRoute>}/>
+          <Route path="/staff/appointments/new" element={<ProtectedRoute allowedRoles={['staff']}><CreateAppointment/></ProtectedRoute>}/>
+          <Route path="/staff/doctors" element={<ProtectedRoute allowedRoles={['staff']}><DoctorList/></ProtectedRoute>}/>
+          <Route path="/staff/doctors/:id" element={<ProtectedRoute allowedRoles={['staff']}><DoctorDetails/></ProtectedRoute>}/>
           <Route path="/staff/prescriptions" element={<ProtectedRoute allowedRoles={['staff']}><PrescriptionList/></ProtectedRoute>}/>
           <Route path="/staff/prescriptions/new" element={<ProtectedRoute allowedRoles={['staff']}><PrescriptionForm/></ProtectedRoute>}/>
+          <Route path="/staff/payment" element={<ProtectedRoute allowedRoles={['staff']}><PaymentListNew/></ProtectedRoute>}/>
+          <Route path="/staff/payment/:appointmentId" element={<ProtectedRoute allowedRoles={['staff']}><PaymentDetails/></ProtectedRoute>}/>
+          <Route path="/staff/payment/success" element={<ProtectedRoute allowedRoles={['staff']}><PaymentSuccess/></ProtectedRoute>}/>
+          <Route path="/staff/payment/failed" element={<ProtectedRoute allowedRoles={['staff']}><PaymentFailed/></ProtectedRoute>}/>
           <Route path="/staff/payments" element={<ProtectedRoute allowedRoles={['staff']}><PaymentList/></ProtectedRoute>}/>
           <Route path="/staff/payments/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
           <Route path="/staff/ratings" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
           <Route path="/staff/ratings/:customerId" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
           <Route path="/staff/profile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfileNew/></ProtectedRoute>}/>
+          <Route path="/staff/profile/edit" element={<ProtectedRoute allowedRoles={['staff']}><EditStaffProfile/></ProtectedRoute>}/>
 
           {/* Staff Routes - Legacy (for backward compatibility) */}
           <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboardNew/></ProtectedRoute>}/>

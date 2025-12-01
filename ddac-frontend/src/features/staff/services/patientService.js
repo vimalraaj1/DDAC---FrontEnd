@@ -1,41 +1,63 @@
 import staffApi from "./staffApi";
-import api from "../../../api/axios";
 
-// Get all patients
+const PATIENT_ENDPOINT = "/patients";
+
+const mapPatientPayload = (payload = {}) => ({
+  id: payload.id?.trim() ?? "",
+  firstName: payload.firstName?.trim() ?? "",
+  lastName: payload.lastName?.trim() ?? "",
+  email: payload.email?.trim() ?? "",
+  phone: payload.phone?.trim() ?? "",
+  dateOfBirth: payload.dateOfBirth ?? "",
+  gender: payload.gender ?? "",
+  address: payload.address ?? "",
+  bloodGroup: payload.bloodGroup || null,
+  emergencyContact: payload.emergencyContact || null,
+  emergencyName: payload.emergencyName || null,
+  emergencyRelationship: payload.emergencyRelationship || null,
+  allergies: payload.allergies || null,
+  conditions: payload.conditions || null,
+  medications: payload.medications || null,
+});
+
 export const getAllPatients = async () => {
-  const response = await staffApi.get("/patient");
+  const response = await staffApi.get(PATIENT_ENDPOINT);
   return response.data;
 };
 
-// Get patient by ID
 export const getPatientById = async (id) => {
-  const response = await staffApi.get(`/patient/${id}`);
+  const response = await staffApi.get(`${PATIENT_ENDPOINT}/${id}`);
   return response.data;
 };
 
-// Create new patient
 export const createPatient = async (patientData) => {
-  const response = await staffApi.post("/patient", patientData);
+  const response = await staffApi.post(
+    PATIENT_ENDPOINT,
+    mapPatientPayload(patientData)
+  );
   return response.data;
 };
 
-// Update patient
 export const updatePatient = async (id, patientData) => {
-  console.log("Request Body: ", patientData);
-
-  const response = await staffApi.put(`/patient/${id}`, patientData);
+  const response = await staffApi.put(
+    `${PATIENT_ENDPOINT}/${id}`,
+    mapPatientPayload(patientData)
+  );
   return response.data;
 };
 
-// Delete patient
 export const deletePatient = async (id) => {
-  const response = await staffApi.delete(`/patients/${id}`);
+  const response = await staffApi.delete(`${PATIENT_ENDPOINT}/${id}`);
   return response.data;
 };
 
-// Search patients
 export const searchPatients = async (query) => {
-  const response = await staffApi.get(`/patients/search?q=${query}`);
+  const response = await staffApi.get(
+    `${PATIENT_ENDPOINT}/search`,
+    {
+      params: { q: query },
+    }
+  );
   return response.data;
 };
 

@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function DataTable({ columns, data, onRowClick, actions }) {
+export default function DataTable({ columns, data, onRowClick, actions, rowClassName }) {
   const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
 
   const handleSort = (key) => {
@@ -55,7 +55,7 @@ export default function DataTable({ columns, data, onRowClick, actions }) {
             sortedData.map((row, index) => (
               <tr
                 key={row.id || index}
-                className={`hover:bg-gray-50 ${onRowClick ? "cursor-pointer" : ""}`}
+                className={`hover:bg-gray-50 ${onRowClick ? "cursor-pointer" : ""} ${rowClassName ? rowClassName(row) : ""}`}
                 onClick={() => onRowClick && onRowClick(row)}
               >
                 {columns.map((column) => (

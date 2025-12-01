@@ -39,7 +39,7 @@ export default function PaymentForm() {
     } catch (error) {
       console.error("Error loading data:", error);
       // Mock data
-      setAppointment({ id: appointmentId, patientName: "John Doe" });
+      setAppointment({ id: appointmentId, patient: { firstName: "John", lastName: "Doe" } });
       setReceipt({
         totalAmount: 150.00,
         items: [{ description: "Consultation", amount: 100.00 }, { description: "Medication", amount: 50.00 }],
@@ -97,7 +97,7 @@ export default function PaymentForm() {
             <h1 className="text-3xl font-bold text-gray-900">Process Payment</h1>
             {appointment && (
               <p className="text-gray-600 mt-2">
-                For: {appointment.patientName || appointment.patient?.name || "Patient"}
+                For: {appointment._patient ? `${appointment._patient.firstName || ""} ${appointment._patient.lastName || ""}`.trim() : appointment.patientId || appointment.patientName || "Patient"}
               </p>
             )}
           </div>

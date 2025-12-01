@@ -3,59 +3,132 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import Layout from "../../../components/Layout";
 import StatusBadge from "../components/StatusBadge";
 import * as appointmentService from "../services/appointmentService";
-import { FaArrowLeft, FaCheck, FaTimes, FaFilePrescription } from "react-icons/fa";
+import * as patientService from "../services/patientService";
+import * as doctorService from "../services/doctorService";
+import * as profileService from "../services/profileService";
+import { FaArrowLeft, FaCheckCircle, FaCreditCard, FaSpinner, FaTimesCircle } from "react-icons/fa";
+import { toast } from "sonner";
+import { formatStaffDate } from "../utils/dateFormat";
 
 export default function AppointmentDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
+  const appointmentIdValue = appointment?.id ?? id;
+  const normalizedStatus = (appointment?.status || "").toLowerCase();
+  const canApprove = normalizedStatus === "pending";
+  const canComplete = normalizedStatus === "approved";
+  const canPay = normalizedStatus === "completed";
+  const isPaid = normalizedStatus === "paid";
 
   useEffect(() => {
     loadAppointment();
   }, [id]);
 
+  const handleApprove = async () => {
+    if (!appointmentIdValue) {
+      toast.error("Unable to determine appointment identifier.");
+      return;
+    }
+    try {
+      setActionLoading(true);
+      await appointmentService.approveAppointment(appointmentIdValue);
+      toast.success("Appointment approved.");
+      await loadAppointment();
+    } catch (error) {
+      console.error("Error approving appointment:", error);
+      toast.error("Failed to approve appointment. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!appointmentIdValue) {
+      toast.error("Unable to determine appointment identifier.");
+      return;
+    }
+
+    const reason =
+      window.prompt("Please provide a reason for rejecting this appointment:", "Rejected by staff") ||
+      "Rejected by staff";
+
+    try {
+      setActionLoading(true);
+      await appointmentService.rejectAppointment(appointmentIdValue, reason);
+      toast.success("Appointment rejected.");
+      await loadAppointment();
+    } catch (error) {
+      console.error("Error rejecting appointment:", error);
+      toast.error("Failed to reject appointment. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const loadAppointment = async () => {
     try {
       setLoading(true);
       const data = await appointmentService.getAppointmentById(id);
+      // try to enrich with related objects
+      try {
+        if (data?.patientId) {
+          const p = await patientService.getPatientById(data.patientId);
+          data._patient = p;
+        }
+        if (data?.doctorId) {
+          const d = await doctorService.getDoctorById(data.doctorId);
+          data._doctor = d;
+        }
+        if (data?.staffId) {
+          const s = await profileService.getProfile();
+          data._staff = s;
+        }
+      } catch (err) {
+        // ignore enrichment errors
+      }
       setAppointment(data);
     } catch (error) {
       console.error("Error loading appointment:", error);
-      // Mock data
-      setAppointment({
-        id: id,
-        patientName: "John Doe",
-        date: "2024-12-20",
-        time: "10:00",
-        status: "pending",
-        reason: "General checkup",
-        notes: "Patient requested follow-up",
-      });
+      toast.error("Failed to load appointment details. Please try again.");
+      setAppointment(null);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApprove = async () => {
+  const handleComplete = async () => {
+    if (!appointmentIdValue) {
+      toast.error("Unable to determine appointment identifier.");
+      return;
+    }
     try {
-      await appointmentService.approveAppointment(id);
-      loadAppointment();
+      setActionLoading(true);
+      await appointmentService.completeAppointment(appointmentIdValue, { completedAt: new Date().toISOString() });
+      toast.success("Appointment marked as completed.");
+      await loadAppointment();
     } catch (error) {
-      console.error("Error approving appointment:", error);
+      console.error("Error completing appointment:", error);
+      toast.error("Failed to complete appointment. Please try again.");
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handleReject = async () => {
-    const reason = prompt("Enter rejection reason:");
-    if (reason) {
-      try {
-        await appointmentService.rejectAppointment(id, reason);
-        loadAppointment();
-      } catch (error) {
-        console.error("Error rejecting appointment:", error);
-      }
+  const handleNavigateToPayment = () => {
+    if (!appointmentIdValue) {
+      toast.error("Unable to determine appointment identifier.");
+      return;
     }
+    if (!canPay) {
+      toast.error("Only completed appointments can proceed to payment.");
+      return;
+    }
+    navigate(`/staff/payment/${appointmentIdValue}`, {
+      state: { appointment, patient: appointment?._patient },
+    });
   };
 
   if (loading) {
@@ -98,35 +171,81 @@ export default function AppointmentDetails() {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Appointment Details</h1>
-                <StatusBadge status={appointment.status} />
+                <h4 className="text-lg font-bold text-gray-900 mb-2">{appointment.id}</h4>
               </div>
-              {appointment.status === "pending" && (
-                <div className="flex gap-2">
+              <div className="flex gap-2">
+                {canApprove && (
+                  <>
+                    <button
+                      onClick={handleApprove}
+                      disabled={actionLoading}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60"
+                    >
+                      {actionLoading ? (
+                        <>
+                          <FaSpinner className="animate-spin" size={16} />
+                          Approving...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheckCircle size={16} />
+                          Approve
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleReject}
+                      disabled={actionLoading}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2 disabled:opacity-60"
+                    >
+                      {actionLoading ? (
+                        <>
+                          <FaSpinner className="animate-spin" size={16} />
+                          Rejecting...
+                        </>
+                      ) : (
+                        <>
+                          <FaTimesCircle size={16} />
+                          Reject
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+                {canComplete && (
                   <button
-                    onClick={handleApprove}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2"
+                    onClick={handleComplete}
+                    disabled={actionLoading}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60"
                   >
-                    <FaCheck size={16} />
-                    Approve
+                    {actionLoading ? (
+                      <>
+                        <FaSpinner className="animate-spin" size={16} />
+                        Completing...
+                      </>
+                    ) : (
+                      <>
+                        <FaCheckCircle size={16} />
+                        Complete
+                      </>
+                    )}
                   </button>
+                )}
+                {canPay && (
                   <button
-                    onClick={handleReject}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center gap-2"
+                    onClick={handleNavigateToPayment}
+                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center gap-2"
                   >
-                    <FaTimes size={16} />
-                    Reject
+                    <FaCreditCard size={16} />
+                    Pay
                   </button>
-                </div>
-              )}
-              {appointment.status === "completed" && (
-                <Link
-                  to={`/staff/prescriptions/new?appointmentId=${id}`}
-                  className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover flex items-center gap-2"
-                >
-                  <FaFilePrescription size={16} />
-                  Assign Prescription
-                </Link>
-              )}
+                )}
+                {isPaid && (
+                  <div className="px-4 py-2 rounded-lg bg-green-50 text-green-700 font-medium border border-green-200">
+                    Payment Completed
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -136,16 +255,18 @@ export default function AppointmentDetails() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Appointment Information</h2>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-500">Patient Name</p>
+                    <p className="text-sm text-gray-500">Patient</p>
                     <p className="text-gray-900 font-medium">
-                      {appointment.patientName || appointment.patient?.name || "N/A"}
+                      {appointment._patient ? `${appointment._patient.firstName || ""} ${appointment._patient.lastName || ""}`.trim() : appointment.patientId || "N/A"}
                     </p>
                   </div>
                   <div>
+                    <p className="text-sm text-gray-500">Doctor</p>
+                    <p className="text-gray-900 font-medium">{appointment._doctor ? `${appointment._doctor.firstName || ""} ${appointment._doctor.lastName || ""}`.trim() : appointment.doctorId || "N/A"}</p>
+                  </div>
+                  <div>
                     <p className="text-sm text-gray-500">Date</p>
-                    <p className="text-gray-900 font-medium">
-                      {appointment.date ? new Date(appointment.date).toLocaleDateString() : "N/A"}
-                    </p>
+                    <p className="text-gray-900 font-medium">{formatStaffDate(appointment.date)}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">Time</p>
@@ -161,12 +282,30 @@ export default function AppointmentDetails() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Details</h2>
                 <div className="space-y-3">
                   <div>
-                    <p className="text-sm text-gray-500">Reason</p>
-                    <p className="text-gray-900 font-medium">{appointment.reason || "N/A"}</p>
+                    <p className="text-sm text-gray-500">Purpose</p>
+                    <p className="text-gray-900 font-medium">{appointment.purpose || "N/A"}</p>
                   </div>
+                  {appointment.status === "Completed" && appointment.comment && (
+                    <div>
+                      <p className="text-sm text-gray-500">Doctor&apos;s Comment</p>
+                      <p className="text-gray-900 font-medium whitespace-pre-wrap">{appointment.comment}</p>
+                    </div>
+                  )}
+                  {appointment.status === "Cancelled" && (
+                    <div>
+                      <p className="text-sm text-gray-500">Cancellation Reason</p>
+                      <p className="text-gray-900 font-medium">{appointment.cancellationReason || "N/A"}</p>
+                    </div>
+                  )}
+                  {appointment.status === "Rejected" && (
+                    <div>
+                      <p className="text-sm text-gray-500">Cancellation Reason</p>
+                      <p className="text-gray-900 font-medium">{appointment.cancellationReason || "N/A"}</p>
+                    </div>
+                  )}
                   <div>
-                    <p className="text-sm text-gray-500">Notes</p>
-                    <p className="text-gray-900 font-medium">{appointment.notes || "No notes"}</p>
+                    <p className="text-sm text-gray-500">Handled By</p>
+                    <p className="text-gray-900 font-medium">{appointment._staff ? appointment._staff.fullName || appointment._staff.email : appointment.staffId || "N/A"}</p>
                   </div>
                 </div>
               </div>

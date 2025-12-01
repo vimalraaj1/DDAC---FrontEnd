@@ -61,27 +61,12 @@ export default function ManagePatients() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-gray-900 mb-2">
-                        {p.patientName}
-                      </h3>
-                      <p className="text-sm text-gray-neutral mb-1">
-                        <span className="font-medium">Phone:</span>{" "}
-                        {p.phoneNumber}
-                      </p>
-                      <p className="text-sm text-gray-neutral mb-1">
-                        <span className="font-medium">Email:</span> {p.email}
-                      </p>
-                      <p className="text-sm text-gray-neutral mb-1">
-                        <span className="font-medium">Gender:</span> {p.gender}
-                      </p>
-                      <p className="text-sm text-gray-neutral mb-1">
-                        <span className="font-medium">Address:</span>{" "}
-                        {p.address}
-                      </p>
-                      <p className="text-sm text-gray-neutral">
-                        <span className="font-medium">Allergies:</span>{" "}
-                        {p.allergies || "None"}
-                      </p>
+                      <h3 className="font-semibold text-gray-900 mb-2">{`${p.firstName || ""} ${p.lastName || ""}`.trim() || "Unnamed"}</h3>
+                      <p className="text-sm text-gray-neutral mb-1"><span className="font-medium">Phone:</span> {p.phone || "-"}</p>
+                      <p className="text-sm text-gray-neutral mb-1"><span className="font-medium">Email:</span> {p.email || "-"}</p>
+                      <p className="text-sm text-gray-neutral mb-1"><span className="font-medium">Gender:</span> {p.gender || "-"}</p>
+                      <p className="text-sm text-gray-neutral mb-1"><span className="font-medium">Address:</span> {p.address || "-"}</p>
+                      <p className="text-sm text-gray-neutral"><span className="font-medium">Allergies:</span> {p.allergies || "None"}</p>
                     </div>
                   </div>
                   <div className="flex space-x-2 pt-4 border-t border-gray-200">

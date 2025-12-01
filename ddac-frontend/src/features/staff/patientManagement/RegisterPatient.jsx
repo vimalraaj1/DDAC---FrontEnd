@@ -10,11 +10,20 @@ const RegisterPatient = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const emptyPatient = {
-    patientName: "",
+    firstName: "",
+    lastName: "",
     gender: "",
-    phoneNumber: "",
+    phone: "",
+    email: "",
+    dateOfBirth: "",
     address: "",
+    bloodGroup: "",
+    emergencyContact: "",
+    emergencyName: "",
+    emergencyRelationship: "",
     allergies: "",
+    conditions: "",
+    medications: "",
   };
 
   const handleSave = async (patientData) => {
@@ -23,9 +32,7 @@ const RegisterPatient = () => {
 
     try {
       const newPatient = await registerPatient(patientData);
-      setSuccessMessage(
-        `Patient ${newPatient.patientName} registered successfully!`
-      );
+      setSuccessMessage(`Patient ${newPatient.firstName || ""} ${newPatient.lastName || ""} registered successfully!`);
 
       setTimeout(() => {
         setSuccessMessage("");

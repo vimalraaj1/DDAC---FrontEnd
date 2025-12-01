@@ -1,6 +1,7 @@
 import { CustomerProvider } from "./features/customer/CustomerProvider";
 import AppRouter from "./router/AppRouter";
 import { useEffect } from "react";
+import { Toaster } from "sonner";
 
 export default function App() {
   useEffect(() => {
@@ -10,5 +11,10 @@ export default function App() {
       document.documentElement.className = `theme-${userRole}`;
     }
   }, []);
-  return <AppRouter />;
+  return (
+    <>
+      <AppRouter />
+      <Toaster position="top-right" richColors />
+    </>
+  );
 }
