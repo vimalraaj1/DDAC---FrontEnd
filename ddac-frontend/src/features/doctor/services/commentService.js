@@ -41,6 +41,7 @@ const commentService = {
      * Get comments for current doctor
      * Filters comments by doctor ID from localStorage
      * Falls back to mock doctor ID (DR000001) for testing without auth
+     * Excludes comments with null ratings (pending patient feedback)
      */
     getDoctorComments: async () => {
         try {
@@ -49,14 +50,28 @@ const commentService = {
             
             console.log('Fetching comments for doctor:', userId);
             
-            const response = await api.get('/comments');
-            // Filter comments for current doctor
-            const doctorComments = response.data.filter(
-                comment => comment.doctorId === userId
+            const [commentsResponse, patientsResponse] = await Promise.all([
+                api.get('/comments'),
+                api.get('/patients')
+            ]);
+            
+            // Filter comments for current doctor and exclude null ratings
+            const doctorComments = commentsResponse.data.filter(
+                comment => comment.doctorId === userId && 
+                           comment.doctorRating !== null
             );
             
+            // Enrich comments with patient names
+            const enrichedComments = doctorComments.map(comment => {
+                const patient = patientsResponse.data.find(p => p.id === comment.patientId);
+                return {
+                    ...comment,
+                    patientName: patient ? `${patient.firstName} ${patient.lastName}` : `Patient ${comment.patientId}`
+                };
+            });
+            
             // Sort by time (most recent first)
-            return doctorComments.sort((a, b) => new Date(b.time) - new Date(a.time));
+            return enrichedComments.sort((a, b) => new Date(b.time) - new Date(a.time));
         } catch (error) {
             console.error('Error fetching doctor comments:', error);
             throw error;

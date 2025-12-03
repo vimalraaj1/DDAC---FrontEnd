@@ -185,7 +185,7 @@ export default function Appointments() {
     };
 
     try {
-      await registerAppointments(payload);
+      await registerAppointment(payload);
 
       toast.success("Appointment booked successfully!", {
         style: {

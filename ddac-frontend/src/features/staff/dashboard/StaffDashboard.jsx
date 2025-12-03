@@ -13,6 +13,8 @@ import {
 } from "react-icons/fa";
 import * as appointmentService from "../services/appointmentService";
 import * as patientService from "../services/patientService";
+import { toast } from "sonner";
+import { formatStaffDate } from "../utils/dateFormat";
 
 export default function StaffDashboard() {
   const [stats, setStats] = useState({
@@ -29,23 +31,51 @@ export default function StaffDashboard() {
   }, []);
 
   const loadDashboardData = async () => {
+    const today = new Date();
+    const isSameDay = (dateStr) => {
+      if (!dateStr) return false;
+      const d = new Date(dateStr);
+      return (
+        d.getFullYear() === today.getFullYear() &&
+        d.getMonth() === today.getMonth() &&
+        d.getDate() === today.getDate()
+      );
+    };
+
     try {
       setLoading(true);
-      // Mock data for now - replace with actual API calls
-      const pendingApps = await appointmentService.getPendingAppointments().catch(() => []);
-      const completedApps = await appointmentService.getCompletedAppointments().catch(() => []);
+      const allAppointments = await appointmentService
+        .getAllAppointments()
+        .catch(() => []);
       const patients = await patientService.getAllPatients().catch(() => []);
 
+      const pendingApps =
+        allAppointments?.filter(
+          (a) => (a.status || "").toLowerCase() === "pending"
+        ) || [];
+      const completedApps =
+        allAppointments?.filter(
+          (a) => (a.status || "").toLowerCase() === "completed"
+        ) || [];
+      const todayApps = allAppointments?.filter((a) => isSameDay(a.date)) || [];
+      const todayApprovedApps =
+        todayApps.filter(
+          (a) => (a.status || "").toLowerCase() === "approved"
+        ) || [];
+
       setStats({
-        pendingAppointments: pendingApps.length || 5,
-        completedAppointments: completedApps.length || 12,
-        totalPatients: patients.length || 45,
-        todayAppointments: 3,
+        pendingAppointments: pendingApps.length,
+        completedAppointments: completedApps.length,
+        totalPatients: patients.length,
+        todayAppointments: todayApps.length,
       });
 
-      setRecentAppointments(pendingApps.slice(0, 5) || []);
+      setRecentAppointments(todayApprovedApps.slice(0, 5) || []);
     } catch (error) {
       console.error("Error loading dashboard data:", error);
+      toast.error(
+        "Failed to load dashboard data. Some information may be incomplete."
+      );
     } finally {
       setLoading(false);
     }
@@ -78,7 +108,7 @@ export default function StaffDashboard() {
       value: stats.todayAppointments,
       icon: FaCalendarCheck,
       color: "bg-purple-500",
-      link: "/staff/appointments",
+      link: "/staff/appointments?filter=today",
     },
   ];
 
@@ -105,17 +135,10 @@ export default function StaffDashboard() {
       color: "bg-purple-50 text-purple-600",
     },
     {
-      title: "Prescriptions",
-      description: "Assign prescriptions",
-      icon: FaFilePrescription,
-      link: "/staff/prescriptions",
-      color: "bg-orange-50 text-orange-600",
-    },
-    {
       title: "Payments",
       description: "Process payments",
       icon: FaCreditCard,
-      link: "/staff/payments",
+      link: "/staff/payment",
       color: "bg-indigo-50 text-indigo-600",
     },
     {
@@ -132,8 +155,12 @@ export default function StaffDashboard() {
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Staff Dashboard</h1>
-            <p className="text-gray-600">Welcome back! Here's what's happening today.</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Staff Dashboard
+            </h1>
+            <p className="text-gray-600">
+              Welcome back! Here's what's happening today.
+            </p>
           </div>
 
           {/* Stats Grid */}
@@ -148,8 +175,12 @@ export default function StaffDashboard() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
-                      <p className="text-3xl font-bold text-gray-900">{stat.value}</p>
+                      <p className="text-sm font-medium text-gray-600 mb-1">
+                        {stat.title}
+                      </p>
+                      <p className="text-3xl font-bold text-gray-900">
+                        {stat.value}
+                      </p>
                     </div>
                     <div className={`${stat.color} p-3 rounded-lg`}>
                       <Icon className="text-white" size={24} />
@@ -161,25 +192,98 @@ export default function StaffDashboard() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Quick Actions */}
+            {/* Today's Appointments (wider) */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Today's Appointments
+                </h2>
+                {loading ? (
+                  <p className="text-gray-500">Loading...</p>
+                ) : recentAppointments.length > 0 ? (
+                  <div className="space-y-3">
+                    {recentAppointments.map((appointment, index) => {
+                      const appointmentId = appointment.id || appointment._id;
+                      if (!appointmentId) return null;
+                      const doctorLabel =
+                        appointment.doctorName ||
+                        appointment.doctorId ||
+                        "Doctor not specified";
+                      const patientLabel =
+                        appointment.patientName ||
+                        appointment.patientId ||
+                        "Patient not specified";
+                      return (
+                        <Link
+                          key={index}
+                          to={`/staff/appointments/${appointmentId}`}
+                          className="block border-l-4 border-blue-500 pl-4 pr-3 py-3 hover:bg-blue-50 rounded-md transition-colors"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                <span className="font-medium">
+                                  {appointmentId}
+                                </span>
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Patient:{" "}
+                                <span className="font-medium">
+                                  {patientLabel}
+                                </span>
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Doctor:{" "}
+                                <span className="font-medium">
+                                  {doctorLabel}
+                                </span>
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {formatStaffDate(
+                                  appointment.date || new Date()
+                                )}
+                                {appointment.time
+                                  ? ` • ${appointment.time}`
+                                  : ""}
+                              </p>
+                            </div>
+                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">
+                              View details
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-gray-500">No appointments for today</p>
+                )}
+              </div>
+            </div>
+
+            {/* Quick Actions (narrower) */}
+            <div>
+              <div className="bg-white rounded-lg shadow-md p-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                  Quick Actions
+                </h2>
+                <div className="grid grid-cols-1 gap-3">
                   {quickActions.map((action, index) => {
                     const Icon = action.icon;
                     return (
                       <Link
                         key={index}
                         to={action.link}
-                        className={`${action.color} p-4 rounded-lg hover:opacity-80 transition-opacity`}
+                        className={`${action.color} p-3 rounded-lg hover:opacity-80 transition-opacity flex items-center gap-3`}
                       >
-                        <div className="flex items-center gap-3">
-                          <Icon size={24} />
-                          <div>
-                            <h3 className="font-semibold">{action.title}</h3>
-                            <p className="text-sm opacity-80">{action.description}</p>
-                          </div>
+                        <Icon size={22} />
+                        <div>
+                          <h3 className="font-semibold text-sm">
+                            {action.title}
+                          </h3>
+                          <p className="text-xs opacity-80">
+                            {action.description}
+                          </p>
                         </div>
                       </Link>
                     );
@@ -187,33 +291,9 @@ export default function StaffDashboard() {
                 </div>
               </div>
             </div>
-
-            {/* Recent Activity */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recent Appointments</h2>
-              {loading ? (
-                <p className="text-gray-500">Loading...</p>
-              ) : recentAppointments.length > 0 ? (
-                <div className="space-y-3">
-                  {recentAppointments.map((appointment, index) => (
-                    <div key={index} className="border-l-4 border-blue-500 pl-3 py-2">
-                      <p className="font-medium text-gray-900">
-                        {appointment.patientName || "Patient Name"}
-                      </p>
-                      <p className="text-sm text-gray-600">
-                        {appointment.date || new Date().toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No recent appointments</p>
-              )}
-            </div>
           </div>
         </div>
       </div>
     </Layout>
   );
 }
-

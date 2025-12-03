@@ -1,33 +1,18 @@
-import axios from "axios";
-import api from "../../../api/axios";
+import {
+  getAllPatients,
+  createPatient,
+  getPatientById as getPatientRecordById,
+  updatePatient as updatePatientRecord,
+  deletePatient as deletePatientRecord,
+} from "../services/patientService";
 
-const BASE_URL = api + "/patient";
+export const getPatients = getAllPatients;
 
-// GET all patients
-export const getPatients = async () => {
-  const res = await axios.get(BASE_URL);
-  return res.data;
-};
+export const registerPatient = createPatient;
 
-// REGISTER new patient
-export const registerPatient = async (patient) => {
-  const res = await axios.post(BASE_URL, patient);
-  return res.data;
-};
+export const getPatientById = getPatientRecordById;
 
-// GET one patient
-export const getPatientById = async (id) => {
-  const res = await axios.get(`${BASE_URL}/${id}`);
-  return res.data;
-};
+export const updatePatient = updatePatientRecord;
 
-// UPDATE patient
-export const updatePatient = async (id, updated) => {
-  const res = await axios.put(`${BASE_URL}/${id}`, updated);
-  return res.data;
-};
+export const deletePatient = deletePatientRecord;
 
-// DELETE patient
-export const deletePatient = async (id) => {
-  await axios.delete(`${BASE_URL}/${id}`);
-};

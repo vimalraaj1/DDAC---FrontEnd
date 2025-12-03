@@ -4,6 +4,7 @@ import Layout from "../../../components/Layout";
 import DataTable from "../components/DataTable";
 import * as prescriptionService from "../services/prescriptionService";
 import { FaEye, FaEdit } from "react-icons/fa";
+import { formatStaffDate } from "../utils/dateFormat";
 
 export default function PrescriptionList() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function PrescriptionList() {
       setPrescriptions([
         {
           id: 1,
-          patientName: "John Doe",
+          patient: { firstName: "John", lastName: "Doe" },
           appointmentDate: "2024-12-20",
           medications: [{ name: "Paracetamol", dosage: "500mg" }],
           createdAt: "2024-12-20",
@@ -40,14 +41,16 @@ export default function PrescriptionList() {
     {
       key: "patientName",
       label: "Patient",
-      render: (value, row) => (
-        <div className="font-medium text-gray-900">{value || row.patient?.name || "N/A"}</div>
-      ),
+      render: (value, row) => {
+        const p = row.patient || row._patient;
+        const label = p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : value || row.patientName || "N/A";
+        return <div className="font-medium text-gray-900">{label}</div>;
+      },
     },
     {
       key: "appointmentDate",
       label: "Appointment Date",
-      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A",
+      render: (value) => formatStaffDate(value),
     },
     {
       key: "medications",
@@ -60,7 +63,7 @@ export default function PrescriptionList() {
     {
       key: "createdAt",
       label: "Created",
-      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A",
+      render: (value) => formatStaffDate(value),
     },
   ];
 

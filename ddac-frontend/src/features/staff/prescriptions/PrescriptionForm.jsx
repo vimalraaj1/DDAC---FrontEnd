@@ -80,7 +80,7 @@ export default function PrescriptionForm() {
             <h1 className="text-3xl font-bold text-gray-900">Assign Prescription</h1>
             {appointment && (
               <p className="text-gray-600 mt-2">
-                For: {appointment.patientName || appointment.patient?.name || "Patient"}
+                For: {appointment._patient ? `${appointment._patient.firstName || ""} ${appointment._patient.lastName || ""}`.trim() : appointment.patientId || appointment.patientName || "Patient"}
               </p>
             )}
           </div>

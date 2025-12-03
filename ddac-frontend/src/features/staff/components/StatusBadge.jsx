@@ -7,6 +7,8 @@ export default function StatusBadge({ status }) {
     cancelled: { color: "bg-gray-100 text-gray-800", label: "Cancelled" },
     paid: { color: "bg-green-100 text-green-800", label: "Paid" },
     unpaid: { color: "bg-orange-100 text-orange-800", label: "Unpaid" },
+    active: { color: "bg-green-100 text-green-800", label: "Active" },
+    inactive: { color: "bg-gray-200 text-gray-700", label: "Inactive" },
   };
 
   const config = statusConfig[status?.toLowerCase()] || {

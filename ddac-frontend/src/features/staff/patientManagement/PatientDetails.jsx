@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import Layout from "../../../components/Layout";
-import StatusBadge from "../components/StatusBadge";
 import * as patientService from "../services/patientService";
 import {
   FaEdit,
@@ -11,29 +10,19 @@ import {
   FaPhone,
   FaCalendar,
   FaMapMarkerAlt,
+  FaTint,
+  FaHeartbeat,
 } from "react-icons/fa";
+import { formatStaffDate } from "../utils/dateFormat";
 
 export default function PatientDetails() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [patient, setPatient] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadPatient();
   }, [id]);
-
-  const icToDob = (ic) => {
-    if (!ic || ic.length < 6) return null;
-
-    const yy = ic.substring(0, 2);
-    const mm = ic.substring(2, 4);
-    const dd = ic.substring(4, 6);
-
-    const year = parseInt(yy) < 25 ? `20${yy}` : `19${yy}`;
-
-    return `${year}-${mm}-${dd}`;
-  };
 
   const loadPatient = async () => {
     try {
@@ -42,18 +31,7 @@ export default function PatientDetails() {
       setPatient(data);
     } catch (error) {
       console.error("Error loading patient:", error);
-      // Mock data for UI
-      setPatient({
-        id: id,
-        firstName: "John",
-        lastName: "Doe",
-        email: "john@example.com",
-        phone: "123-456-7890",
-        dateOfBirth: "1990-01-01",
-        address: "123 Main St, City, State 12345",
-        status: "active",
-        createdAt: "2024-01-01",
-      });
+      setPatient(null);
     } finally {
       setLoading(false);
     }
@@ -84,138 +62,130 @@ export default function PatientDetails() {
     );
   }
 
+  const formatDate = (value) => formatStaffDate(value);
+
   return (
     <Layout role="staff">
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto px-4 py-8">
-          <div className="mb-6">
+          <div className="mb-6 flex justify-between items-center">
             <Link
               to="/staff/patients"
-              className="text-primary hover:underline flex items-center gap-2 mb-4"
+              className="text-primary hover:underline flex items-center gap-2"
             >
               <FaArrowLeft size={16} />
               Back to Patients
             </Link>
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {patient.name || patient.fullName}
-                </h1>
-                <StatusBadge status={patient.status || "active"} />
-              </div>
-              <Link
-                to={`/staff/patients/${id}/edit`}
-                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover flex items-center gap-2"
-              >
-                <FaEdit size={16} />
-                Edit Patient
-              </Link>
-            </div>
+
+            <Link
+              to={`/staff/patients/${id}/edit`}
+              className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary-hover flex items-center gap-2"
+            >
+              <FaEdit size={16} />
+              Edit Patient
+            </Link>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Info */}
             <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-4">
                 Personal Information
               </h2>
               <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <FaUser className="text-gray-400 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-500">First Name</p>
-                    <p className="text-gray-900 font-medium">
-                      {patient.firstName || "N/A"}
-                    </p>
+                {[
+                  {
+                    label: "Patient ID",
+                    value: patient.id || "N/A",
+                    icon: FaUser,
+                  },
+                  {
+                    label: "First Name",
+                    value: patient.firstName || "N/A",
+                    icon: FaUser,
+                  },
+                  {
+                    label: "Last Name",
+                    value: patient.lastName || "N/A",
+                    icon: FaUser,
+                  },
+                  {
+                    label: "Email",
+                    value: patient.email || "N/A",
+                    icon: FaEnvelope,
+                  },
+                  {
+                    label: "Phone",
+                    value: patient.phone || "N/A",
+                    icon: FaPhone,
+                  },
+                  {
+                    label: "Date of Birth",
+                    value: formatDate(patient.dateOfBirth),
+                    icon: FaCalendar,
+                  },
+                  {
+                    label: "Gender",
+                    value: patient.gender || "N/A",
+                    icon: FaUser,
+                  },
+                  {
+                    label: "Address",
+                    value: patient.address || "N/A",
+                    icon: FaMapMarkerAlt,
+                  },
+                ].map(({ label, value, icon: Icon }) => (
+                  <div key={label} className="flex items-start gap-3">
+                    <Icon className="text-gray-400 mt-1" />
+                    <div>
+                      <p className="text-sm text-gray-500">{label}</p>
+                      <p className="text-gray-900 font-medium">{value}</p>
+                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+                Medical & Emergency Info
+              </h2>
+              <div className="space-y-4">
                 <div className="flex items-start gap-3">
-                  <FaUser className="text-gray-400 mt-1" />
+                  <FaTint className="text-gray-400 mt-1" />
                   <div>
-                    <p className="text-sm text-gray-500">Last Name</p>
+                    <p className="text-sm text-gray-500">Blood Group</p>
                     <p className="text-gray-900 font-medium">
-                      {patient.lastName || "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FaUser className="text-gray-400 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-500">IC Number</p>
-                    <p className="text-gray-900 font-medium">
-                      {patient.icNumber || "N/A"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FaEnvelope className="text-gray-400 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="text-gray-900 font-medium">
-                      {patient.email || "N/A"}
+                      {patient.bloodGroup || "N/A"}
                     </p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
                   <FaPhone className="text-gray-400 mt-1" />
                   <div>
-                    <p className="text-sm text-gray-500">Phone</p>
+                    <p className="text-sm text-gray-500">Emergency Contact</p>
                     <p className="text-gray-900 font-medium">
-                      {patient.phone || "N/A"}
+                      {patient.emergencyContact || "N/A"}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {patient.emergencyName
+                        ? `${patient.emergencyName} (${patient.emergencyRelationship || "Relationship N/A"})`
+                        : ""}
                     </p>
                   </div>
                 </div>
-                <div className="flex items-start gap-3">
-                  <FaCalendar className="text-gray-400 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-500">Date of Birth</p>
+                <br />
+                {[
+                  { label: "Allergies", value: patient.allergies },
+                  { label: "Conditions", value: patient.conditions },
+                  { label: "Medications", value: patient.medications },
+                ].map((item) => (
+                  <div key={item.label}>
+                    <p className="text-sm text-gray-500">{item.label}</p>
                     <p className="text-gray-900 font-medium">
-                      {patient.icNumber
-                        ? new Date(
-                            icToDob(patient.icNumber)
-                          ).toLocaleDateString("en-GB")
-                        : "N/A"}
+                      {item.value || "None"}
                     </p>
                   </div>
-                </div>
-                <div className="flex items-start gap-3">
-                  <FaMapMarkerAlt className="text-gray-400 mt-1" />
-                  <div>
-                    <p className="text-sm text-gray-500">Address</p>
-                    <p className="text-gray-900 font-medium">
-                      {patient.address || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Additional Info */}
-            <div className="bg-white rounded-lg shadow-md p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Additional Information
-              </h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-500">Patient ID</p>
-                  <p className="text-gray-900 font-medium">{patient.patientId}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Allergies</p>
-                  <p className="text-gray-900 font-medium">{patient.allergies || "None"}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">Status</p>
-                  <StatusBadge status={patient.status || "active"} />
-                </div>
-                {patient.createdAt && (
-                  <div>
-                    <p className="text-sm text-gray-500">Registered On</p>
-                    <p className="text-gray-900 font-medium">
-                      {new Date(patient.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                )}
+                ))}
               </div>
             </div>
           </div>
