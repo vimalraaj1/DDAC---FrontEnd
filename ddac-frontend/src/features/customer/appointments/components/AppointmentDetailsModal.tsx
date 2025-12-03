@@ -8,6 +8,7 @@ import {
   Phone,
   Mail,
   Pill,
+  Ban,
 } from "lucide-react";
 import {
   Dialog,
@@ -34,14 +35,14 @@ export function AppointmentDetailsModal({
   if (!appointment) return null;
 
   const statusStyles = {
-    Confirmed: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
+    Approved: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
     Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">
+      <DialogContent className="sm:max-w-[600px]  max-h-[650px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -81,11 +82,11 @@ export function AppointmentDetailsModal({
             <div className="space-y-3">
               <div className="flex items-center gap-3 text-[#3D3D3D]">
                 <Phone className="h-4 w-4 text-[#4EA5D9]" />
-                <span>(555) 123-4567</span>
+                <span>{appointment.doctorPhone}</span>
               </div>
               <div className="flex items-center gap-3 text-[#3D3D3D]">
                 <Mail className="h-4 w-4 text-[#4EA5D9]" />
-                <span>dr.sarah.johnson@hospital.com</span>
+                <span>{appointment.doctorEmail}</span>
               </div>
             </div>
           </div>
@@ -108,66 +109,41 @@ export function AppointmentDetailsModal({
                   <p className="text-[#1A1A1A]">{appointment.time}</p>
                 </div>
               </div>
-
-              <div className="flex items-start gap-3">
-                <MapPin className="h-4 w-4 text-[#4EA5D9] mt-1" />
-                <div>
-                  <p className="text-[#7A7A7A] text-sm">Location</p>
-                  <p className="text-[#1A1A1A]">{appointment.location}</p>
-                </div>
-              </div>
             </div>
           </div>
 
           {/* Additional Notes */}
           <div className="space-y-3">
-            <h4 className="text-[#1A1A1A] flex items-center gap-2">
-              <FileText className="h-5 w-5 text-[#4EA5D9]" />
-              Additional Information
-            </h4>
+            {appointment.status != "Cancelled" ? (
+              <div>
+                <h4 className="text-[#1A1A1A] flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-[#4EA5D9]" />
+                  Additional Information
+                </h4>
 
-            <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7">
-              <p className="text-[#3D3D3D] text-sm">
-                Please arrive 15 minutes early to complete any necessary
-                paperwork. Bring your insurance card and a valid photo ID. If
-                you need to cancel or reschedule, please do so at least 24 hours
-                in advance.
-              </p>
-            </div>
+                <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7 mt-5">
+                  <p className="text-[#3D3D3D] text-sm">
+                    Please arrive 15 minutes early to complete any necessary
+                    paperwork. Bring your insurance card and a valid photo ID.
+                    If you need to cancel or reschedule, please do so at least
+                    24 hours in advance.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <h4 className="text-[#1A1A1A] flex items-center gap-2">
+                  <Ban className="h-5 w-5 text-[#E74C3C]" />
+                  Cancellation Reason
+                </h4>
 
-            {/* Prescriptions */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Pill className="size-5 text-[#4EA5D9]" />
-                <h4 className="text-gray-900">Prescription</h4>
+                <div className="mt-4 bg-[#FEF3F2] border border-[#E74C3C]/20 rounded-xl p-4">
+                  <p className="text-[#E74C3C] text-sm">
+                    {appointment.cancellationReason}{" "}
+                  </p>
+                </div>
               </div>
-              <div className="space-y-3">
-                {appointment.prescriptions.map((medication, index) => (
-                  <div
-                    key={index}
-                    className="bg-[#4EA5D9]/10 rounded-xl p-4 space-y-2"
-                  >
-                    <h5 className="text-gray-900">{medication.name}</h5>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <p className="text-gray-500">Dosage</p>
-                        <p className="text-gray-700">{medication.dosage}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Duration</p>
-                        <p className="text-gray-700">{medication.duration}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Refills</p>
-                        <p className="text-gray-700">
-                          {medication.refills} remaining
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            )}
 
             {/* Button */}
             <div className="flex gap-3 pt-4">

@@ -7,7 +7,7 @@ export const getConsultations = async () => {
     return res.data;
 }
 
-const addConsultation = async (consultation) => {
+export const addConsultation = async (consultation) => {
     const res = await api.post(BASE_URL, consultation);
     return res.data;
 }
@@ -24,4 +24,12 @@ export const updateConsultation = async (id, consultation) => {
 
 export const deleteConsultation = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);
+    return res.data;
 }
+
+// GET all appointments with patientID
+export const getConsultationsByPatientId = async (patientId) => {
+  const res = await api.get(`${BASE_URL}/patient/${patientId}/consultations`);
+  return res.data;
+};
+

@@ -951,7 +951,7 @@ export default function App() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <Toaster />
+
       </div>
     </Layout>
   );

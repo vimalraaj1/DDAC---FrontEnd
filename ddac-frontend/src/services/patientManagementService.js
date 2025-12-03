@@ -17,6 +17,8 @@ export const registerPatient = async (patient) => {
 
 // GET one patient
 export const getPatientById = async (id) => {
+  console.log("VITE_API_URL =", import.meta.env.VITE_API_URL);
+
   const res = await api.get(`${BASE_URL}/${id}`);
   return res.data;
 };

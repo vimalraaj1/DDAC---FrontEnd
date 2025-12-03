@@ -2,13 +2,19 @@ import api from "../api/axios";
 
 const BASE_URL = "/comments";
 
-export const getComments = async () => {
-    const res = await api.get(BASE_URL);
-    return res.data;
+// GET all appointments with patientID
+export const getCommentsByPatientId = async (patientId) => {
+  const res = await api.get(`${BASE_URL}/patient/${patientId}/comments`);
+  return res.data;
+};
+
+export const addComment = async (commentId, payload) => {
+  const res = await api.put(`${BASE_URL}/${commentId}`, payload);
+  return res.data;
 }
 
-const addComment = async (comment) => {
-    const res = await api.post(BASE_URL, comment);
+export const getComments = async () => {
+    const res = await api.get(BASE_URL);
     return res.data;
 }
 
@@ -24,4 +30,5 @@ export const updateComment = async (id, comment) => {
 
 export const deleteComment = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);
+    return res.data;
 }
