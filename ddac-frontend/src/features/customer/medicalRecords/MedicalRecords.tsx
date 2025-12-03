@@ -152,7 +152,7 @@ export default function App() {
             </div>
           </main>
         </div>
-        <Toaster />
+
       </div>
     </Layout>
   );

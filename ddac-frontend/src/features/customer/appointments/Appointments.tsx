@@ -416,7 +416,6 @@ export default function Appointments() {
           appointment={selectedAppointment}
           onConfirmCancel={handleConfirmCancel}
         />
-        <Toaster />
 
         <LoadingOverlay
           isLoading={loadingBooking}

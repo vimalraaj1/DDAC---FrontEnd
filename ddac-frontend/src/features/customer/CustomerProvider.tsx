@@ -16,6 +16,8 @@ export function CustomerProvider({children}: {children: ReactNode}){
         try{
             const data = await getPatientById(id);
             setPatient(data);
+        }catch(err){
+            console.log("Error: ", err);
         }finally{
             setLoading(false);
         }

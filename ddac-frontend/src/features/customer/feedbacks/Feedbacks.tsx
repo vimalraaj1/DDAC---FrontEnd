@@ -636,7 +636,6 @@ export default function Feedbacks() {
             )}
           </DialogContent>
         </Dialog>
-        <Toaster />
 
         <LoadingOverlay
           isLoading={loadingSubmittingComment}
