@@ -34,7 +34,7 @@ import DoctorSettings from "../features/doctor/settings/DoctorSettings";
 import Payments from "../../src/features/customer/payments/Payments.js";
 import MedicalRecords from "../features/customer/medicalRecords/MedicalRecords.js";
 import Feedbacks from "../features/customer/feedbacks/Feedbacks.js";
-import { CustomerProvider } from "../features/customer/CustomerProvider.jsx";
+import { CustomerProvider } from "../features/customer/CustomerProvider.tsx";
 import ManagerDashboard from "../features/manager/ManagerDashboard.jsx";
 import DoctorInfo from "../features/manager/doctorInfo/DoctorInfo.jsx";
 import AddNewDoctor from "../features/manager/doctorInfo/AddNewDoctor.jsx";

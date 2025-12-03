@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Separator } from "../../components/ui/separator";
+import { useNavigate } from "react-router-dom";
 
 interface Medication {
   name: string;
@@ -44,6 +45,8 @@ export function AppointmentCard({
     Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
   };
+
+  const navigate = useNavigate();
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-400 hover:shadow-md transition-shadow">
@@ -97,7 +100,16 @@ export function AppointmentCard({
             Cancel
           </Button>
         </div>
-      ) : (
+      ) : type === "past"?  (
+        <div className="flex gap-3">
+          <Button
+               onClick={() => navigate("/medicalRecords")}
+            className="flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl cursor-pointer"
+          >
+            View Prescription
+          </Button>
+        </div>
+      ): (
         <div className="flex gap-3">
           <Button
             onClick={() => onViewDetails(appointment.id)}

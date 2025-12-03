@@ -128,7 +128,7 @@ export function AppointmentBookingModal({
       });
 
       setDoctorAvailability(filteredAvailability);
-
+      console.log(filteredAvailability);
       const dates = filteredAvailability.map((slot) => slot.date);
 
       const formattedDates = dates.map((d) => formatDate(d));
@@ -137,8 +137,9 @@ export function AppointmentBookingModal({
       setAvailableDates(uniqueDates);
     } catch (err) {
       console.log(err);
+    } finally {
+      setIsLoadingAvailability(false);
     }
-    setIsLoadingAvailability(false);
   };
 
   const retrieveTimeSlot = (date: string) => {
@@ -243,6 +244,8 @@ export function AppointmentBookingModal({
                   placeholder={
                     isLoadingAvailability
                       ? "Loading dates..."
+                      : availableDates.length === 0
+                      ? "No available dates for the selected doctor..."
                       : formData.date === ""
                       ? "Select a date..." // show placeholder when date is cleared
                       : formData.date

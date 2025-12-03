@@ -42,7 +42,7 @@ export function AppointmentDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">
+      <DialogContent className="sm:max-w-[600px]  max-h-[650px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div>
@@ -121,7 +121,7 @@ export function AppointmentDetailsModal({
                   Additional Information
                 </h4>
 
-                <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7">
+                <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7 mt-5">
                   <p className="text-[#3D3D3D] text-sm">
                     Please arrive 15 minutes early to complete any necessary
                     paperwork. Bring your insurance card and a valid photo ID.
@@ -144,40 +144,6 @@ export function AppointmentDetailsModal({
                 </div>
               </div>
             )}
-
-            {/* Prescriptions */}
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Pill className="size-5 text-[#4EA5D9]" />
-                <h4 className="text-gray-900">Prescription</h4>
-              </div>
-              <div className="space-y-3">
-                {appointment.prescriptions.map((medication, index) => (
-                  <div
-                    key={index}
-                    className="bg-[#4EA5D9]/10 rounded-xl p-4 space-y-2"
-                  >
-                    <h5 className="text-gray-900">{medication.name}</h5>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <p className="text-gray-500">Dosage</p>
-                        <p className="text-gray-700">{medication.dosage}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Duration</p>
-                        <p className="text-gray-700">{medication.duration}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Refills</p>
-                        <p className="text-gray-700">
-                          {medication.refills} remaining
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Button */}
             <div className="flex gap-3 pt-4">

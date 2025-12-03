@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { getPatientById } from "../../services/patientManagementService";
 import { CustomerContext } from "./CustomerContext";
 
-export function CustomerProvider({children}){
+export function CustomerProvider({children}: {children: ReactNode}){
     const [patient, setPatient] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -12,7 +12,7 @@ export function CustomerProvider({children}){
         else setLoading(false);
     }, []);
 
-    const fetchPatient = async (id) => {
+    const fetchPatient = async (id: string) => {
         try{
             const data = await getPatientById(id);
             setPatient(data);

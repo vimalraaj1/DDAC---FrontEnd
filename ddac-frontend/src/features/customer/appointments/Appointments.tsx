@@ -32,41 +32,6 @@ import {
 } from "../../../../../utils/DateConversion";
 import LoadingOverlay from "../components/LoadingOverlay";
 
-const pastAppointments: Appointment[] = [
-  {
-    id: "5",
-    doctorName: "Dr. Sarah Johnson",
-    doctorSpecialty: "Cardiologist",
-    doctorInitials: "SJ",
-    date: "Monday, October 21, 2025",
-    time: "10:00 AM - 10:30 AM",
-    location: "Cardiac Care Center, Room 305",
-    status: "Approved",
-    doctorEmail: "asdad",
-    doctorPhone: "adasd",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-    cancellationReason: null,
-  },
-];
 
 type TabType = "upcoming" | "past" | "cancelled";
 

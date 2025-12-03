@@ -13,6 +13,10 @@ export const getAppointmentByAppointmentId = async (appointmentId) => {
   return res.data;
 };
 
+export const getUpcomingAppointmentByPatientId = async (patientId) => {
+  const res = await api.get(`${BASE_URL}/upcoming/${patientId}`);
+  return res.data;
+}
 
 export const registerAppointments = async (appointment) => {
   const res = await api.post(`${BASE_URL}`, appointment);
