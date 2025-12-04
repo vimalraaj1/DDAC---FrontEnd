@@ -16,6 +16,7 @@ const mapTransactionPayload = (payload = {}) => ({
   cardLast4: payload.cardLast4 || null,
   appointmentId: payload.appointmentId?.trim() ?? "",
   patient: payload.patient || null,
+  receipt: payload.receipt || null, 
   fees: payload.fees || {
     consultationFee: Number(payload.consultationFee) || 0,
     medicationFee: Number(payload.medicationFee) || 0,
@@ -83,10 +84,10 @@ export const createStripeSession = async (appointmentId, payload = {}) => {
   };
 };
 
-export const confirmPayment = async (appointmentId, sessionId) => {
+export const confirmPayment = async (data) => {
   const response = await staffApi.post(`${TRANSACTION_ENDPOINT}/confirm`, {
-    appointmentId,
-    sessionId,
+    appointmentId: data.appointmentId,
+    sessionId: data.sessionId,
   });
   return response.data;
 };

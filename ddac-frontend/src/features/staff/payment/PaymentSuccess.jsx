@@ -26,9 +26,13 @@ export default function PaymentSuccess() {
   const confirmPayment = async () => {
     try {
       setConfirming(true);
-      //await paymentService.confirmPayment(appointmentId, sessionId);
-      await paymentService.markAppointmentAsPaid(appointmentId);
-      //await paymentService.generateReceipt(appointmentId);
+      
+      // Use the backend's confirm payment endpoint
+      await paymentService.confirmPayment({
+        appointmentId: appointmentId,
+        sessionId: sessionId
+      });
+      
       setConfirmed(true);
       toast.success("Payment confirmed successfully!");
     } catch (error) {
