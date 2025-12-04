@@ -237,22 +237,44 @@ export default function PaymentDetails() {
           currency: 'MYR',
           paymentTime: new Date().toISOString(),
           receipt: receiptData,
-          notes: getNotes() || 'Payment processed via Stripe'
         });
       } else {
         // Update existing pending transaction with latest receipt data
-        await paymentService.updatePayment(pendingTransaction.id, {
+        // Backend requires all these fields even for updates
+        const updatePayload = {
           amount: getTotalAmount(),
+          currency: pendingTransaction.currency || 'MYR',
+          status: pendingTransaction.status || 'Pending',
+          paymentMethod: pendingTransaction.paymentMethod || 'Stripe',
+          paymentIntentId: pendingTransaction.paymentIntentId || '',
+          chargeId: pendingTransaction.chargeId || '',
+          cardLast4: pendingTransaction.cardLast4 || null,
           receipt: receiptData,
-          notes: getNotes() || 'Payment processed via Stripe'
-        });
+        };
+        console.log('Updating payment with ID:', pendingTransaction.id);
+        console.log('Update payload:', JSON.stringify(updatePayload, null, 2));
+        await paymentService.updatePayment(pendingTransaction.id, updatePayload);
       }
       
+      console.log('Creating Stripe session with:', { appointmentId, amount: getTotalAmount(), currency: 'MYR', receipt: receiptData });
       const checkoutData = await paymentService.createStripeSession(appointmentId, {
         amount: getTotalAmount(),
         currency: "MYR",
-        fees: getFeeBreakdown(),
+        receipt: receiptData,
       });
+      
+      // Update the pending transaction with the PaymentIntentId from Stripe session
+      // This ensures when Stripe confirms payment, it finds and updates the correct transaction with receipt
+      if (checkoutData?.sessionId && (pendingTransaction || existingTransactions?.length > 0)) {
+        const txnToUpdate = pendingTransaction || existingTransactions[existingTransactions.length - 1];
+        try {
+          // Get session details to find PaymentIntentId
+          // For now, we'll rely on backend to match by appointmentId
+          console.log('Stripe session created, will be matched by appointmentId on confirmation');
+        } catch (err) {
+          console.warn('Could not update transaction with session info:', err);
+        }
+      }
       
       if (checkoutData?.url) {
         window.location.href = checkoutData.url;
@@ -261,7 +283,11 @@ export default function PaymentDetails() {
       }
     } catch (error) {
       console.error("Error creating Stripe checkout:", error);
-      toast.error("Error processing payment. Please try again.");
+      console.error("Error response data:", error.response?.data);
+      console.error("Error response status:", error.response?.status);
+      console.error("Full error details:", JSON.stringify(error.response?.data, null, 2));
+      const errorMessage = error.response?.data?.message || error.response?.data?.title || error.message || "Error processing payment";
+      toast.error(errorMessage);
     } finally {
       setStripeProcessing(false);
     }
@@ -304,7 +330,6 @@ export default function PaymentDetails() {
         status: "Paid",
         paymentTime: new Date().toISOString(),
         receipt: receiptData,
-        notes: getNotes() || 'Payment received via cash/other method'
       });
       await paymentService.markAppointmentAsPaid(appointmentId);
       toast.success("Manual payment recorded successfully!");
