@@ -130,7 +130,7 @@ export default function Appointments() {
       const appointmentDate = new Date(a.date);
       appointmentDate.setHours(0, 0, 0, 0);
 
-      if (a.status === "Cancelled") {
+      if (a.status === "Cancelled" || a.status === "Rejected") {
         cancelled.push(a);
       } else if (appointmentDate < today) {
         past.push(a);
@@ -367,7 +367,7 @@ export default function Appointments() {
                 appointments.map((appointment) => {
                   let type: "upcoming" | "past" | "cancelled" = "upcoming";
                   
-                  if (appointment.status === "Cancelled") type = "cancelled";
+                  if (appointment.status === "Cancelled" || appointment.status === "Rejected") type = "cancelled";
                   else if (new Date(appointment.date) < today)
                     type = "past";
 

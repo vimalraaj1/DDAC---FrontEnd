@@ -178,25 +178,24 @@ export default function Payments() {
           <div className="max-w-7xl mx-auto">
             <div className="flex gap-6">
               {/* Payment History Section */}
-              <div className="flex-1">
-                <FadeInSection delay={0}>
-                  {/* Desktop Table View */}
+              <div className="flex-1 flex flex-col gap-5 ">
+                {/* <FadeInSection delay={0}>
+                  {/* Desktop Table View *
                   <PaymentHistoryTable
                     payments={payments}
                     onViewDetails={handleViewDetails}
                   />
-                </FadeInSection>
+                </FadeInSection> */}
 
                 {/* Mobile Card View */}
-                <div className="md:hidden space-y-4">
-                  {payments.map((payment) => (
-                    <PaymentCard
-                      key={payment.id}
-                      payment={payment}
-                      onViewDetails={handleViewDetails}
-                    />
-                  ))}
-                </div>
+
+                {payments.map((payment) => (
+                  <PaymentCard
+                    key={payment.id}
+                    payment={payment}
+                    onViewDetails={handleViewDetails}
+                  />
+                ))}
 
                 {/* Empty State */}
                 {payments.length === 0 && (
