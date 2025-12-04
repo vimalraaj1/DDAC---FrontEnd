@@ -6,7 +6,7 @@ import * as appointmentService from "../services/appointmentService";
 import * as patientService from "../services/patientService";
 import * as doctorService from "../services/doctorService";
 import * as profileService from "../services/profileService";
-import { FaArrowLeft, FaCheckCircle, FaCreditCard, FaSpinner, FaTimesCircle } from "react-icons/fa";
+import { FaArrowLeft, FaCheckCircle, FaSpinner, FaTimesCircle } from "react-icons/fa";
 import { toast } from "sonner";
 import { formatStaffDate } from "../utils/dateFormat";
 
@@ -20,7 +20,6 @@ export default function AppointmentDetails() {
   const normalizedStatus = (appointment?.status || "").toLowerCase();
   const canApprove = normalizedStatus === "pending";
   const canComplete = normalizedStatus === "approved";
-  const canPay = normalizedStatus === "completed";
   const isPaid = normalizedStatus === "paid";
 
   useEffect(() => {
@@ -99,6 +98,24 @@ export default function AppointmentDetails() {
     }
   };
 
+  const handleNoShow = async () => {
+    if (!appointmentIdValue) {
+      toast.error("Unable to determine appointment identifier.");
+      return;
+    }
+    try {
+      setActionLoading(true);
+      await appointmentService.markAppointmentAsNoShow(appointmentIdValue);
+      toast.success("Appointment marked as no show.");
+      await loadAppointment();
+    } catch (error) {
+      console.error("Error marking appointment as no show:", error);
+      toast.error("Failed to mark appointment as no show. Please try again.");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleComplete = async () => {
     if (!appointmentIdValue) {
       toast.error("Unable to determine appointment identifier.");
@@ -108,27 +125,16 @@ export default function AppointmentDetails() {
       setActionLoading(true);
       await appointmentService.completeAppointment(appointmentIdValue, { completedAt: new Date().toISOString() });
       toast.success("Appointment marked as completed.");
-      await loadAppointment();
+      // Navigate directly to payment after completing
+      navigate(`/staff/payment/${appointmentIdValue}`, {
+        state: { appointment, patient: appointment?._patient },
+      });
     } catch (error) {
       console.error("Error completing appointment:", error);
       toast.error("Failed to complete appointment. Please try again.");
     } finally {
       setActionLoading(false);
     }
-  };
-
-  const handleNavigateToPayment = () => {
-    if (!appointmentIdValue) {
-      toast.error("Unable to determine appointment identifier.");
-      return;
-    }
-    if (!canPay) {
-      toast.error("Only completed appointments can proceed to payment.");
-      return;
-    }
-    navigate(`/staff/payment/${appointmentIdValue}`, {
-      state: { appointment, patient: appointment?._patient },
-    });
   };
 
   if (loading) {
@@ -179,7 +185,7 @@ export default function AppointmentDetails() {
                     <button
                       onClick={handleApprove}
                       disabled={actionLoading}
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60"
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center gap-2 disabled:opacity-60"
                     >
                       {actionLoading ? (
                         <>
@@ -213,32 +219,42 @@ export default function AppointmentDetails() {
                   </>
                 )}
                 {canComplete && (
-                  <button
-                    onClick={handleComplete}
-                    disabled={actionLoading}
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60"
-                  >
-                    {actionLoading ? (
-                      <>
-                        <FaSpinner className="animate-spin" size={16} />
-                        Completing...
-                      </>
-                    ) : (
-                      <>
-                        <FaCheckCircle size={16} />
-                        Complete
-                      </>
-                    )}
-                  </button>
-                )}
-                {canPay && (
-                  <button
-                    onClick={handleNavigateToPayment}
-                    className="bg-emerald-600 text-white px-4 py-2 rounded-lg hover:bg-emerald-700 flex items-center gap-2"
-                  >
-                    <FaCreditCard size={16} />
-                    Pay
-                  </button>
+                  <>
+                    <button
+                      onClick={handleNoShow}
+                      disabled={actionLoading}
+                      className="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 flex items-center gap-2 disabled:opacity-60"
+                    >
+                      {actionLoading ? (
+                        <>
+                          <FaSpinner className="animate-spin" size={16} />
+                          Updating...
+                        </>
+                      ) : (
+                        <>
+                          <FaTimesCircle size={16} />
+                          No Show
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleComplete}
+                      disabled={actionLoading}
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2 disabled:opacity-60"
+                    >
+                      {actionLoading ? (
+                        <>
+                          <FaSpinner className="animate-spin" size={16} />
+                          Completing...
+                        </>
+                      ) : (
+                        <>
+                          <FaCheckCircle size={16} />
+                          Complete
+                        </>
+                      )}
+                    </button>
+                  </>
                 )}
                 {isPaid && (
                   <div className="px-4 py-2 rounded-lg bg-green-50 text-green-700 font-medium border border-green-200">

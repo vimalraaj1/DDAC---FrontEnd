@@ -78,8 +78,14 @@ export const updateAppointmentStatus = async (id, status, extra = {}) => {
   return response.data;
 };
 
-export const completeAppointment = async (id, payload = {}) => {
+export const completeAppointment = async (id) => {
   const response = await staffApi.patch(`${APPOINTMENT_ENDPOINT}/${id}/complete`);
+  return response.data;
+};
+
+
+export const markAppointmentAsNoShow = async (id) => {
+  const response = await staffApi.patch(`${APPOINTMENT_ENDPOINT}/${id}/mark-no-show`);
   return response.data;
 };
 
