@@ -8,3 +8,8 @@ export const getAvailabilitiesByDoctorId = async (doctorId) => {
   return res.data;
 };
 
+export const updateAvailabilityByAppointmentId = async (appointmentId) => {
+  const res = await api.patch(`${BASE_URL}/${appointmentId}/bookAvailability`);
+  return res.data;
+}
+

@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { StarRating } from "./StarRating";
 import { Button } from "../../components/ui/button";
 import { Calendar, Stethoscope } from "lucide-react";
+import { convertDateTime } from "../../../../../../utils/TimeConversion";
 
 interface PastFeedbackCardProps {
   id: string;
@@ -43,22 +44,6 @@ export function PastFeedbackCard({
           .toUpperCase()
           .slice(0, 2);
 
-  const formatReadableDate = (isoString: string) => {
-    const date = new Date(isoString);
-
-    const day = date.getDate();
-    const year = date.getFullYear();
-
-    const month = date.toLocaleString("en-US", {month: "long"});
-
-    const time = date.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-
-    return `${day} ${month} ${year}, ${time}`;
-  } 
 
   return (
     <div
@@ -81,7 +66,7 @@ export function PastFeedbackCard({
           <div className="flex items-center justify-between mb-1">
             <p style={{ color: "var(--text-heading)" }}>{patientName}</p>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {formatReadableDate(commentTime)}
+              {convertDateTime(commentTime)}
             </p>
           </div>
 

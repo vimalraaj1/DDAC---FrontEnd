@@ -1,4 +1,4 @@
-import { Calendar, Clock, MapPin } from "lucide-react";
+import { Calendar, ClipboardPlus, Clock, MapPin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Appointment } from "../appointments/components/AppointmentCard";
 export function UpcomingAppointment({
@@ -42,6 +42,14 @@ export function UpcomingAppointment({
                 <Clock className="w-5 h-5 text-[#4EA5D9]" />
                 <span>{appointment.time}</span>
               </div>
+              <div>
+                <div className="bg-[#F5F7FA] rounded-xl p-4 pl-5 mt-3 flex gap-2">
+                  <p className="text-[#3D3D3D] text-sm">
+                    {appointment.purpose}
+                  </p>
+                </div>
+              </div>
+             
             </div>
 
             <div className="">

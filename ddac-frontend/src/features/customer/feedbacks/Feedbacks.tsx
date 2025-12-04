@@ -42,6 +42,7 @@ import {
   getCommentsByPatientId,
 } from "../../../services/commentManagementService";
 import LoadingOverlay from "../components/LoadingOverlay";
+import { convertDateTime } from "../../../../../utils/TimeConversion";
 
 interface PastFeedback {
   id: string;
@@ -528,7 +529,7 @@ export default function Feedbacks() {
                       className="text-sm"
                       style={{ color: "var(--text-muted)" }}
                     >
-                      Commented at: {selectedComment.commentTime}
+                      Commented at: {convertDateTime(selectedComment.commentTime)}
                     </p>
                   </div>
                 </div>

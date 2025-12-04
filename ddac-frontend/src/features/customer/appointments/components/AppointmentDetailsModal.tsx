@@ -9,6 +9,8 @@ import {
   Mail,
   Pill,
   Ban,
+  Users,
+  ClipboardPlus,
 } from "lucide-react";
 import {
   Dialog,
@@ -36,10 +38,12 @@ export function AppointmentDetailsModal({
 
   const statusStyles = {
     Approved: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
-    Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
+    Rejected: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Scheduled: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Completed: "bg-[#3498DB]/10 text-[#3498DB] border-[#3498DB]/20",
+    "No Show": "bg-[#95A5A6]/10 text-[#95A5A6] border-[#95A5A6]/20",
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]  max-h-[650px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">
@@ -112,22 +116,37 @@ export function AppointmentDetailsModal({
             </div>
           </div>
 
-          {/* Additional Notes */}
           <div className="space-y-3">
             {appointment.status != "Cancelled" ? (
               <div>
-                <h4 className="text-[#1A1A1A] flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-[#4EA5D9]" />
-                  Additional Information
-                </h4>
+                {/* Purpose of Visit */}
+                <div>
+                  <h4 className="text-[#1A1A1A] flex items-center gap-2">
+                    <ClipboardPlus className="h-5 w-5 text-[#4EA5D9]" />
+                    Reason to Visit
+                  </h4>
 
-                <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7 mt-5">
-                  <p className="text-[#3D3D3D] text-sm">
-                    Please arrive 15 minutes early to complete any necessary
-                    paperwork. Bring your insurance card and a valid photo ID.
-                    If you need to cancel or reschedule, please do so at least
-                    24 hours in advance.
-                  </p>
+                  <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7 mt-3">
+                    <p className="text-[#3D3D3D] text-sm">
+                      {appointment.purpose}
+                    </p>
+                  </div>
+                </div>
+                {/* Additional Notes */}
+                <div>
+                  <h4 className="text-[#1A1A1A] flex items-center gap-2 mt-5">
+                    <FileText className="h-5 w-5 text-[#4EA5D9]" />
+                    Additional Information
+                  </h4>
+
+                  <div className="bg-[#F5F7FA] rounded-xl p-4 pl-7 mt-3">
+                    <p className="text-[#3D3D3D] text-sm">
+                      Please arrive 15 minutes early to complete any necessary
+                      paperwork. Bring your insurance card and a valid photo ID.
+                      If you need to cancel or reschedule, please do so at least
+                      24 hours in advance.
+                    </p>
+                  </div>
                 </div>
               </div>
             ) : (
