@@ -33,6 +33,7 @@ interface AppointmentBookingModalProps {
 }
 
 export interface AppointmentFormData {
+  availabilityId: string;
   doctorId: string;
   date: string;
   time: string;
@@ -46,6 +47,7 @@ interface DoctorDropdown {
 }
 
 interface DoctorAvailability {
+  id: string;
   date: string;
   time: string;
   isBooked: boolean;
@@ -63,6 +65,7 @@ export function AppointmentBookingModal({
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [formData, setFormData] = useState<AppointmentFormData>({
+    availabilityId: "",
     doctorId: "",
     date: "",
     time: "",
@@ -128,7 +131,7 @@ export function AppointmentBookingModal({
       });
 
       setDoctorAvailability(filteredAvailability);
-      console.log(filteredAvailability);
+
       const dates = filteredAvailability.map((slot) => slot.date);
 
       const formattedDates = dates.map((d) => formatDate(d));
@@ -162,14 +165,36 @@ export function AppointmentBookingModal({
 
   const handleSubmit = () => {
     if (formData.doctorId && formData.date && formData.time) {
-      onBookAppointment(formData);
+      const finalAppointment = doctorAvailability.find(
+        (a) =>
+          a.date === reverseFormatDate(formData.date) &&
+          a.time === formData.time
+      );
+
+
+      if (!finalAppointment) {
+        console.error("No matching appointment found");
+        return;
+      }
+
+      const updatedFormData = {
+        ...formData,
+        availabilityId: finalAppointment.id,
+      };
+      
+      console.log("Updated Form Data: ", updatedFormData);
+
+      onBookAppointment(updatedFormData);
+
       // Reset form
       setFormData({
+        availabilityId: "",
         doctorId: "",
         date: "",
         time: "",
         purpose: "",
       });
+
       onOpenChange(false);
     }
   };

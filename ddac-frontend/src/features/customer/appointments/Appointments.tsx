@@ -31,6 +31,10 @@ import {
   reverseFormatDate,
 } from "../../../../../utils/DateConversion";
 import LoadingOverlay from "../components/LoadingOverlay";
+import { getInitials } from "../../../../../utils/GetInitials";
+import { convertTime } from "../../../../../utils/TimeConversion";
+import { sendEmail } from "../../../services/emailManagementService";
+import { updateAvailabilityByAppointmentId } from "../../../services/availabilityManagementService";
 
 
 type TabType = "upcoming" | "past" | "cancelled";
@@ -79,20 +83,8 @@ export default function Appointments() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return firstName[0] + lastName[0];
-  };
 
-  const convertTime = (time24: string) => {
-    const [hour, minute] = time24.split(":");
-    const date = new Date();
-    date.setHours(parseInt(hour), parseInt(minute));
 
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
 
   const fetchAppointmentDataDB = async (id: any) => {
     try {
@@ -108,6 +100,7 @@ export default function Appointments() {
         doctorPhone: data.doctorPhone,
         date: formatDate(data.date),
         time: convertTime(data.time),
+        purpose: data.purpose,
         status: data.status,
         prescriptions: [],
         cancellationReason: data.cancellationReason,
@@ -180,12 +173,24 @@ export default function Appointments() {
       date: reverseFormatDate(appointmentData.date),
       patientId: patient.id,
       status: "Pending",
+      isBooked: true,
       staffId: "ST000001", // hard coded for now
       cancellationReason: null,
     };
 
+    const emailPayload = {
+      patientEmail: "cincainame04@gmail.com",
+      patientName: "Mr. Sick",
+      doctorName: "Tristen Chris",
+      date: "2025-12-5",
+      time: "12:00",
+      notes: "Check up for heart",
+    }
+
     try {
+      await updateAvailabilityByAppointmentId(payload.availabilityId);
       await registerAppointments(payload);
+      await sendEmail(emailPayload);
 
       toast.success("Appointment booked successfully!", {
         style: {

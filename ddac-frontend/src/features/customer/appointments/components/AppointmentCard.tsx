@@ -21,6 +21,7 @@ export interface Appointment {
   doctorPhone: string;
   date: string;
   time: string;
+  purpose: string;
   location: string;
   status: "Approved" | "Pending" | "Cancelled";
   prescriptions: Medication[];

@@ -21,13 +21,6 @@ export default function App() {
 
   useEffect(() => {
     fetchMedicalRecordsFromDB(patient.id);
-    toast.success("Medical Records retrieved!", {
-      style: {
-        background: "#2ECC71",
-        color: "#ffffff",
-        borderRadius: "10px",
-      },
-    });
   }, []);
 
   const fetchMedicalRecordsFromDB = async (patientId: string) => {
