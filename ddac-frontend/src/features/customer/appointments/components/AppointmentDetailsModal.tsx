@@ -117,7 +117,7 @@ export function AppointmentDetailsModal({
           </div>
 
           <div className="space-y-3">
-            {appointment.status != "Cancelled" ? (
+            {appointment.status != "Cancelled" && appointment.status != "Rejected" ? (
               <div>
                 {/* Purpose of Visit */}
                 <div>

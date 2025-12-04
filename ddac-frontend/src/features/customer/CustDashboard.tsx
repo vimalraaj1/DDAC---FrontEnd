@@ -43,7 +43,7 @@ export default function CustDashboard() {
         time: convertTime(data.time),
         purpose: data.purpose,
         location: "",
-        status: "Pending",
+        status: "Scheduled",
         prescriptions: [],
         cancellationReason: "",
       });
