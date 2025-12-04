@@ -38,10 +38,12 @@ export function AppointmentDetailsModal({
 
   const statusStyles = {
     Approved: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
-    Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
+    Rejected: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Scheduled: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Completed: "bg-[#3498DB]/10 text-[#3498DB] border-[#3498DB]/20",
+    "No Show": "bg-[#95A5A6]/10 text-[#95A5A6] border-[#95A5A6]/20",
   };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]  max-h-[650px] bg-white border-[#DCEFFB] rounded-2xl h-[90%] overflow-auto ">

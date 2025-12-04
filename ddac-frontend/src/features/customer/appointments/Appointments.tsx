@@ -83,9 +83,6 @@ export default function Appointments() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-
-
-
   const fetchAppointmentDataDB = async (id: any) => {
     try {
       setLoadingAppointment(true);
@@ -172,19 +169,19 @@ export default function Appointments() {
       ...appointmentData,
       date: reverseFormatDate(appointmentData.date),
       patientId: patient.id,
-      status: "Pending",
+      status: "Scheduled",
       isBooked: true,
-      staffId: "ST000001", // hard coded for now
+      staffId: null, 
       cancellationReason: null,
     };
 
     const emailPayload = {
-      patientEmail: "cincainame04@gmail.com",
-      patientName: "Mr. Sick",
-      doctorName: "Tristen Chris",
-      date: "2025-12-5",
-      time: "12:00",
-      notes: "Check up for heart",
+      patientEmail: "cincainame04@gmail.com", // hard code for now 
+      patientName: patient.firstName + " " + patient.lastName,
+      doctorName: appointmentData.doctorName,
+      date: appointmentData.date,
+      time: appointmentData.time,
+      notes: appointmentData.purpose,
     }
 
     try {

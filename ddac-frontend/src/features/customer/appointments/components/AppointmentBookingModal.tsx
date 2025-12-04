@@ -35,6 +35,7 @@ interface AppointmentBookingModalProps {
 export interface AppointmentFormData {
   availabilityId: string;
   doctorId: string;
+  doctorName?: string;
   date: string;
   time: string;
   purpose: string;
@@ -67,6 +68,7 @@ export function AppointmentBookingModal({
   const [formData, setFormData] = useState<AppointmentFormData>({
     availabilityId: "",
     doctorId: "",
+    doctorName: "",
     date: "",
     time: "",
     purpose: "",
@@ -171,6 +173,7 @@ export function AppointmentBookingModal({
           a.time === formData.time
       );
 
+      const doctor = doctorDropdown.find((d) => d.id === formData.doctorId);
 
       if (!finalAppointment) {
         console.error("No matching appointment found");
@@ -180,8 +183,9 @@ export function AppointmentBookingModal({
       const updatedFormData = {
         ...formData,
         availabilityId: finalAppointment.id,
+        doctorName: doctor?.name,
       };
-      
+
       console.log("Updated Form Data: ", updatedFormData);
 
       onBookAppointment(updatedFormData);
@@ -190,6 +194,7 @@ export function AppointmentBookingModal({
       setFormData({
         availabilityId: "",
         doctorId: "",
+        doctorName: "",
         date: "",
         time: "",
         purpose: "",
@@ -255,6 +260,7 @@ export function AppointmentBookingModal({
               <Calendar className="h-4 w-4 text-[#4EA5D9]" />
               Appointment Date
               <span className="text-red-500">*</span>
+              <span className="text-red-500">*</span>
             </Label>
             <Select
               disabled={isLoadingAvailability || availableDates.length === 0}
@@ -272,7 +278,7 @@ export function AppointmentBookingModal({
                       : availableDates.length === 0
                       ? "No available dates for the selected doctor..."
                       : formData.date === ""
-                      ? "Select a date..." // show placeholder when date is cleared
+                      ? "Select a date..." 
                       : formData.date
                   }
                 />
@@ -349,7 +355,8 @@ export function AppointmentBookingModal({
               className="text-[#1A1A1A] flex items-center gap-2"
             >
               <FileText className="h-4 w-4 text-[#4EA5D9]" />
-              Reason for Visit (Optional)
+              Reason for Visit
+              <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="reason"
@@ -375,7 +382,7 @@ export function AppointmentBookingModal({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!formData.doctorId || !formData.date || !formData.time}
+            disabled={!formData.doctorId || !formData.date || !formData.time || !formData.purpose}
             className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             Book Appointment

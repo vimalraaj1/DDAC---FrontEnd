@@ -23,7 +23,13 @@ export interface Appointment {
   time: string;
   purpose: string;
   location: string;
-  status: "Approved" | "Pending" | "Cancelled";
+  status:
+    | "Approved"
+    | "Rejected"
+    | "Scheduled"
+    | "Cancelled"
+    | "Completed"
+    | "No Show";
   prescriptions: Medication[];
   cancellationReason: string | null;
 }
@@ -43,8 +49,11 @@ export function AppointmentCard({
 }: AppointmentCardProps) {
   const statusStyles = {
     Approved: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
-    Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
+    Rejected: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Scheduled: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Completed: "bg-[#3498DB]/10 text-[#3498DB] border-[#3498DB]/20",
+    "No Show": "bg-[#95A5A6]/10 text-[#95A5A6] border-[#95A5A6]/20",
   };
 
   const navigate = useNavigate();
@@ -101,16 +110,16 @@ export function AppointmentCard({
             Cancel
           </Button>
         </div>
-      ) : type === "past"?  (
+      ) : type === "past" ? (
         <div className="flex gap-3">
           <Button
-               onClick={() => navigate("/medicalRecords")}
+            onClick={() => navigate("/medicalRecords")}
             className="flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl cursor-pointer"
           >
             View Prescription
           </Button>
         </div>
-      ): (
+      ) : (
         <div className="flex gap-3">
           <Button
             onClick={() => onViewDetails(appointment.id)}
