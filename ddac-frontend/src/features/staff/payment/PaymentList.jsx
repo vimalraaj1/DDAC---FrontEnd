@@ -19,12 +19,15 @@ export default function PaymentList() {
   const loadPendingPayments = async () => {
     try {
       setLoading(true);
-      // Get completed appointments that need payment
-      const completedAppointments = await appointmentService.getCompletedAppointments();
+      // Get all appointments and filter for approved status
+      const allAppointments = await appointmentService.getAllAppointments();
+      const approvedAppointments = (allAppointments || []).filter(
+        (appointment) => (appointment.status || "").toLowerCase() === "approved"
+      );
       
       // Filter appointments that don't have a successful payment
       const pendingPayments = [];
-      for (const appointment of completedAppointments || []) {
+      for (const appointment of approvedAppointments) {
         try {
           const payments = await paymentService.getPaymentsByAppointment(appointment.id || appointment._id);
           const hasPaid = payments?.some(
@@ -81,7 +84,7 @@ export default function PaymentList() {
         {/* Page Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-heading">Payment Management</h1>
-          <p className="text-muted mt-1">Process payments for completed appointments</p>
+          <p className="text-muted mt-1">Process payments for approved appointments</p>
         </div>
 
         {/* Stats Cards */}
@@ -171,7 +174,7 @@ export default function PaymentList() {
                         <div className="flex flex-col items-center gap-3">
                           <FaDollarSign size={48} className="text-muted opacity-50" />
                           <p className="text-muted text-lg">No pending payments</p>
-                          <p className="text-muted text-sm">All completed appointments have been paid</p>
+                          <p className="text-muted text-sm">All approved appointments have been paid</p>
                         </div>
                       </td>
                     </tr>

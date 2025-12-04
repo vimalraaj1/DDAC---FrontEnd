@@ -85,23 +85,6 @@ export default function AppointmentList() {
     return "";
   };
 
-  const handleComplete = async (event, row) => {
-    event.stopPropagation();
-    const appointmentId = row.id;
-    if (!appointmentId) return;
-    try {
-      setActionLoadingId(appointmentId);
-      await appointmentService.completeAppointment(appointmentId, { completedAt: new Date().toISOString() });
-      toast.success("Appointment marked as completed.");
-      await loadAppointments();
-    } catch (error) {
-      console.error("Error completing appointment:", error);
-      toast.error("Unable to complete appointment. Please try again.");
-    } finally {
-      setActionLoadingId(null);
-    }
-  };
-
   const handleApprove = async (event, row) => {
     event.stopPropagation();
     const appointmentId = row.id;
@@ -119,28 +102,72 @@ export default function AppointmentList() {
     }
   };
 
-  const handlePay = (event, row) => {
+  const handleReject = async (event, row) => {
     event.stopPropagation();
     const appointmentId = row.id;
     if (!appointmentId) return;
-    if ((row.status || "").toLowerCase() !== "completed") {
-      toast.error("Appointment must be completed before payment.");
-      return;
+    const reason =
+      window.prompt("Please provide a reason for rejecting this appointment:", "Rejected by staff") ||
+      "Rejected by staff";
+    try {
+      setActionLoadingId(appointmentId);
+      await appointmentService.rejectAppointment(appointmentId, reason);
+      toast.success("Appointment marked as rejected.");
+      await loadAppointments();
+    } catch (error) {
+      console.error("Error rejecting appointment:", error);
+      toast.error("Unable to reject appointment. Please try again.");
+    } finally {
+      setActionLoadingId(null);
     }
-    navigate(`/staff/payment/${appointmentId}`, {
-      state: {
-        appointment: row,
-        patient: patientsMap[row.patientId],
-      },
-    });
+  };
+
+  const handleNoShow = async (event, row) => {
+    event.stopPropagation();
+    const appointmentId = row.id;
+    if (!appointmentId) return;
+    try {
+      setActionLoadingId(appointmentId);
+      await appointmentService.markAppointmentAsNoShow(appointmentId);
+      toast.success("Appointment marked as no show.");
+      await loadAppointments();
+    } catch (error) {
+      console.error("Error marking appointment as no show:", error);
+      toast.error("Unable to mark appointment as no show. Please try again.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleComplete = async (event, row) => {
+    event.stopPropagation();
+    const appointmentId = row.id;
+    if (!appointmentId) return;
+    try {
+      setActionLoadingId(appointmentId);
+      await appointmentService.completeAppointment(appointmentId, { completedAt: new Date().toISOString() });
+      toast.success("Appointment marked as completed.");
+      // Navigate directly to payment after completing
+      navigate(`/staff/payment/${appointmentId}`, {
+        state: {
+          appointment: row,
+          patient: patientsMap[row.patientId],
+        },
+      });
+    } catch (error) {
+      console.error("Error completing appointment:", error);
+      toast.error("Unable to complete appointment. Please try again.");
+    } finally {
+      setActionLoadingId(null);
+    }
   };
 
   const tabs = [
     { label: "All", filter: "all" },
     { label: "Today", filter: "today" },
     { label: "Pending", filter: "pending" },
+    { label: "Approved", filter: "approved" },
     { label: "Completed", filter: "completed" },
-    { label: "Paid", filter: "paid" },
     { label: "Others", filter: "others" },
   ];
 
@@ -150,6 +177,9 @@ export default function AppointmentList() {
   ).length;
   const completedAppointments = appointments.filter(
     (appointment) => (appointment.status || "").toLowerCase() === "completed"
+  ).length;
+  const approvedAppointments = appointments.filter(
+    (appointment) => (appointment.status || "").toLowerCase() === "approved"
   ).length;
 
   const today = new Date();
@@ -167,9 +197,10 @@ export default function AppointmentList() {
     const status = (appointment.status || "").toLowerCase();
     if (filter === "pending") return status === "pending";
     if (filter === "completed") return status === "completed";
+    if (filter === "approved") return status === "approved";
     if (filter === "paid") return status === "paid";
     if (filter === "today") return isSameDay(appointment.date);
-    if (filter === "others") return status === "cancelled" || status === "rejected";
+    if (filter === "others") return status === "cancelled" || status === "rejected" || status === "no show";
     return true; // "all" or any unknown filter
   });
 
@@ -211,8 +242,8 @@ export default function AppointmentList() {
                   <FaClock size={24} className="text-ondark" />
                 </div>
                 <div>
-                  <h3 className="text-heading text-2xl font-bold">{pendingAppointments}</h3>
-                  <p className="text-muted text-sm">Pending</p>
+                  <h3 className="text-heading text-2xl font-bold">{approvedAppointments}</h3>
+                  <p className="text-muted text-sm">Approved</p>
                 </div>
               </div>
             </div>
@@ -261,34 +292,43 @@ export default function AppointmentList() {
                 const status = (row.status || "").toLowerCase();
                 const isPending = status === "pending";
                 const isApproved = status === "approved";
-                const isCompleted = status === "completed";
                 return (
                   <div className="flex gap-2">
-                    {/* {isPending && (
-                      <button
-                        onClick={(event) => handleApprove(event, row)}
-                        disabled={actionLoadingId === row.id}
-                        className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {actionLoadingId === row.id ? "Approving..." : "Approved"}
-                      </button>
-                    )} */}
-                    {isApproved && (
-                      <button
-                        onClick={(event) => handleComplete(event, row)}
-                        disabled={actionLoadingId === row.id}
-                        className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
-                      >
-                        {actionLoadingId === row.id ? "Completing..." : "Complete"}
-                      </button>
+                    {isPending && (
+                      <>
+                        <button
+                          onClick={(event) => handleApprove(event, row)}
+                          disabled={actionLoadingId === row.id}
+                          className="px-3 py-1 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50"
+                        >
+                          {actionLoadingId === row.id ? "Approving..." : "Approve"}
+                        </button>
+                        <button
+                          onClick={(event) => handleReject(event, row)}
+                          disabled={actionLoadingId === row.id}
+                          className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-50"
+                        >
+                          {actionLoadingId === row.id ? "Rejecting..." : "Reject"}
+                        </button>
+                      </>
                     )}
-                    {isCompleted && (
-                      <button
-                        onClick={(event) => handlePay(event, row)}
-                        className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700"
-                      >
-                        Pay
-                      </button>
+                    {isApproved && (
+                      <>
+                        <button
+                          onClick={(event) => handleNoShow(event, row)}
+                          disabled={actionLoadingId === row.id}
+                          className="px-3 py-1 rounded-lg bg-orange-600 text-white text-xs font-medium hover:bg-orange-700 disabled:opacity-50"
+                        >
+                          {actionLoadingId === row.id ? "Updating..." : "No Show"}
+                        </button>
+                        <button
+                          onClick={(event) => handleComplete(event, row)}
+                          disabled={actionLoadingId === row.id}
+                          className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
+                        >
+                          {actionLoadingId === row.id ? "Completing..." : "Complete"}
+                        </button>
+                      </>
                     )}
                   </div>
                 );
