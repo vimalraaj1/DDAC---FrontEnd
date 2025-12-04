@@ -21,6 +21,7 @@ import PaymentListNew from "../features/staff/payment/PaymentList";
 import PaymentDetails from "../features/staff/payment/PaymentDetails";
 import PaymentSuccess from "../features/staff/payment/PaymentSuccess";
 import PaymentFailed from "../features/staff/payment/PaymentFailed";
+import ReceiptDisplay from "../features/staff/payments/ReceiptDisplay";
 import DoctorList from "../features/staff/doctorManagement/DoctorList";
 import DoctorDetails from "../features/staff/doctorManagement/DoctorDetails";
 import CustomerRatings from "../features/staff/ratings/CustomerRatings";
@@ -93,6 +94,7 @@ export default function AppRouter() {
           <Route path="/staff/payment/failed" element={<ProtectedRoute allowedRoles={['staff']}><PaymentFailed/></ProtectedRoute>}/>
           <Route path="/staff/payments" element={<ProtectedRoute allowedRoles={['staff']}><PaymentList/></ProtectedRoute>}/>
           <Route path="/staff/payments/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
+          <Route path="/staff/payments/receipt/view" element={<ProtectedRoute allowedRoles={['staff']}><ReceiptDisplay/></ProtectedRoute>}/>
           <Route path="/staff/ratings" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
           <Route path="/staff/ratings/:customerId" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
           <Route path="/staff/profile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfileNew/></ProtectedRoute>}/>

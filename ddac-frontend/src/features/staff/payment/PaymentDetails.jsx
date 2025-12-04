@@ -4,9 +4,18 @@ import Layout from "../../../components/Layout";
 import StatusBadge from "../components/StatusBadge";
 import * as paymentService from "../services/paymentService";
 import * as appointmentService from "../services/appointmentService";
-import { FaArrowLeft, FaCreditCard, FaFileInvoice, FaCheckCircle, FaSpinner } from "react-icons/fa";
+import { FaArrowLeft, FaCreditCard, FaFileInvoice, FaCheckCircle, FaSpinner, FaPlus, FaTrash, FaStethoscope } from "react-icons/fa";
 import { toast } from "sonner";
 import { formatStaffDate } from "../utils/dateFormat";
+
+const APPOINTMENT_TYPES = [
+  { value: 'consultation', label: 'Consultation' },
+  { value: 'xray', label: 'X-Ray' },
+  { value: 'surgery', label: 'Surgery' },
+  { value: 'lab_test', label: 'Lab Test' },
+  { value: 'physiotherapy', label: 'Physiotherapy' },
+  { value: 'other', label: 'Other Service' },
+];
 
 export default function PaymentDetails() {
   const { appointmentId } = useParams();
@@ -19,34 +28,35 @@ export default function PaymentDetails() {
   const [billingSummary, setBillingSummary] = useState(null);
   const [consultationDetails, setConsultationDetails] = useState(null);
   const initialFees = {
-    consultationFee: "",
     medicationFee: "",
-    otherCharges: "",
     notes: "",
   };
   const [fees, setFees] = useState(initialFees);
   const [feeErrors, setFeeErrors] = useState({});
   const [stripeProcessing, setStripeProcessing] = useState(false);
   const [manualProcessing, setManualProcessing] = useState(false);
+  
+  // Receipt items state
+  const [receiptItems, setReceiptItems] = useState([]);
+  const [selectedService, setSelectedService] = useState('');
+  const [servicePrice, setServicePrice] = useState('');
 
   const buildBillingSummary = (feeData = fees) => {
     const parsed = {
-      consultationFee: Number(feeData.consultationFee) || 0,
       medicationFee: Number(feeData.medicationFee) || 0,
-      otherCharges: Number(feeData.otherCharges) || 0,
     };
 
+    // Calculate receipt items totals
+    const servicesTotal = receiptItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+
     const items = [
-      parsed.consultationFee > 0 && { description: "Consultation Fee", amount: parsed.consultationFee },
+      ...receiptItems.map(item => ({ description: item.name, amount: parseFloat(item.price) })),
       parsed.medicationFee > 0 && { description: "Medication", amount: parsed.medicationFee },
-      parsed.otherCharges > 0 && { description: "Additional Fees", amount: parsed.otherCharges },
     ].filter(Boolean);
 
     return {
-      consultationFee: parsed.consultationFee,
       medicineCost: parsed.medicationFee,
-      additionalFee: parsed.otherCharges,
-      total: parsed.consultationFee + parsed.medicationFee + parsed.otherCharges,
+      total: parsed.medicationFee + servicesTotal,
       items,
     };
   };
@@ -66,14 +76,67 @@ export default function PaymentDetails() {
     }
   };
 
+  // Receipt item handlers
+  const handleAddService = () => {
+    if (!selectedService || !servicePrice || parseFloat(servicePrice) <= 0) {
+      toast.error("Please select a service and enter a valid price");
+      return;
+    }
+
+    const serviceType = APPOINTMENT_TYPES.find(t => t.value === selectedService);
+    const newItem = {
+      id: Date.now(),
+      type: 'service',
+      name: serviceType.label,
+      key: selectedService,
+      price: parseFloat(servicePrice).toFixed(2)
+    };
+
+    const updatedItems = [...receiptItems, newItem];
+    setReceiptItems(updatedItems);
+    setSelectedService('');
+    setServicePrice('');
+    
+    // Immediately update billing summary with new items
+    const servicesTotal = updatedItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+    const medicationFee = Number(fees.medicationFee) || 0;
+    const items = [
+      ...updatedItems.map(item => ({ description: item.name, amount: parseFloat(item.price) })),
+      medicationFee > 0 && { description: "Medication", amount: medicationFee },
+    ].filter(Boolean);
+    
+    setBillingSummary({
+      medicineCost: medicationFee,
+      total: medicationFee + servicesTotal,
+      items,
+    });
+  };
+
+  const handleRemoveService = (id) => {
+    const updatedItems = receiptItems.filter(item => item.id !== id);
+    setReceiptItems(updatedItems);
+    
+    // Immediately update billing summary after removal
+    const servicesTotal = updatedItems.reduce((sum, item) => sum + parseFloat(item.price || 0), 0);
+    const medicationFee = Number(fees.medicationFee) || 0;
+    const items = [
+      ...updatedItems.map(item => ({ description: item.name, amount: parseFloat(item.price) })),
+      medicationFee > 0 && { description: "Medication", amount: medicationFee },
+    ].filter(Boolean);
+    
+    setBillingSummary({
+      medicineCost: medicationFee,
+      total: medicationFee + servicesTotal,
+      items,
+    });
+  };
+
   const validateFees = () => {
     const errors = {};
-    ["consultationFee", "medicationFee", "otherCharges"].forEach((field) => {
-      const value = Number(fees[field]);
-      if (Number.isNaN(value) || value < 0) {
-        errors[field] = "Enter a valid amount (0 or greater).";
-      }
-    });
+    const medicationValue = Number(fees.medicationFee);
+    if (Number.isNaN(medicationValue) || medicationValue < 0) {
+      errors.medicationFee = "Enter a valid amount (0 or greater).";
+    }
     const total = Number(billingSummary?.total) || 0;
     if (total <= 0) {
       errors.total = "Total amount must be greater than zero.";
@@ -83,9 +146,7 @@ export default function PaymentDetails() {
   };
 
   const getFeeBreakdown = () => ({
-    consultationFee: Number(fees.consultationFee) || 0,
     medicationFee: Number(fees.medicationFee) || 0,
-    otherCharges: Number(fees.otherCharges) || 0,
   });
 
   const getTotalAmount = () => Number(billingSummary?.total) || 0;
@@ -147,11 +208,73 @@ export default function PaymentDetails() {
 
     try {
       setStripeProcessing(true);
+      
+      // Build receipt object
+      const receiptData = {};
+      
+      // Add custom services
+      receiptItems.forEach(item => {
+        receiptData[item.key] = parseFloat(item.price);
+      });
+      
+      // Add medication fee if present
+      if (Number(fees.medicationFee) > 0) {
+        receiptData['medication'] = Number(fees.medicationFee);
+      }
+      
+      // Check if a pending transaction already exists for this appointment
+      const existingTransactions = await paymentService.getPaymentsByAppointment(appointmentId);
+      const pendingTransaction = existingTransactions?.find(
+        (txn) => (txn.status || "").toLowerCase() === "pending"
+      );
+      
+      // Only create a new transaction if no pending one exists
+      if (!pendingTransaction) {
+        await paymentService.createPayment({
+          appointmentId: appointmentId,
+          amount: getTotalAmount(),
+          status: 'Pending',
+          currency: 'MYR',
+          paymentTime: new Date().toISOString(),
+          receipt: receiptData,
+        });
+      } else {
+        // Update existing pending transaction with latest receipt data
+        // Backend requires all these fields even for updates
+        const updatePayload = {
+          amount: getTotalAmount(),
+          currency: pendingTransaction.currency || 'MYR',
+          status: pendingTransaction.status || 'Pending',
+          paymentMethod: pendingTransaction.paymentMethod || 'Stripe',
+          paymentIntentId: pendingTransaction.paymentIntentId || '',
+          chargeId: pendingTransaction.chargeId || '',
+          cardLast4: pendingTransaction.cardLast4 || null,
+          receipt: receiptData,
+        };
+        console.log('Updating payment with ID:', pendingTransaction.id);
+        console.log('Update payload:', JSON.stringify(updatePayload, null, 2));
+        await paymentService.updatePayment(pendingTransaction.id, updatePayload);
+      }
+      
+      console.log('Creating Stripe session with:', { appointmentId, amount: getTotalAmount(), currency: 'MYR', receipt: receiptData });
       const checkoutData = await paymentService.createStripeSession(appointmentId, {
         amount: getTotalAmount(),
         currency: "MYR",
-        fees: getFeeBreakdown(),
+        receipt: receiptData,
       });
+      
+      // Update the pending transaction with the PaymentIntentId from Stripe session
+      // This ensures when Stripe confirms payment, it finds and updates the correct transaction with receipt
+      if (checkoutData?.sessionId && (pendingTransaction || existingTransactions?.length > 0)) {
+        const txnToUpdate = pendingTransaction || existingTransactions[existingTransactions.length - 1];
+        try {
+          // Get session details to find PaymentIntentId
+          // For now, we'll rely on backend to match by appointmentId
+          console.log('Stripe session created, will be matched by appointmentId on confirmation');
+        } catch (err) {
+          console.warn('Could not update transaction with session info:', err);
+        }
+      }
       
       if (checkoutData?.url) {
         window.location.href = checkoutData.url;
@@ -160,7 +283,11 @@ export default function PaymentDetails() {
       }
     } catch (error) {
       console.error("Error creating Stripe checkout:", error);
-      toast.error("Error processing payment. Please try again.");
+      console.error("Error response data:", error.response?.data);
+      console.error("Error response status:", error.response?.status);
+      console.error("Full error details:", JSON.stringify(error.response?.data, null, 2));
+      const errorMessage = error.response?.data?.message || error.response?.data?.title || error.message || "Error processing payment";
+      toast.error(errorMessage);
     } finally {
       setStripeProcessing(false);
     }
@@ -181,11 +308,28 @@ export default function PaymentDetails() {
 
     try {
       setManualProcessing(true);
+      
+      // Build receipt object
+      const receiptData = {};
+      
+      // Add custom services
+      receiptItems.forEach(item => {
+        receiptData[item.key] = parseFloat(item.price);
+      });
+      
+      // Add medication fee if present
+      if (Number(fees.medicationFee) > 0) {
+        receiptData['medication'] = Number(fees.medicationFee);
+      }
+      
       await paymentService.createPayment({
         appointmentId,
         amount: getTotalAmount(),
         currency: "MYR",
         paymentMethod: "Manual",
+        status: "Paid",
+        paymentTime: new Date().toISOString(),
+        receipt: receiptData,
       });
       await paymentService.markAppointmentAsPaid(appointmentId);
       toast.success("Manual payment recorded successfully!");
@@ -348,43 +492,86 @@ export default function PaymentDetails() {
                 <h2 className="text-xl font-semibold text-heading">Fee Breakdown</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="text-sm text-muted mb-1 block">Consultation Fee (RM)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={fees.consultationFee}
-                    onChange={(e) => handleFeeChange("consultationFee", e.target.value)}
-                    className="w-full border border-color rounded-lg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  {feeErrors.consultationFee && <p className="text-accent-danger text-xs mt-1">{feeErrors.consultationFee}</p>}
+              {/* Services Section */}
+              <div className="mb-6 pb-6 border-b border-color">
+                <h3 className="text-lg font-semibold text-heading mb-4 flex items-center gap-2">
+                  <FaStethoscope className="text-blue-600" />
+                  Services
+                </h3>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-muted mb-2">
+                      Service Type
+                    </label>
+                    <select
+                      value={selectedService}
+                      onChange={(e) => setSelectedService(e.target.value)}
+                      className="w-full px-4 py-2 border border-color rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    >
+                      <option value="">Select a service...</option>
+                      {APPOINTMENT_TYPES.map(type => (
+                        <option key={type.value} value={type.value}>
+                          {type.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-muted mb-2">
+                      Price (RM)
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={servicePrice}
+                        onChange={(e) => setServicePrice(e.target.value)}
+                        placeholder="0.00"
+                        className="flex-1 px-4 py-2 border border-color rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                      />
+                      <button
+                        onClick={handleAddService}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <FaPlus />
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <label className="text-sm text-muted mb-1 block">Medication Fee (RM)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={fees.medicationFee}
-                    onChange={(e) => handleFeeChange("medicationFee", e.target.value)}
-                    className="w-full border border-color rounded-lg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  {feeErrors.medicationFee && <p className="text-accent-danger text-xs mt-1">{feeErrors.medicationFee}</p>}
-                </div>
-                <div>
-                  <label className="text-sm text-muted mb-1 block">Other Charges (RM)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={fees.otherCharges}
-                    onChange={(e) => handleFeeChange("otherCharges", e.target.value)}
-                    className="w-full border border-color rounded-lg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  {feeErrors.otherCharges && <p className="text-accent-danger text-xs mt-1">{feeErrors.otherCharges}</p>}
-                </div>
+
+                {receiptItems.length > 0 && (
+                  <div className="space-y-2">
+                    {receiptItems.map(item => (
+                      <div key={item.id} className="flex justify-between items-center bg-blue-50 p-3 rounded-lg">
+                        <span className="font-medium text-body">{item.name}</span>
+                        <div className="flex items-center gap-3">
+                          <span className="font-semibold text-heading">RM {item.price}</span>
+                          <button
+                            onClick={() => handleRemoveService(item.id)}
+                            className="text-red-500 hover:text-red-700"
+                          >
+                            <FaTrash size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Medication Fee */}
+              <div className="mb-6">
+                <label className="text-sm text-muted mb-1 block">Medication Fee (RM)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={fees.medicationFee}
+                  onChange={(e) => handleFeeChange("medicationFee", e.target.value)}
+                  className="w-full border border-color rounded-lg px-3 py-2 text-body focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+                {feeErrors.medicationFee && <p className="text-accent-danger text-xs mt-1">{feeErrors.medicationFee}</p>}
               </div>
 
               <div className="mt-4">
