@@ -1,38 +1,49 @@
 import staffApi from "./staffApi";
 
-// Get all prescriptions
+const CONSULTATION_ENDPOINT = "/consultations";
+
+const mapConsultationPayload = (payload = {}) => ({
+  id: payload.id?.trim() ?? "",
+  appointmentId: payload.appointmentId?.trim() ?? "",
+  feedbackNotes: payload.feedbackNotes || "",
+  prescriptionNotes: payload.prescriptionNotes || "",
+});
+
 export const getAllPrescriptions = async () => {
-  const response = await staffApi.get("/prescriptions");
+  const response = await staffApi.get(CONSULTATION_ENDPOINT);
   return response.data;
 };
 
-// Get prescription by ID
 export const getPrescriptionById = async (id) => {
-  const response = await staffApi.get(`/prescriptions/${id}`);
+  const response = await staffApi.get(`${CONSULTATION_ENDPOINT}/${id}`);
   return response.data;
 };
 
-// Get prescriptions by appointment ID
 export const getPrescriptionsByAppointment = async (appointmentId) => {
-  const response = await staffApi.get(`/prescriptions/appointment/${appointmentId}`);
+  const response = await staffApi.get(CONSULTATION_ENDPOINT, {
+    params: { appointmentId },
+  });
   return response.data;
 };
 
-// Create prescription
-export const createPrescription = async (prescriptionData) => {
-  const response = await staffApi.post("/prescriptions", prescriptionData);
+export const createPrescription = async (consultationData) => {
+  const response = await staffApi.post(
+    CONSULTATION_ENDPOINT,
+    mapConsultationPayload(consultationData)
+  );
   return response.data;
 };
 
-// Update prescription
-export const updatePrescription = async (id, prescriptionData) => {
-  const response = await staffApi.put(`/prescriptions/${id}`, prescriptionData);
+export const updatePrescription = async (id, consultationData) => {
+  const response = await staffApi.put(
+    `${CONSULTATION_ENDPOINT}/${id}`,
+    mapConsultationPayload(consultationData)
+  );
   return response.data;
 };
 
-// Delete prescription
 export const deletePrescription = async (id) => {
-  const response = await staffApi.delete(`/prescriptions/${id}`);
+  const response = await staffApi.delete(`${CONSULTATION_ENDPOINT}/${id}`);
   return response.data;
 };
 

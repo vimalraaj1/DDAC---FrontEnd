@@ -1,17 +1,28 @@
 import { useState, useEffect } from "react";
 import StaffNavBar from "../components/StaffNavBar";
 import AppointmentForm from "./AppointmentForm";
-import { getAllAppointments, deleteAppointment, createAppointment, updateAppointment } from "./appointmentService";
 import Layout from "../../../components/Layout";
+import * as appointmentService from "../services/appointmentService";
+import * as patientService from "../services/patientService";
+import * as doctorService from "../services/doctorService";
 
 export default function StaffAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [editing, setEditing] = useState(null); 
   const [showForm, setShowForm] = useState(false);
+  const [patientsMap, setPatientsMap] = useState({});
+  const [doctorsMap, setDoctorsMap] = useState({});
 
   const fetchAppointments = async () => {
-    const data = await getAllAppointments();
-    setAppointments(data);
+    const data = await appointmentService.getAllAppointments();
+    setAppointments(data || []);
+    try {
+      const [pList, dList] = await Promise.all([patientService.getAllPatients(), doctorService.getAllDoctors()]);
+      setPatientsMap((pList || []).reduce((acc, p) => ({ ...acc, [p.id || p.patientId]: p }), {}));
+      setDoctorsMap((dList || []).reduce((acc, d) => ({ ...acc, [d.id || d.doctorId]: d }), {}));
+    } catch (err) {
+      // ignore mapping errors
+    }
   };
 
   useEffect(() => {
@@ -19,18 +30,18 @@ export default function StaffAppointments() {
   }, []);
 
   const handleCreate = async (data) => {
-    await createAppointment(data);
+    await appointmentService.createAppointment(data);
     fetchAppointments();
   };
 
   const handleUpdate = async (data) => {
-    await updateAppointment(editing.id, data);
+    await appointmentService.updateAppointment(editing.id, data);
     setEditing(null);
     fetchAppointments();
   };
 
   const handleDelete = async (id) => {
-    await deleteAppointment(id);
+    await appointmentService.deleteAppointment(id);
     fetchAppointments();
   };
 
@@ -81,7 +92,7 @@ export default function StaffAppointments() {
                         {a.status}
                       </span>
                     </div>
-                    <h3 className="font-semibold text-gray-900 mb-1">{a.patient}</h3>
+                    <h3 className="font-semibold text-gray-900 mb-1">{(patientsMap[a.patientId] ? `${patientsMap[a.patientId].firstName || ""} ${patientsMap[a.patientId].lastName || ""}`.trim() : a.patientId) || "Patient"}</h3>
                     <p className="text-sm text-gray-neutral">
                       <span className="font-medium">Date:</span> {a.date}
                     </p>
@@ -89,7 +100,7 @@ export default function StaffAppointments() {
                       <span className="font-medium">Time:</span> {a.time}
                     </p>
                     <p className="text-sm text-gray-neutral">
-                      <span className="font-medium">Doctor:</span> {a.doctor}
+                      <span className="font-medium">Doctor:</span> {(doctorsMap[a.doctorId] ? `${doctorsMap[a.doctorId].firstName || ""} ${doctorsMap[a.doctorId].lastName || ""}`.trim() : a.doctorId) || "Doctor"}
                     </p>
                     <p className="text-sm text-gray-neutral">
                       <span className="font-medium">Purpose:</span> {a.purpose}

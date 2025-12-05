@@ -108,22 +108,16 @@ export function FilterBar({ onFilter }: FilterBarProps) {
                     All Status
                   </SelectItem>
                   <SelectItem
-                    value="paid"
+                    value="Succeed"
                     className="hover:bg-[#F5F7FA] cursor-pointer"
                   >
-                    Paid
+                    Succeed
                   </SelectItem>
                   <SelectItem
-                    value="pending"
+                    value="Pending"
                     className="hover:bg-[#F5F7FA] cursor-pointer"
                   >
                     Pending
-                  </SelectItem>
-                  <SelectItem
-                    value="overdue"
-                    className="hover:bg-[#F5F7FA] cursor-pointer"
-                  >
-                    Overdue
                   </SelectItem>
                 </SelectContent>
               </Select>

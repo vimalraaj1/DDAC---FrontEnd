@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { StarRating } from "./StarRating";
 import { Button } from "../../components/ui/button";
 import { Calendar, Stethoscope } from "lucide-react";
+import { convertDateTime } from "../../../../../../utils/TimeConversion";
 
 interface PastFeedbackCardProps {
   id: string;
@@ -11,10 +12,10 @@ interface PastFeedbackCardProps {
   appointmentTime: string;
   patientName: string;
   commentTime: string;
-  overallRating: number;
-  staffRating: number;
-  doctorRating: number;
-  feedback: string;
+  overallRating: number | null;
+  staffRating: number | null;
+  doctorRating: number | null;
+  feedback: string | null;
   onViewMore: () => void;
   onGiveFeedback: () => void;
 }
@@ -43,6 +44,7 @@ export function PastFeedbackCard({
           .toUpperCase()
           .slice(0, 2);
 
+
   return (
     <div
       className="p-4 rounded-xl border"
@@ -64,7 +66,7 @@ export function PastFeedbackCard({
           <div className="flex items-center justify-between mb-1">
             <p style={{ color: "var(--text-heading)" }}>{patientName}</p>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              {commentTime}
+              {convertDateTime(commentTime)}
             </p>
           </div>
 
@@ -87,15 +89,15 @@ export function PastFeedbackCard({
 
           <div className="mb-2 flex flex-row gap-2">
             <p className="text-sm text-gray-400 w-25">Overall Rating: </p>
-            <StarRating rating={overallRating} interactive={false} size="sm" />
+            <StarRating rating={overallRating ?? 0} interactive={false} size="sm" />
           </div>
           <div className="mb-2 flex flex-row gap-2">
             <p className="text-sm text-gray-400 w-25">Doctor Rating: </p>
-            <StarRating rating={doctorRating} interactive={false} size="sm" />
+            <StarRating rating={doctorRating ?? 0} interactive={false} size="sm" />
           </div>
           <div className="mb-2 flex flex-row gap-2">
             <p className="text-sm text-gray-400 w-25">Staff Rating: </p>
-            <StarRating rating={staffRating} interactive={false} size="sm" />
+            <StarRating rating={staffRating ?? 0} interactive={false} size="sm" />
           </div>
 
           <p
@@ -105,7 +107,7 @@ export function PastFeedbackCard({
             {feedback}
           </p>
 
-          {overallRating === 0 ? (
+          {overallRating === null ? (
 
             <Button
               onClick={onGiveFeedback}

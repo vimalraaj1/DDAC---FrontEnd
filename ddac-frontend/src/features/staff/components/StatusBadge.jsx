@@ -5,8 +5,12 @@ export default function StatusBadge({ status }) {
     rejected: { color: "bg-red-100 text-red-800", label: "Rejected" },
     completed: { color: "bg-blue-100 text-blue-800", label: "Completed" },
     cancelled: { color: "bg-gray-100 text-gray-800", label: "Cancelled" },
+    "no show": { color: "bg-orange-100 text-orange-800", label: "No Show" },
+    "no-show": { color: "bg-orange-100 text-orange-800", label: "No Show" },
     paid: { color: "bg-green-100 text-green-800", label: "Paid" },
     unpaid: { color: "bg-orange-100 text-orange-800", label: "Unpaid" },
+    active: { color: "bg-green-100 text-green-800", label: "Active" },
+    inactive: { color: "bg-gray-200 text-gray-700", label: "Inactive" },
   };
 
   const config = statusConfig[status?.toLowerCase()] || {

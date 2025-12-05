@@ -3,14 +3,19 @@ import { Button } from "../../components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { StatusBadge } from "./StatusBadge";
 
+export type Receipt = Record<string, number>;
 export interface Payment {
-  id: string;
   billId: string;
-  service: string;
-  department: string;
-  dateIssued: string;
   amount: number;
-  status: "paid" | "pending" | "overdue";
+  status: "Succeed" | "Pending" | null;
+  paymentTime: string;
+  paymentMethod: string;
+  receipt: Receipt | null;
+  appoinmentId: string;
+  appointmentDate: string;
+  appointmentTime: string;
+  doctorName: string;
+  doctorSpecialization: string;
 }
 
 interface PaymentHistoryTableProps {
@@ -43,7 +48,7 @@ export function PaymentHistoryTable({ payments, onViewDetails }: PaymentHistoryT
         <TableBody>
           {payments.map((payment, index) => (
             <TableRow 
-              key={payment.id}
+              key={payment.billId}
               style={{ 
                 backgroundColor: index % 2 === 0 ? 'var(--bg-card)' : 'rgba(248, 250, 252, 0.5)'
               }}
@@ -53,12 +58,12 @@ export function PaymentHistoryTable({ payments, onViewDetails }: PaymentHistoryT
               </TableCell>
               <TableCell>
                 <div>
-                  <p style={{ color: 'var(--text-body)' }}>{payment.service}</p>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{payment.department}</p>
+                  <p style={{ color: 'var(--text-body)' }}>{payment.doctorSpecialization}</p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{payment.doctorName}</p>
                 </div>
               </TableCell>
               <TableCell style={{ color: 'var(--text-body)' }}>
-                {payment.dateIssued}
+                {payment.paymentTime}
               </TableCell>
               <TableCell style={{ color: 'var(--text-heading)' }}>
                 RM {payment.amount.toLocaleString()}

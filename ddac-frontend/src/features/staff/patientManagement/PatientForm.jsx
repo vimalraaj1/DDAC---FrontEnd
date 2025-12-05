@@ -2,64 +2,50 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Layout from "../../../components/Layout";
 import * as patientService from "../services/patientService";
+import { patientDefaults, genderOptions } from "./patientSchema";
 import { FaArrowLeft, FaSave } from "react-icons/fa";
+import { toast } from "sonner";
 
 export default function PatientForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    dateOfBirth: "",
-    address: "",
-    allergies: "",
-    status: "Active", // match backend
-    icNumber: "",
-    password: "", // optional
-    emergencyContact: "", // optional
-  });
+  const [formData, setFormData] = useState({ ...patientDefaults });
 
   useEffect(() => {
     if (isEdit) {
       loadPatient();
+    } else {
+      setFormData({ ...patientDefaults });
     }
   }, [id]);
-
-  const icToDob = (ic) => {
-    if (!ic) return "";
-    const s = ic.substring(0, 6);
-    const yy = parseInt(s.substring(0, 2));
-    const mm = s.substring(2, 4);
-    const dd = s.substring(4, 6);
-    const fullYear =
-      yy <= new Date().getFullYear() % 100 ? 2000 + yy : 1900 + yy;
-    return `${fullYear}-${mm}-${dd}`;
-  };
 
   const loadPatient = async () => {
     try {
       const data = await patientService.getPatientById(id);
       setFormData({
+        //id: data.id || "",
         firstName: data.firstName || "",
         lastName: data.lastName || "",
+        gender: data.gender || "",
         email: data.email || "",
         phone: data.phone || "",
         dateOfBirth: data.dateOfBirth
           ? data.dateOfBirth.split("T")[0]
-          : icToDob(data.icNumber),
+          : "",
         address: data.address || "",
-        allergies: data.allergies || "None",
-        status: data.status || "Active",
-        icNumber: data.icNumber || "",
-        password: "",
+        bloodGroup: data.bloodGroup || "",
         emergencyContact: data.emergencyContact || "",
+        emergencyName: data.emergencyName || "",
+        emergencyRelationship: data.emergencyRelationship || "",
+        allergies: data.allergies || "",
+        conditions: data.conditions || "",
+        medications: data.medications || "",
       });
     } catch (error) {
       console.error("Error loading patient:", error);
+      toast.error("Failed to load patient data. Please try again.");
     }
   };
 
@@ -68,19 +54,57 @@ export default function PatientForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const validateForm = () => {
+    // if (!formData.id?.trim()) {
+    //   toast.error("Patient ID is required.");
+    //   return false;
+    // }
+    if (!formData.firstName?.trim()) {
+      toast.error("First name is required.");
+      return false;
+    }
+    if (!formData.lastName?.trim()) {
+      toast.error("Last name is required.");
+      return false;
+    }
+    if (!formData.email?.trim()) {
+      toast.error("Email is required.");
+      return false;
+    }
+    if (!formData.phone?.trim()) {
+      toast.error("Phone number is required.");
+      return false;
+    }
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return false;
+    }
+    return true;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
     try {
       if (isEdit) {
         await patientService.updatePatient(id, formData);
+        toast.success("Patient updated successfully!");
       } else {
         await patientService.createPatient(formData);
+        toast.success("Patient registered successfully!");
       }
       navigate("/staff/patients");
     } catch (error) {
       console.error("Error saving patient:", error);
-      alert("Error saving patient. Please try again.");
+      const errorMessage = error.response?.data?.message || "Error saving patient. Please try again.";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -103,96 +127,128 @@ export default function PatientForm() {
             </h1>
           </div>
 
-          <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl">
+          <div className="bg-white rounded-lg shadow-md p-6 max-w-3xl">
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  First Name *
-                </label>
-                <input
-                  type="text"
-                  id="firstName"
-                  name="firstName"
-                  value={formData.firstName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    First Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Last Name *
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Last Name *
-                </label>
-                <input
-                  type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Phone *
+                  </label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
               </div>
 
-              <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Email *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="phone"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Phone *
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-
-              <div>
-                <label
-                  htmlFor="dateOfBirth"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Date of Birth *
-                </label>
-                <input
-                  type="date"
-                  id="dateOfBirth"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label
+                    htmlFor="dateOfBirth"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Date of Birth *
+                  </label>
+                  <input
+                    type="date"
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    value={formData.dateOfBirth}
+                    onChange={handleChange}
+                    required
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Gender *
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {genderOptions.map((gender) => (
+                      <label
+                        key={gender}
+                        className={`flex items-center justify-center border rounded-lg py-3 cursor-pointer transition-all ${
+                          formData.gender === gender
+                            ? "border-primary bg-primary text-white font-semibold"
+                            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="gender"
+                          value={gender}
+                          checked={formData.gender === gender}
+                          onChange={handleChange}
+                          className="hidden"
+                          required
+                        />
+                        {gender}
+                      </label>
+                    ))}
+                  </div>
+                </div>
               </div>
 
               <div>
@@ -200,56 +256,159 @@ export default function PatientForm() {
                   htmlFor="address"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  Address
+                  Address *
                 </label>
                 <textarea
                   id="address"
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
+                  required
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 />
               </div>
 
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Allergies
-                </label>
-                <input
-                  type="text"
-                  id="allergies"
-                  name="allergies"
-                  value={formData.allergies}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-
-              {isEdit && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label
-                    htmlFor="status"
+                    htmlFor="emergencyContact"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Status
+                    Emergency Contact
                   </label>
-                  <select
-                    id="status"
-                    name="status"
-                    value={formData.status}
+                  <input
+                    type="tel"
+                    id="emergencyContact"
+                    name="emergencyContact"
+                    value={formData.emergencyContact}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
+                  />
                 </div>
-              )}
+                <div>
+                  <label
+                    htmlFor="emergencyName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Emergency Name
+                  </label>
+                  <input
+                    type="text"
+                    id="emergencyName"
+                    name="emergencyName"
+                    value={formData.emergencyName}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="emergencyRelationship"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Emergency Relationship
+                  </label>
+                  <input
+                    type="text"
+                    id="emergencyRelationship"
+                    name="emergencyRelationship"
+                    value={formData.emergencyRelationship}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label
+                    htmlFor="allergies"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Allergies
+                  </label>
+                  <input
+                    type="text"
+                    id="allergies"
+                    name="allergies"
+                    value={formData.allergies}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="conditions"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Conditions
+                  </label>
+                  <input
+                    type="text"
+                    id="conditions"
+                    name="conditions"
+                    value={formData.conditions}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="medications"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Medications
+                  </label>
+                  <input
+                    type="text"
+                    id="medications"
+                    name="medications"
+                    value={formData.medications}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* <div>
+                  <label
+                    htmlFor="id"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Patient ID *
+                  </label>
+                  <input
+                    type="text"
+                    id="id"
+                    name="id"
+                    value={formData.id}
+                    onChange={handleChange}
+                    required
+                    disabled={isEdit}
+                    placeholder="PT000001"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
+                  />
+                </div> */}
+                <div>
+                  <label
+                    htmlFor="bloodGroup"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Blood Group
+                  </label>
+                  <input
+                    type="text"
+                    id="bloodGroup"
+                    name="bloodGroup"
+                    value={formData.bloodGroup}
+                    onChange={handleChange}
+                    placeholder="e.g., O+"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+              </div>
 
               <div className="flex gap-4">
                 <button

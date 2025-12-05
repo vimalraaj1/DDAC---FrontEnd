@@ -3,7 +3,7 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Separator } from "../../components/ui/separator";
-
+import { useNavigate } from "react-router-dom";
 
 interface Medication {
   name: string;
@@ -12,39 +12,54 @@ interface Medication {
   refills: number;
 }
 
-export interface  Appointment {
+export interface Appointment {
   id: string;
   doctorName: string;
   doctorSpecialty: string;
   doctorInitials: string;
+  doctorEmail: string;
+  doctorPhone: string;
   date: string;
   time: string;
+  purpose: string;
   location: string;
-  status: "Approved" | "Pending" | "Cancelled";
+  status:
+    | "Approved"
+    | "Rejected"
+    | "Scheduled"
+    | "Cancelled"
+    | "Completed"
+    | "No Show";
   prescriptions: Medication[];
+  cancellationReason: string | null;
 }
 
 interface AppointmentCardProps {
   appointment: Appointment;
+  type: "upcoming" | "past" | "cancelled";
   onViewDetails: (id: string) => void;
-  onEdit: (id: string) => void;
   onCancel: (id: string) => void;
 }
 
 export function AppointmentCard({
   appointment,
+  type,
   onViewDetails,
-  onEdit,
   onCancel,
 }: AppointmentCardProps) {
   const statusStyles = {
     Approved: "bg-[#2ECC71]/10 text-[#2ECC71] border-[#2ECC71]/20",
-    Pending: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
+    Rejected: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Scheduled: "bg-[#F39C12]/10 text-[#F39C12] border-[#F39C12]/20",
     Cancelled: "bg-[#E74C3C]/10 text-[#E74C3C] border-[#E74C3C]/20",
+    Completed: "bg-[#3498DB]/10 text-[#3498DB] border-[#3498DB]/20",
+    "No Show": "bg-[#95A5A6]/10 text-[#95A5A6] border-[#95A5A6]/20",
   };
 
+  const navigate = useNavigate();
+
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#DCEFFB] hover:shadow-md transition-shadow">
+    <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-400 hover:shadow-md transition-shadow">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 bg-[#E8F6FD] rounded-full flex items-center justify-center flex-shrink-0">
@@ -79,28 +94,41 @@ export function AppointmentCard({
 
       <Separator className="mb-4 bg-[#DCEFFB]" />
 
-      <div className="flex gap-3">
-        <Button
-          onClick={() => onViewDetails(appointment.id)}
-          className="flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl cursor-pointer"
-        >
-          View Details
-        </Button>
-        <Button
-          onClick={() => onEdit(appointment.id)}
-          variant="outline"
-          className="flex-1 border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-        >
-          Edit
-        </Button>
-        <Button
-          onClick={() => onCancel(appointment.id)}
-          variant="outline"
-          className="flex-1 border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C]/5 rounded-xl cursor-pointer"
-        >
-          Cancel
-        </Button>
-      </div>
+      {type === "upcoming" ? (
+        <div className="flex gap-3">
+          <Button
+            onClick={() => onViewDetails(appointment.id)}
+            className="flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl cursor-pointer"
+          >
+            View Details
+          </Button>
+          <Button
+            onClick={() => onCancel(appointment.id)}
+            variant="outline"
+            className="flex-1 border-[#E74C3C] text-[#E74C3C] hover:bg-[#E74C3C]/5 rounded-xl cursor-pointer"
+          >
+            Cancel
+          </Button>
+        </div>
+      ) : type === "past" ? (
+        <div className="flex gap-3">
+          <Button
+            onClick={() => navigate("/medicalRecords")}
+            className="flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl cursor-pointer"
+          >
+            View Prescription
+          </Button>
+        </div>
+      ) : (
+        <div className="flex gap-3">
+          <Button
+            onClick={() => onViewDetails(appointment.id)}
+            className="flex-1 bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl cursor-pointer"
+          >
+            View Details
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

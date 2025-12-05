@@ -21,123 +21,23 @@ import Layout from "../../../components/Layout";
 import { CustomerContext } from "../CustomerContext";
 import LoadingSpinner from "../components/LoadingSpinner";
 import {
+  getAppointmentByAppointmentId,
   getAppointmentsByPatientId,
-  registerAppointment,
+  registerAppointments,
+  updateAppointment,
 } from "../../../services/appointmentManagementService";
 import {
   formatDate,
   reverseFormatDate,
 } from "../../../../../utils/DateConversion";
+import LoadingOverlay from "../components/LoadingOverlay";
+import { getInitials } from "../../../../../utils/GetInitials";
+import { convertTime } from "../../../../../utils/TimeConversion";
+import { sendEmail } from "../../../services/emailManagementService";
+import { updateAvailabilityByAppointmentId } from "../../../services/availabilityManagementService";
 
-
-const pastAppointments: Appointment[] = [
-  {
-    id: "5",
-    doctorName: "Dr. Sarah Johnson",
-    doctorSpecialty: "Cardiologist",
-    doctorInitials: "SJ",
-    date: "Monday, October 21, 2025",
-    time: "10:00 AM - 10:30 AM",
-    location: "Cardiac Care Center, Room 305",
-    status: "Approved",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-  {
-    id: "6",
-    doctorName: "Dr. James Thompson",
-    doctorSpecialty: "Neurologist",
-    doctorInitials: "JT",
-    date: "Wednesday, October 9, 2025",
-    time: "3:00 PM - 3:45 PM",
-    location: "Neurology Department, Room 501",
-    status: "Approved",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-];
-
-const cancelledAppointments: Appointment[] = [
-  {
-    id: "7",
-    doctorName: "Dr. Lisa Anderson",
-    doctorSpecialty: "Pediatrician",
-    doctorInitials: "LA",
-    date: "Friday, November 15, 2025",
-    time: "1:00 PM - 1:30 PM",
-    location: "Pediatrics Wing, Room 203",
-    status: "Cancelled",
-    prescriptions: [
-      {
-        name: "Atorvastatin 20mg",
-        dosage: "1 tablet after dinner",
-        duration: "30 days",
-        refills: 2,
-      },
-      {
-        name: "Lisinopril 10mg",
-        dosage: "1 tablet in the morning",
-        duration: "30 days",
-        refills: 3,
-      },
-      {
-        name: "Aspirin 81mg",
-        dosage: "1 tablet daily with food",
-        duration: "90 days",
-        refills: 1,
-      },
-    ],
-  },
-];
 
 type TabType = "upcoming" | "past" | "cancelled";
-
-type AppointmentType = {
-  id: string;
-  doctorName: string;
-  doctorInitials: string;
-  time: string;
-  doctorSpecialty: string;
-  location: string;
-  date: string;
-  status: "Approved" | "Pending" | "Cancelled";
-};
 
 export default function Appointments() {
   const { patient, loading } = useContext(CustomerContext);
@@ -152,8 +52,18 @@ export default function Appointments() {
     useState<Appointment | null>(null);
 
   const [appointmentsData, setAppointmentsData] = useState<Appointment[]>([]);
+
+  const [upcomingAppointments, setUpcomingAppointments] = useState<
+    Appointment[]
+  >([]);
+  const [pastAppointments, setPastAppointments] = useState<Appointment[]>([]);
+  const [cancelledAppointments, setCancelledAppointments] = useState<
+    Appointment[]
+  >([]);
+
   const [loadingAppointment, setLoadingAppointment] = useState(true);
   const [loadingBooking, setLoadingBooking] = useState(false);
+  const [loadingCancel, setLoadingCancel] = useState(false);
 
   // get appointments data from db
   useEffect(() => {
@@ -162,22 +72,16 @@ export default function Appointments() {
     }
   }, [patient?.id]);
 
+  useEffect(() => {
+    if (appointmentsData.length > 0) {
+      filterAppointmentsBasedOnStatus();
+    }
+  }, [appointmentsData]);
+
   if (loading || !patient) return <LoadingSpinner />;
 
-  const getInitials = (firstName: string, lastName: string) => {
-    return firstName[0] + lastName[0];
-  };
-
-  const convertTime = (time24: string) => {
-    const [hour, minute] = time24.split(":");
-    const date = new Date();
-    date.setHours(parseInt(hour), parseInt(minute));
-
-    return date.toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-    });
-  };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const fetchAppointmentDataDB = async (id: any) => {
     try {
@@ -189,15 +93,17 @@ export default function Appointments() {
         doctorName: data.doctorFirstName + " " + data.doctorLastName,
         doctorSpecialty: data.doctorSpecialization,
         doctorInitials: getInitials(data.doctorFirstName, data.doctorLastName),
+        doctorEmail: data.doctorEmail,
+        doctorPhone: data.doctorPhone,
         date: formatDate(data.date),
         time: convertTime(data.time),
-        location: "",
+        purpose: data.purpose,
         status: data.status,
         prescriptions: [],
+        cancellationReason: data.cancellationReason,
       }));
 
       setAppointmentsData(formattedAppointments); // single state update
-      console.log(formattedAppointments);
     } catch (err) {
       console.log(err);
       toast.error("Something went wrong!", {
@@ -212,19 +118,37 @@ export default function Appointments() {
     }
   };
 
+  const filterAppointmentsBasedOnStatus = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const upcoming: typeof appointmentsData = [];
+    const past: typeof appointmentsData = [];
+    const cancelled: typeof appointmentsData = [];
+
+    appointmentsData.forEach((a) => {
+      const appointmentDate = new Date(a.date);
+      appointmentDate.setHours(0, 0, 0, 0);
+
+      if (a.status === "Cancelled" || a.status === "Rejected") {
+        cancelled.push(a);
+      } else if (appointmentDate < today) {
+        past.push(a);
+      } else {
+        upcoming.push(a);
+      }
+    });
+
+    setUpcomingAppointments(upcoming);
+    setPastAppointments(past);
+    setCancelledAppointments(cancelled);
+  };
+
   const handleViewDetails = (id: string) => {
     const appointment = getAppointments()?.find((a) => a.id === id);
     if (appointment) {
       setSelectedAppointment(appointment);
       setDetailsModalOpen(true);
-    }
-  };
-
-  const handleEdit = (id: string) => {
-    const appointment = getAppointments()?.find((a) => a.id === id);
-    if (appointment) {
-      setSelectedAppointment(appointment);
-      setEditModalOpen(true);
     }
   };
 
@@ -245,13 +169,25 @@ export default function Appointments() {
       ...appointmentData,
       date: reverseFormatDate(appointmentData.date),
       patientId: patient.id,
-      status: "Pending",
-      staffId: "ST000001", // hard coded for now
+      status: "Scheduled",
+      isBooked: true,
+      staffId: null, 
       cancellationReason: null,
     };
 
+    const emailPayload = {
+      patientEmail: "cincainame04@gmail.com", // hard code for now 
+      patientName: patient.firstName + " " + patient.lastName,
+      doctorName: appointmentData.doctorName,
+      date: appointmentData.date,
+      time: appointmentData.time,
+      notes: appointmentData.purpose,
+    }
+
     try {
-      await registerAppointment(payload);
+      await updateAvailabilityByAppointmentId(payload.availabilityId);
+      await registerAppointments(payload);
+      await sendEmail(emailPayload);
 
       toast.success("Appointment booked successfully!", {
         style: {
@@ -289,21 +225,48 @@ export default function Appointments() {
     });
   };
 
-  const handleConfirmCancel = (appointmentId: string) => {
-    console.log("Cancelling appointment:", appointmentId);
-    toast.success("Appointment has been cancelled!", {
-      style: {
-        background: "var(--accent-success)",
-        color: "#ffffff",
-        borderRadius: "10px",
-      },
-    });
+  const handleConfirmCancel = async (
+    appointmentId: string,
+    cancellationReason: string
+  ) => {
+    setLoadingCancel(true);
+
+    try {
+      const existing = await getAppointmentByAppointmentId(appointmentId);
+      const payload = {
+        ...existing,
+        status: "Cancelled",
+        cancellationReason: cancellationReason.trim(),
+      };
+
+      await updateAppointment(appointmentId, payload);
+
+      toast.success("Appointment has been cancelled!", {
+        style: {
+          background: "var(--accent-success)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } catch (err) {
+      console.log("Error: ", err);
+      toast.error("Booking failed!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } finally {
+      setLoadingCancel(false);
+      fetchAppointmentDataDB(patient.id);
+    }
   };
 
   const getAppointments = () => {
     switch (activeTab) {
       case "upcoming":
-        return appointmentsData;
+        return upcomingAppointments;
       case "past":
         return pastAppointments;
       case "cancelled":
@@ -318,8 +281,7 @@ export default function Appointments() {
     const query = searchQuery.toLowerCase();
     return (
       appointment.doctorName.toLowerCase().includes(query) ||
-      appointment.doctorSpecialty.toLowerCase().includes(query) ||
-      appointment.location.toLowerCase().includes(query)
+      appointment.doctorSpecialty.toLowerCase().includes(query)
     );
   });
 
@@ -352,7 +314,7 @@ export default function Appointments() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-[#7A7A7A]" />
               <Input
                 type="text"
-                placeholder="Search by doctor name, specialty, or location..."
+                placeholder="Search by doctor name or specialty"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 bg-white border-[#DCEFFB] focus:ring-[#4EA5D9] focus:border-[#4EA5D9] rounded-xl"
@@ -402,15 +364,23 @@ export default function Appointments() {
                   <p className="text-[#7A7A7A]">Retrieving appointments...</p>
                 </div>
               ) : appointments && appointments.length > 0 ? (
-                appointments.map((appointment) => (
-                  <AppointmentCard
-                    key={appointment.id}
-                    appointment={appointment}
-                    onViewDetails={handleViewDetails}
-                    onEdit={handleEdit}
-                    onCancel={handleCancel}
-                  />
-                ))
+                appointments.map((appointment) => {
+                  let type: "upcoming" | "past" | "cancelled" = "upcoming";
+                  
+                  if (appointment.status === "Cancelled" || appointment.status === "Rejected") type = "cancelled";
+                  else if (new Date(appointment.date) < today)
+                    type = "past";
+
+                  return (
+                    <AppointmentCard
+                      key={appointment.id}
+                      type={type}
+                      appointment={appointment}
+                      onViewDetails={handleViewDetails}
+                      onCancel={handleCancel}
+                    />
+                  );
+                })
               ) : (
                 <div className="bg-white rounded-2xl p-12 text-center border border-[#DCEFFB]">
                   <p className="text-[#7A7A7A]">
@@ -448,18 +418,16 @@ export default function Appointments() {
           appointment={selectedAppointment}
           onConfirmCancel={handleConfirmCancel}
         />
-        <Toaster />
 
-        {loadingBooking && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
-            <div className="bg-white p-6 rounded-2xl shadow-lg flex flex-col items-center gap-3">
-              <Loader2 className="h-6 w-6 animate-spin text-[#4EA5D9]" />
-              <p className="text-sm font-medium text-gray-700">
-                Booking your appointment...
-              </p>
-            </div>
-          </div>
-        )}
+        <LoadingOverlay
+          isLoading={loadingBooking}
+          message="Booking your appointment..."
+        />
+
+        <LoadingOverlay
+          isLoading={loadingCancel}
+          message="Cancelling your appointment..."
+        />
       </div>
     </Layout>
   );

@@ -4,13 +4,23 @@ const BASE_URL = "/appointments";
 
 // GET all appointments with patientID
 export const getAppointmentsByPatientId = async (patientId) => {
-  const res = await api.get(`${BASE_URL}/patient/${patientId}/appointments`);
-  return res.data;
+    const res = await api.get(`${BASE_URL}/patient/${patientId}/appointments`);
+    return res.data;
 };
 
+export const getAppointmentByAppointmentId = async (appointmentId) => {
+    const res = await api.get(`${BASE_URL}/${appointmentId}`);
+    return res.data;
+};
+
+export const getUpcomingAppointmentByPatientId = async (patientId) => {
+    const res = await api.get(`${BASE_URL}/upcoming/${patientId}`);
+    return res.data;
+}
+
 export const registerAppointment = async (appointment) => {
-  const res = await api.post(`${BASE_URL}`, appointment);
-  return res.data;
+    const res = await api.post(`${BASE_URL}`, appointment);
+    return res.data;
 }
 
 export const getAppointments = async () => {

@@ -33,7 +33,9 @@ interface AppointmentBookingModalProps {
 }
 
 export interface AppointmentFormData {
+  availabilityId: string;
   doctorId: string;
+  doctorName?: string;
   date: string;
   time: string;
   purpose: string;
@@ -46,6 +48,7 @@ interface DoctorDropdown {
 }
 
 interface DoctorAvailability {
+  id: string;
   date: string;
   time: string;
   isBooked: boolean;
@@ -63,7 +66,9 @@ export function AppointmentBookingModal({
   const [availableDates, setAvailableDates] = useState<string[]>([]);
   const [availableTimes, setAvailableTimes] = useState<string[]>([]);
   const [formData, setFormData] = useState<AppointmentFormData>({
+    availabilityId: "",
     doctorId: "",
+    doctorName: "",
     date: "",
     time: "",
     purpose: "",
@@ -74,6 +79,9 @@ export function AppointmentBookingModal({
   useEffect(() => {
     fetchDoctorDataDB();
   }, []);
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const fetchDoctorDataDB = async () => {
     try {
@@ -117,7 +125,13 @@ export function AppointmentBookingModal({
         doctorId
       );
 
-      const filteredAvailability = datas.filter((slot) => !slot.isBooked);
+      const filteredAvailability = datas.filter((slot) => {
+        const slotDate = new Date(slot.date);
+        slotDate.setHours(0, 0, 0, 0);
+
+        return !slot.isBooked && slotDate > today;
+      });
+
       setDoctorAvailability(filteredAvailability);
 
       const dates = filteredAvailability.map((slot) => slot.date);
@@ -128,8 +142,9 @@ export function AppointmentBookingModal({
       setAvailableDates(uniqueDates);
     } catch (err) {
       console.log(err);
+    } finally {
+      setIsLoadingAvailability(false);
     }
-    setIsLoadingAvailability(false);
   };
 
   const retrieveTimeSlot = (date: string) => {
@@ -152,14 +167,39 @@ export function AppointmentBookingModal({
 
   const handleSubmit = () => {
     if (formData.doctorId && formData.date && formData.time) {
-      onBookAppointment(formData);
+      const finalAppointment = doctorAvailability.find(
+        (a) =>
+          a.date === reverseFormatDate(formData.date) &&
+          a.time === formData.time
+      );
+
+      const doctor = doctorDropdown.find((d) => d.id === formData.doctorId);
+
+      if (!finalAppointment) {
+        console.error("No matching appointment found");
+        return;
+      }
+
+      const updatedFormData = {
+        ...formData,
+        availabilityId: finalAppointment.id,
+        doctorName: doctor?.name,
+      };
+
+      console.log("Updated Form Data: ", updatedFormData);
+
+      onBookAppointment(updatedFormData);
+
       // Reset form
       setFormData({
+        availabilityId: "",
         doctorId: "",
+        doctorName: "",
         date: "",
         time: "",
         purpose: "",
       });
+
       onOpenChange(false);
     }
   };
@@ -220,6 +260,7 @@ export function AppointmentBookingModal({
               <Calendar className="h-4 w-4 text-[#4EA5D9]" />
               Appointment Date
               <span className="text-red-500">*</span>
+              <span className="text-red-500">*</span>
             </Label>
             <Select
               disabled={isLoadingAvailability || availableDates.length === 0}
@@ -234,8 +275,10 @@ export function AppointmentBookingModal({
                   placeholder={
                     isLoadingAvailability
                       ? "Loading dates..."
+                      : availableDates.length === 0
+                      ? "No available dates for the selected doctor..."
                       : formData.date === ""
-                      ? "Select a date..." // show placeholder when date is cleared
+                      ? "Select a date..." 
                       : formData.date
                   }
                 />
@@ -312,7 +355,8 @@ export function AppointmentBookingModal({
               className="text-[#1A1A1A] flex items-center gap-2"
             >
               <FileText className="h-4 w-4 text-[#4EA5D9]" />
-              Reason for Visit (Optional)
+              Reason for Visit
+              <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="reason"
@@ -338,7 +382,7 @@ export function AppointmentBookingModal({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!formData.doctorId || !formData.date || !formData.time}
+            disabled={!formData.doctorId || !formData.date || !formData.time || !formData.purpose}
             className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             Book Appointment

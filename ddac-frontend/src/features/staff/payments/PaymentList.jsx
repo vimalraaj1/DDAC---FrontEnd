@@ -5,6 +5,7 @@ import DataTable from "../components/DataTable";
 import StatusBadge from "../components/StatusBadge";
 import * as paymentService from "../services/paymentService";
 import { FaEye, FaFileInvoice } from "react-icons/fa";
+import { formatStaffDate } from "../utils/dateFormat";
 
 export default function PaymentList() {
   const navigate = useNavigate();
@@ -26,7 +27,7 @@ export default function PaymentList() {
       setPayments([
         {
           id: 1,
-          patientName: "John Doe",
+          patient: { firstName: "John", lastName: "Doe" },
           amount: 150.00,
           status: "paid",
           date: "2024-12-20",
@@ -34,7 +35,7 @@ export default function PaymentList() {
         },
         {
           id: 2,
-          patientName: "Jane Smith",
+          patient: { firstName: "Jane", lastName: "Smith" },
           amount: 200.00,
           status: "unpaid",
           date: "2024-12-19",
@@ -50,9 +51,11 @@ export default function PaymentList() {
     {
       key: "patientName",
       label: "Patient",
-      render: (value, row) => (
-        <div className="font-medium text-gray-900">{value || row.patient?.name || "N/A"}</div>
-      ),
+      render: (value, row) => {
+        const p = row.patient || row._patient;
+        const label = p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : value || row.patientName || "N/A";
+        return <div className="font-medium text-gray-900">{label}</div>;
+      },
     },
     {
       key: "amount",
@@ -71,7 +74,7 @@ export default function PaymentList() {
     {
       key: "date",
       label: "Date",
-      render: (value) => value ? new Date(value).toLocaleDateString() : "N/A",
+      render: (value) => formatStaffDate(value),
     },
   ];
 

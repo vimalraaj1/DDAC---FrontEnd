@@ -30,8 +30,9 @@ export default function StaffNavBar({role = "staff"}) {
     { icon: FaHome, label: "Dashboard", path: "/staff/dashboard" },
     { icon: FaUsers, label: "Patients", path: "/staff/patients" },
     { icon: FaCalendarCheck, label: "Appointments", path: "/staff/appointments" },
-    { icon: FaFilePrescription, label: "Prescriptions", path: "/staff/prescriptions" },
-    { icon: FaCreditCard, label: "Payments", path: "/staff/payments" },
+    { icon: FaUser, label: "Doctors", path: "/staff/doctors" },
+    // { icon: FaFilePrescription, label: "Prescriptions", path: "/staff/prescriptions" },
+    { icon: FaCreditCard, label: "Payment", path: "/staff/payment" },
     { icon: FaStar, label: "Ratings", path: "/staff/ratings" },
     { icon: FaUser, label: "Profile", path: "/staff/profile" },
   ];
