@@ -1,15 +1,15 @@
 import { DollarSign, AlertCircle, TrendingUp, FileText } from "lucide-react";
 
 interface SummaryPanelProps {
+  totalRecords: number;
   totalPaidThisYear: number;
   outstandingAmount: number;
-  overdueAmount: number;
 }
 
 export function SummaryPanel({
+  totalRecords,
   totalPaidThisYear,
   outstandingAmount,
-  overdueAmount,
 }: SummaryPanelProps) {
   return (
     <div className="space-y-4">
@@ -34,7 +34,7 @@ export function SummaryPanel({
             <p className="text-sm" style={{ color: "var(--text-muted)" }}>
               Total Records
             </p>
-            <h3 style={{ color: "var(--btn-primary)" }}>10</h3>
+            <h3 style={{ color: "var(--btn-primary)" }}>{totalRecords}</h3>
           </div>
         </div>
       </div>
@@ -91,35 +91,6 @@ export function SummaryPanel({
             </p>
             <h3 style={{ color: "var(--accent-warning)" }}>
               RM {outstandingAmount.toLocaleString()}
-            </h3>
-          </div>
-        </div>
-      </div>
-
-      {/* Overdue Amount */}
-      <div
-        className="p-6 rounded-xl shadow-sm border"
-        style={{
-          backgroundColor: "var(--bg-card)",
-          borderColor: "var(--input-border)",
-        }}
-      >
-        <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "#f9e5e2" }}
-          >
-            <AlertCircle
-              className="w-5 h-5"
-              style={{ color: "var(--accent-danger)" }}
-            />
-          </div>
-          <div>
-            <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-              Overdue Amount
-            </p>
-            <h3 style={{ color: "var(--accent-danger)" }}>
-              RM {overdueAmount.toLocaleString()}
             </h3>
           </div>
         </div>

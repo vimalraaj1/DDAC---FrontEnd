@@ -64,6 +64,7 @@ import ManagerProfile from "../features/manager/profile/ManagerProfile.jsx";
 import EditManagerProfile from "../features/manager/profile/EditManagerProfile.jsx";
 import AppointmentReport from "../features/manager/report/AppointmentReport.jsx";
 import DoctorStaffReport from "../features/manager/report/DoctorStaffReport.jsx";
+import CustomerReceiptDisplay from "../features/customer/payments/components/CustomerReceiptDisplay.jsx";
 
 export default function AppRouter() {
   return (
@@ -152,6 +153,19 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+
+      <Route 
+        path="/customer/payments/receipt/view" 
+        element={
+          <ProtectedRoute allowedRoles={['customer']}>
+            <CustomerProvider>
+              <CustomerReceiptDisplay/>
+            </CustomerProvider>
+          </ProtectedRoute>
+        }
+        />
+
 
         <Route
           path="/medicalRecords"

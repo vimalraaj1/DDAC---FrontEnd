@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { PageHeader } from "./components/PageHeader";
 import { FilterBar } from "./components/FilterBar";
 import {
@@ -7,98 +7,68 @@ import {
 } from "./components/PaymentHistoryTable";
 import { PaymentCard } from "./components/PaymentCard";
 import { SummaryPanel } from "./components/SummaryPanel";
-import { InvoiceDetailsModal } from "./components/InvoiceDetailsModal";
 import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
 import Layout from "../../../components/Layout";
-
-// Mock payment data
-const mockPayments: Payment[] = [
-  {
-    id: "1",
-    billId: "#INV-20394",
-    service: "General Consultation",
-    department: "Family Medicine",
-    dateIssued: "Nov 15, 2024",
-    amount: 200,
-    status: "paid",
-  },
-  {
-    id: "2",
-    billId: "#INV-20395",
-    service: "Blood Test Panel",
-    department: "Laboratory",
-    dateIssued: "Nov 10, 2024",
-    amount: 350,
-    status: "paid",
-  },
-  {
-    id: "3",
-    billId: "#INV-20396",
-    service: "X-Ray Examination",
-    department: "Radiology",
-    dateIssued: "Nov 8, 2024",
-    amount: 300,
-    status: "pending",
-  },
-  {
-    id: "4",
-    billId: "#INV-20397",
-    service: "Physical Therapy",
-    department: "Rehabilitation",
-    dateIssued: "Nov 5, 2024",
-    amount: 225,
-    status: "paid",
-  },
-  {
-    id: "5",
-    billId: "#INV-20398",
-    service: "Dental Checkup",
-    department: "Dentistry",
-    dateIssued: "Oct 28, 2024",
-    amount: 300,
-    status: "overdue",
-  },
-  {
-    id: "6",
-    billId: "#INV-20399",
-    service: "MRI Scan",
-    department: "Radiology",
-    dateIssued: "Oct 20, 2024",
-    amount: 1550,
-    status: "paid",
-  },
-  {
-    id: "7",
-    billId: "#INV-20400",
-    service: "Vaccination",
-    department: "Immunology",
-    dateIssued: "Oct 15, 2024",
-    amount: 75,
-    status: "paid",
-  },
-  {
-    id: "8",
-    billId: "#INV-20401",
-    service: "ECG Test",
-    department: "Cardiology",
-    dateIssued: "Oct 10, 2024",
-    amount: 250,
-    status: "pending",
-  },
-];
+import { getTransactionsByPatientId } from "../../../services/transactionManagementService";
+import { toast } from "sonner";
+import { CustomerContext } from "../CustomerContext";
+import { formatDate } from "../../../../../utils/DateConversion";
 
 export default function Payments() {
-  const [payments, setPayments] = useState<Payment[]>(mockPayments);
-  const [selectedPayment, setSelectedPayment] = useState<Payment | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+  const [originalPayment, setOriginalPayments] = useState<Payment[]>([]);
+  const [payments, setPayments] = useState<Payment[]>([]);
+
+  const { patient, loading } = useContext(CustomerContext);
+
+  useEffect(() => {
+    if (patient?.id) {
+      fetchTransactionsFromDB(patient.id);
+    }
+  }, [patient?.id]);
+
+  const fetchTransactionsFromDB = async (patientId: string) => {
+    setIsLoadingPayment(true);
+
+    try {
+      const data = await getTransactionsByPatientId(patientId);
+      const transactions = data.map((t: any) => ({
+        billId: t.id,
+        amount: t.amount,
+        status:
+          t.status === "succeede" || t.status === "Paid" ? "Succeed" : t.status, // hardcode for now
+        paymentTime: formatDate(t.paymentTime),
+        paymentMethod: t.paymentMethod,
+        receipt: t.receipt,
+        appointmentId: t.appointment.appointmentId,
+        appointmentTime: t.appointment.appointmentTime,
+        doctorName: t.doctor.firstName + " " + t.doctor.lastName,
+        doctorSpecialization: t.doctor.specialization,
+      }));
+      setPayments(transactions);
+      setOriginalPayments(transactions);
+    } catch (err) {
+      console.log(err);
+      toast.error("Something went wrong!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } finally {
+      setIsLoadingPayment(false);
+    }
+  };
+
   const handleFilter = (filters: {
     startDate: string;
     endDate: string;
     status: string;
     search: string;
   }) => {
-    let filtered = [...mockPayments];
+    let filtered = [...originalPayment];
 
     // Filter by status
     if (filters.status && filters.status !== "all") {
@@ -111,8 +81,8 @@ export default function Payments() {
       filtered = filtered.filter(
         (p) =>
           p.billId.toLowerCase().includes(searchLower) ||
-          p.service.toLowerCase().includes(searchLower) ||
-          p.department.toLowerCase().includes(searchLower)
+          p.doctorSpecialization.toLowerCase().includes(searchLower) ||
+          p.doctorName.toLowerCase().includes(searchLower)
       );
     }
 
@@ -122,7 +92,7 @@ export default function Payments() {
     if (startDate) {
       const start = new Date(startDate); // YYYY-MM-DD from input
       filtered = filtered.filter((p) => {
-        const paymentDate = new Date(p.dateIssued); // "Oct 10, 2024"
+        const paymentDate = new Date(p.paymentTime); // "Oct 10, 2024"
         return paymentDate >= start;
       });
     }
@@ -133,7 +103,7 @@ export default function Payments() {
       end.setHours(23, 59, 59, 999);
 
       filtered = filtered.filter((p) => {
-        const paymentDate = new Date(p.dateIssued);
+        const paymentDate = new Date(p.paymentTime);
         return paymentDate <= end;
       });
     }
@@ -141,27 +111,15 @@ export default function Payments() {
     setPayments(filtered);
   };
 
-  const handleViewDetails = (payment: Payment) => {
-    setSelectedPayment(payment);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setTimeout(() => setSelectedPayment(null), 300);
-  };
-
   // Calculate summary data
-  const totalPaidThisYear = mockPayments
-    .filter((p) => p.status === "paid")
+  const totalRecords = payments.length;
+
+  const totalPaidThisYear = payments
+    .filter((p) => p.status === "Succeed")
     .reduce((sum, p) => sum + p.amount, 0);
 
-  const outstandingAmount = mockPayments
-    .filter((p) => p.status === "pending")
-    .reduce((sum, p) => sum + p.amount, 0);
-
-  const overdueAmount = mockPayments
-    .filter((p) => p.status === "overdue")
+  const outstandingAmount = payments
+    .filter((p) => p.status === "Pending")
     .reduce((sum, p) => sum + p.amount, 0);
 
   return (
@@ -179,26 +137,20 @@ export default function Payments() {
             <div className="flex gap-6">
               {/* Payment History Section */}
               <div className="flex-1 flex flex-col gap-5 ">
-                {/* <FadeInSection delay={0}>
-                  {/* Desktop Table View *
-                  <PaymentHistoryTable
-                    payments={payments}
-                    onViewDetails={handleViewDetails}
-                  />
-                </FadeInSection> */}
-
-                {/* Mobile Card View */}
-
-                {payments.map((payment) => (
-                  <PaymentCard
-                    key={payment.id}
-                    payment={payment}
-                    onViewDetails={handleViewDetails}
-                  />
-                ))}
+                {isLoadingPayment ? (
+                  <div className="bg-white rounded-2xl p-12 text-center border border-[#DCEFFB]">
+                    <p className="text-[#7A7A7A]">
+                      Retrieving transaction records...
+                    </p>
+                  </div>
+                ) : (
+                  payments.map((payment) => (
+                    <PaymentCard key={payment.billId} payment={payment} />
+                  ))
+                )}
 
                 {/* Empty State */}
-                {payments.length === 0 && (
+                {(payments.length === 0 && !isLoadingPayment) && (
                   <div
                     className="p-12 rounded-xl text-center"
                     style={{
@@ -217,9 +169,9 @@ export default function Payments() {
               <div className="hidden lg:block w-80">
                 <FadeInSection delay={0.6}>
                   <SummaryPanel
+                    totalRecords={totalRecords}
                     totalPaidThisYear={totalPaidThisYear}
                     outstandingAmount={outstandingAmount}
-                    overdueAmount={overdueAmount}
                   />
                 </FadeInSection>
               </div>
@@ -227,12 +179,6 @@ export default function Payments() {
           </div>
         </div>
 
-        {/* Invoice Details Modal */}
-        <InvoiceDetailsModal
-          payment={selectedPayment}
-          open={isModalOpen}
-          onClose={handleCloseModal}
-        />
       </div>
     </Layout>
   );
