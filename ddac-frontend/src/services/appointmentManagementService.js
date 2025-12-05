@@ -24,7 +24,7 @@ export const registerAppointment = async (appointment) => {
 }
 
 export const getAppointments = async () => {
-    const res = await api.post(`${BASE_URL}`);
+    const res = await api.get(`${BASE_URL}`);
     return res.data;
 }
 

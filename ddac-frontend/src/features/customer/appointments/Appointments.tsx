@@ -23,7 +23,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import {
   getAppointmentByAppointmentId,
   getAppointmentsByPatientId,
-  registerAppointments,
+  registerAppointment,
   updateAppointment,
 } from "../../../services/appointmentManagementService";
 import {
@@ -34,7 +34,7 @@ import LoadingOverlay from "../components/LoadingOverlay";
 import { getInitials } from "../../../../../utils/GetInitials";
 import { convertTime } from "../../../../../utils/TimeConversion";
 import { sendEmail } from "../../../services/emailManagementService";
-import { updateAvailabilityByAppointmentId } from "../../../services/availabilityManagementService";
+import { bookAppointment } from "../../../services/availabilityManagementService";
 
 
 type TabType = "upcoming" | "past" | "cancelled";
@@ -185,8 +185,8 @@ export default function Appointments() {
     }
 
     try {
-      await updateAvailabilityByAppointmentId(payload.availabilityId);
-      await registerAppointments(payload);
+      await bookAppointment(payload.availabilityId);
+      await registerAppointment(payload);
       await sendEmail(emailPayload);
 
       toast.success("Appointment booked successfully!", {
