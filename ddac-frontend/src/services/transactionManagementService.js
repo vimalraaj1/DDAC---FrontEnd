@@ -25,3 +25,8 @@ export const updateTransaction = async (id, transaction) => {
 export const deleteTransaction = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);
 }
+
+export const getTransactionsByPatientId = async (patientId) => {
+    const res = await api.get(`${BASE_URL}/${patientId}/patient`);
+    return res.data;
+}
