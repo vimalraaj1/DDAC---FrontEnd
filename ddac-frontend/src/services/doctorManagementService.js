@@ -23,6 +23,16 @@ export const updateDoctor = async (id, payload) => {
     return res.data;
 }
 
-const deleteDoctor = async (id) => {
+export const deleteDoctor = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);
+}
+
+export const getActiveDoctors = async () => {
+    const res = await api.get(`${BASE_URL}/active-doctor-count`);
+    return res.data;
+}
+
+export const getOnLeaveDoctors = async () => {
+    const res = await api.get(`${BASE_URL}/onleave-doctor-count`);
+    return res.data;
 }

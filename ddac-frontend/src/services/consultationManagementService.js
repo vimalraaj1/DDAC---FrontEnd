@@ -7,7 +7,7 @@ export const getConsultations = async () => {
     return res.data;
 }
 
-const addConsultation = async (consultation) => {
+export const addConsultation = async (consultation) => {
     const res = await api.post(BASE_URL, consultation);
     return res.data;
 }

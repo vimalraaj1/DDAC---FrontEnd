@@ -1,7 +1,8 @@
 import axios from "axios";
 
 // Backend API URL - must be prefixed with VITE_ to be exposed to client
-const API_BASE_URL = import.meta.env.VITE_APP_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+console.log('Environment check:', import.meta.env.VITE_API_BASE_URL);
 
 const api = axios.create({
   baseURL: API_BASE_URL + "/api",

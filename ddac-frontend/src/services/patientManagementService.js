@@ -5,7 +5,7 @@ const BASE_URL = "/patients";
 
 // GET all patients
 export const getPatients = async () => {
-  const res = await axios.get(BASE_URL);
+  const res = await api.get(BASE_URL);
   return res.data;
 };
 
@@ -29,5 +29,5 @@ export const updatePatient = async (id, updated) => {
 
 // DELETE patient
 export const deletePatient = async (id) => {
-  await axios.delete(`${BASE_URL}/${id}`);
+  await api.delete(`${BASE_URL}/${id}`);
 };

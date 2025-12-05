@@ -25,3 +25,8 @@ export const updateComment = async (id, comment) => {
 export const deleteComment = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);
 }
+
+export const averageStaffRating = async (staffId) => {
+    const res = await api.get(`${BASE_URL}/staffs/${staffId}/average-rating`);
+    return res.data;
+}
