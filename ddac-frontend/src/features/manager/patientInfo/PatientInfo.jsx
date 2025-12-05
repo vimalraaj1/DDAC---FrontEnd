@@ -1,90 +1,45 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaUser, FaEnvelope, FaPhone } from 'react-icons/fa';
+import {useEffect, useState} from 'react';
+import {FaSearch, FaEdit, FaTrash, FaEye, FaUser, FaEnvelope, FaPhone, FaUserInjured} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {deletePatient, getPatients} from "../../../services/patientManagementService.js";
+import {HasAppointment} from "../../../services/appointmentManagementService.js";
 
 export default function PatientInfo() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterBloodType, setFilterBloodType] = useState('all');
     const navigate = useNavigate();
+    const [patients, setPatients] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Sample patient data (replace with API call later)
-    const patients = [
-        {
-            id: 'PT000001',
-            firstName: "Ahmad",
-            lastName: "Ibrahim",
-            dateOfBirth: "1990-03-15",
-            gender: "male",
-            phone: "+60 12-345 6789",
-            email: "ahmad.ibrahim@email.com",
-            bloodType: "O+",
-            conditions: "Hypertension",
-            lastVisit: "2024-11-15",
-        },
-        {
-            id: 'PT000002',
-            firstName: "Siti",
-            lastName: "Abdullah",
-            dateOfBirth: "1985-07-22",
-            gender: "female",
-            phone: "+60 13-456 7890",
-            email: "siti.abdullah@email.com",
-            bloodType: "A+",
-            conditions: "Diabetes",
-            lastVisit: "2024-11-18",
-        },
-        {
-            id: 'PT000003',
-            firstName: "Raj",
-            lastName: "Kumar",
-            dateOfBirth: "1978-11-08",
-            gender: "male",
-            phone: "+60 14-567 8901",
-            email: "raj.kumar@email.com",
-            bloodType: "B+",
-            conditions: "None",
-            lastVisit: "2024-10-30",
-        },
-        {
-            id: 'PT000004',
-            firstName: "Mei",
-            lastName: "Wong",
-            dateOfBirth: "1995-05-12",
-            gender: "female",
-            phone: "+60 15-678 9012",
-            email: "mei.wong@email.com",
-            bloodType: "AB+",
-            conditions: "Asthma",
-            lastVisit: "2024-11-20",
-        },
-        {
-            id: 'PT000005',
-            firstName: "Hassan",
-            lastName: "Ali",
-            dateOfBirth: "1982-09-25",
-            gender: "male",
-            phone: "+60 16-789 0123",
-            email: "hassan.ali@email.com",
-            bloodType: "O-",
-            conditions: "Hypertension, Diabetes",
-            lastVisit: "2024-09-15",
-        },
-        {
-            id: 'PT000006',
-            firstName: "Lakshmi",
-            lastName: "Devi",
-            dateOfBirth: "1992-02-18",
-            gender: "female",
-            phone: "+60 17-890 1234",
-            email: "lakshmi.devi@email.com",
-            bloodType: "A-",
-            conditions: "None",
-            lastVisit: "2024-11-22",
+   useEffect(() => {
+       getPatientsInfo();
+   }, [])
+
+    const getPatientsInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await getPatients();
+            console.log('Fetched patients:', data);
+            if (Array.isArray(data)) {
+                setPatients(data);
+            } else {
+                throw new Error('Invalid response format');
+            }
         }
-    ];
-
+        catch (err) {
+            console.error('Error fetching patients:', err);
+            setError(err.message || 'Failed to fetch patients');
+            setPatients([]);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
     // Get unique blood types for filter
     const bloodTypes = [...new Set(patients.map(p => p.bloodType))];
 
@@ -122,12 +77,64 @@ export default function PatientInfo() {
         navigate(`/managerEditPatient/${id}`);
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this patient record?')) {
-            console.log('Delete patient:', id);
-            // Call delete API
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this patient?')) {
+            try {
+                const hasAppointment = await HasAppointment(id);
+                if (hasAppointment === false) {
+                    await deletePatient(id);
+                    console.log('Delete patient successful:', id);
+                    alert('Patient record deleted successfully');
+                    try {
+                        await getPatientsInfo();
+                    } catch (refreshErr) {
+                        console.error('Error refreshing patient list:', refreshErr);
+                    }
+                } else{
+                    console.log('Deletion blocked: Patient has associated appointments.', id);
+                    alert('Patient record cannot be deleted as it is associated with appointments!');
+                }
+            } catch (err) {
+                console.error('Error deleting patient:', err);
+                alert('Failed to delete patient');
+            }
         }
     };
+
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading patients...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaUserInjured size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Patients</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getPatientsInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout role="manager">
@@ -239,7 +246,7 @@ export default function PatientInfo() {
                                     Contact
                                 </th>
                                 <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">
-                                    Blood Type
+                                    Blood Group
                                 </th>
                                 <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">
                                     Conditions
@@ -292,16 +299,16 @@ export default function PatientInfo() {
                                         <td className="py-4 px-6">
                                                 <span className="inline-flex items-center gap-2 bg-accent-danger bg-opacity-10 
                                                                text-ondark px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap">
-                                                    {patient.bloodType}
+                                                    {patient.bloodGroup || "None"}
                                                 </span>
                                         </td>
                                         <td className="py-4 px-6">
                                                 <span className={`text-sm ${
-                                                    patient.conditions === 'None'
+                                                    patient.conditions === null || patient.conditions === '' || patient.conditions === 'None'
                                                         ? 'text-accent-success font-medium break-all'
                                                         : 'text-accent-warning break-all'
                                                 }`}>
-                                                    {patient.conditions}
+                                                    {patient.conditions || "None"}
                                                 </span>
                                         </td>
                                         <td className="py-4 px-4">

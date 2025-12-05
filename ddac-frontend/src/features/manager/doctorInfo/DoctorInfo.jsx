@@ -1,79 +1,68 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { FaSearch, FaEdit, FaTrash, FaEye, FaUserMd, FaEnvelope, FaPhone } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {
+    deleteDoctor,
+    getActiveDoctors,
+    getDoctors,
+    getOnLeaveDoctors
+} from "../../../services/doctorManagementService.js";
+import {CountNumberOfUniquePatientsByDoctorId} from "../../../services/appointmentManagementService.js";
 
 export default function DoctorInfo() { 
     const [searchTerm, setSearchTerm] = useState('');
     const [filterSpecialty, setFilterSpecialty] = useState('all');
+    const [doctors, setDoctors] = useState([]);
+    const [numOfPatients, setNumOfPatients] = useState({});
+    // const [activeDoctor, setActiveDoctor] = useState(0);
+    // const [onLeaveDoctor, setOnLeaveDoctor] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
-    
-    const doctors = [
-        {
-            id: 12457245972459724579,
-            firstName: "Sarah",
-            lastName: "Wilson",
-            specialization: "Cardiology",
-            email: "sarah.wilson@hospital.com",
-            phone: "+60 12-345 6789",
-            patients: 45,
-            status: "active",
-        },
-        {
-            id: 2,
-            firstName: "Michael",
-            lastName: "Chen",
-            specialization: "Neurology",
-            email: "michael.chen@hospital.com",
-            phone: "+60 12-345 6790",
-            patients: 38,
-            status: "active",
-        },
-        {
-            id: 3,
-            firstName: "Emily",
-            lastName: "Rodriguez",
-            specialization: "Pediatrics",
-            email: "emily.rodriguez@hospital.com",
-            phone: "+60 12-345 6791",
-            patients: 52,
-            status: "active",
-        },
-        {
-            id: 4,
-            firstName: "James",
-            lastName: "Kumar",
-            specialization: "Orthopedics",
-            email: "james.kumar@hospital.com",
-            phone: "+60 12-345 6792",
-            patients: 41,
-            status: "on-leave",
-        },
-        {
-            id: 5,
-            firstName: "Lisa",
-            lastName: "Thompson",
-            specialization: "Dermatology",
-            email: "lisa.thompson@hospital.com",
-            phone: "+60 12-345 6793",
-            patients: 35,
-            status: "active",
-        },
-        {
-            id: 6,
-            firstName: "Ahmed",
-            lastName: "Hassan",
-            specialization: "Cardiology",
-            email: "ahmed.hassan@hospital.com",
-            phone: "+60 12-345 6794",
-            patients: 48,
-            status: "active",
-        },
-    ];
-    
-    const getDoctors = async () => {
-        
+
+    // Fetch doctors on component mount
+    useEffect(() => {
+        getDoctorsInfo();
+    }, []);
+
+    const getDoctorsInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await getDoctors();
+            console.log('Fetched doctors:', data);
+            if (Array.isArray(data)) {
+                setDoctors(data);
+                const counts = {};
+                await Promise.all(
+                    data.map(async (doctor) => {
+                        try {
+                            const count = await CountNumberOfUniquePatientsByDoctorId(doctor.id);
+                            counts[doctor.id] = count;
+                        } catch (err) {
+                            console.error(`Error fetching patient count for doctor ${doctor.id}:`, err);
+                            counts[doctor.id] = 0; 
+                        }
+                    })
+                );
+                setNumOfPatients(counts);
+                console.log('Patient counts:', counts);
+                // await getActiveDoctors();
+                // await getOnLeaveDoctors();
+            } else {
+                throw new Error('Invalid response format');
+            }
+        }
+        catch (err) {
+            console.error('Error fetching doctors:', err);
+            setError(err.message || 'Failed to fetch doctors');
+            setDoctors([]);
+        } finally {
+            setLoading(false);
+        }
     }
 
     // Get unique specialties for filter
@@ -85,7 +74,7 @@ export default function DoctorInfo() {
             doctor.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             doctor.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesSpecialty = filterSpecialty === 'all' || doctor.specialty === filterSpecialty;
+        const matchesSpecialty = filterSpecialty === 'all' || doctor.specialization === filterSpecialty;
         return matchesSearch && matchesSpecialty;
     });
 
@@ -99,13 +88,63 @@ export default function DoctorInfo() {
         navigate(`/managerEditDoctor/${id}`);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this doctor?')) {
-            console.log('Delete doctor:', id);
-            // Call delete API
+            try {
+                await deleteDoctor(id);
+                console.log('Delete doctor successful:', id);
+                alert('Doctor record deleted successfully');
+                try {
+                    await getDoctorsInfo();
+                } catch (refreshErr) {
+                    console.error('Error refreshing doctor list:', refreshErr);
+                }
+            } catch (err) {
+                console.error('Error deleting doctor:', err);
+                alert('Failed to delete doctor');
+            }
         }
     };
 
+    const normalizeStatus = (status) => {
+        return status?.toLowerCase() || 'inactive';
+    };
+
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading doctors...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaUserMd size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Doctors</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getDoctorsInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">
@@ -136,7 +175,7 @@ export default function DoctorInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {doctors.filter(d => d.status === 'active').length}
+                                    {doctors.filter(d => d.status.toLowerCase() === 'active').length}
                                 </h3>
                                 <p className="text-muted text-sm">Active Doctors</p>
                             </div>
@@ -150,7 +189,7 @@ export default function DoctorInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {doctors.filter(d => d.status === 'on-leave').length}
+                                    {doctors.filter(d => d.status.toLowerCase() === 'on-leave').length}
                                 </h3>
                                 <p className="text-muted text-sm">On Leave</p>
                             </div>
@@ -277,16 +316,16 @@ export default function DoctorInfo() {
                                             </div>
                                         </td>
                                         <td className="py-4 px-6 whitespace-nowrap">
-                                            <span className="text-heading font-semibold">{doctor.patients}</span>
+                                            <span className="text-heading font-semibold">{numOfPatients[doctor.id] ?? 0}</span>
                                             <span className="text-muted text-sm ml-1">patients</span>
                                         </td>
                                         <td className="py-4 px-6">
                                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                                                    doctor.status === 'active'
+                                                    normalizeStatus(doctor.status) === 'active'
                                                         ? 'bg-accent-success bg-opacity-10 text-body'
                                                         : 'bg-accent-warning bg-opacity-10 text-body'
                                                 }`}>
-                                                    {doctor.status === 'active' ? 'Active' : 'On Leave'}
+                                                    {doctor.status.toLowerCase() === 'active' ? 'Active' : 'On Leave'}
                                                 </span>
                                         </td>
                                         <td className="py-4 px-4">

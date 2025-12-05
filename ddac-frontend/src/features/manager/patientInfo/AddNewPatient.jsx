@@ -3,11 +3,11 @@ import Layout from '../../../components/Layout.jsx';
 import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaCalendar, FaMapMarkerAlt, FaArrowLeft, FaHeartbeat, FaUserInjured } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {registerStaff} from "../../../services/staffManagementService.js";
+import {registerPatient} from "../../../services/patientManagementService.js";
 
 export default function AddNewPatient() {
     const navigate = useNavigate();
-
-    const [generatedId, setGeneratedId] = useState('');
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -16,7 +16,7 @@ export default function AddNewPatient() {
         phone: '',
         email: '',
         address: '',
-        bloodType: '',
+        bloodGroup: '',
         allergies: '',
         conditions: '',
         medications: '',
@@ -27,40 +27,7 @@ export default function AddNewPatient() {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isGeneratingId, setIsGeneratingId] = useState(true);
-
-    // Generate Patient ID on component mount
-    useEffect(() => {
-        generatePatientId();
-    }, []);
-
-    const generatePatientId = async () => {
-        try {
-            setIsGeneratingId(true);
-
-            // Simulate API call to get last patient ID
-            // Replace with actual API call: const response = await fetch('YOUR_API_URL/patient/last-id');
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Mock: Get last patient ID from database
-            // In real scenario, fetch from API: const data = await response.json();
-            const lastPatientId = 'PT000006'; // This should come from your API
-
-            // Extract number from last ID
-            const lastNumber = parseInt(lastPatientId.replace('PT', ''));
-            // Generate new ID
-            const newNumber = lastNumber + 1;
-            const newId = `PT${String(newNumber).padStart(6, '0')}`;
-            setGeneratedId(newId);
-        } catch (error) {
-            console.error('Error generating patient ID:', error);
-            // Fallback to default if API fails
-            setGeneratedId('PT000001');
-        } finally {
-            setIsGeneratingId(false);
-        }
-    };
-
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -95,7 +62,7 @@ export default function AddNewPatient() {
         }
         if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
         if (!formData.gender) newErrors.gender = 'Gender is required';
-        if (!formData.bloodType) newErrors.bloodType = 'Blood type is required';
+        // if (!formData.bloodType) newErrors.bloodType = 'Blood type is required';
         if (!formData.address) newErrors.address = 'Address is required';
 
         setErrors(newErrors);
@@ -111,21 +78,24 @@ export default function AddNewPatient() {
         setIsSubmitting(true);
 
         try {
-            // Prepare data with generated ID
-            const patientData = {
-                id: generatedId,
-                ...formData
+            setIsSubmitting(true);
+            const payload = {
+                ...formData,
             };
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            console.log('Form submitted:', patientData);
-            // Show success message
-            alert(`Patient added successfully! ID: ${generatedId}`);
-            // Navigate back to patients list
+            console.log('Submitting patient data: ', payload);
+            const response = await registerPatient(payload);
+            console.log('Patient created successfully:', response);
+            alert('Patient added successfully!');
             navigate('/managerPatientInfo');
         } catch (error) {
             console.error('Error adding patient:', error);
-            alert('Failed to add patient. Please try again.');
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+                console.error('Backend Validation Errors:', error.response.data.errors);
+                alert('Failed to add patient. Please try again.');
+            } else {
+                alert(error.response?.data?.message || 'Failed to add patient. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -136,27 +106,7 @@ export default function AddNewPatient() {
             navigate('/managerPatientInfo');
         }
     };
-
-    const SimpleLoadingSpinner = ({ loadingText = "Loading..." }) => (
-        <div className="flex items-center justify-center h-screen">
-            <div className="text-center">
-                <div className="h-12 w-12 border-4 border-t-4 border-gray-200 border-t-[var-(--primary)] rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-muted text-lg">{loadingText}</p>
-            </div>
-        </div>
-    );
-
-    // Loading state while generating ID
-    if (isGeneratingId) {
-        return (
-            <Layout role="manager">
-                <div className="flex items-center justify-center h-screen">
-                    <SimpleLoadingSpinner loadingText="Generating Patient ID..."/>
-                </div>
-            </Layout>
-        );
-    }
-
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">
@@ -173,17 +123,6 @@ export default function AddNewPatient() {
                         <FaArrowLeft size={16} />
                         <span>Back to Patients</span>
                     </button>
-                </div>
-
-                {/* Generated Patient ID Display */}
-                <div className="bg-primary bg-opacity-10 border border-primary rounded-xl p-4 mb-6">
-                    <div className="flex items-center gap-3">
-                        <FaIdCard className="text-primary" size={24} />
-                        <div>
-                            <p className="text-sm text-ondark">Auto-Generated Patient ID</p>
-                            <p className="text-2xl font-bold text-ondark">{generatedId}</p>
-                        </div>
-                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -318,27 +257,25 @@ export default function AddNewPatient() {
                                     }`}
                                 >
                                     <option value="">Select gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
                                 </select>
                                 {errors.gender && <p className="text-accent-danger text-xs mt-1">{errors.gender}</p>}
                             </div>
 
-                            {/* Blood Type */}
+                            {/* Blood Group */}
                             <div>
                                 <label className="block text-sm font-medium text-heading mb-2">
-                                    Blood Type <span className="text-accent-danger">*</span>
+                                    Blood Group 
                                 </label>
                                 <select
-                                    name="bloodType"
-                                    value={formData.bloodType}
+                                    name="bloodGroup"
+                                    value={formData.bloodGroup}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
-                                        errors.bloodType ? 'border-accent-danger' : 'border-input'
-                                    }`}
+                                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card`}
                                 >
-                                    <option value="">Select blood type</option>
+                                    <option value="">Select blood group</option>
                                     <option value="A+">A+</option>
                                     <option value="A-">A-</option>
                                     <option value="B+">B+</option>
@@ -349,7 +286,7 @@ export default function AddNewPatient() {
                                     <option value="O-">O-</option>
                                     <option value="Golden Blood">Golden Blood</option>
                                 </select>
-                                {errors.bloodType && <p className="text-accent-danger text-xs mt-1">{errors.bloodType}</p>}
+                                {/*{errors.bloodGroup && <p className="text-accent-danger text-xs mt-1">{errors.bloodGroup}</p>}*/}
                             </div>
                         </div>
                     </div>

@@ -3,6 +3,8 @@ import Layout from '../../../components/Layout.jsx';
 import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaUserTie, FaIdCard, FaCalendar, FaMapMarkerAlt, FaArrowLeft, FaClock } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
+import {updateDoctor} from "../../../services/doctorManagementService.js";
+import {getStaffById, updateStaff} from "../../../services/staffManagementService.js";
 
 export default function EditMStaff() {
     const navigate = useNavigate();
@@ -61,30 +63,8 @@ export default function EditMStaff() {
     const fetchStaffData = async () => {
         try {
             setIsLoading(true);
-
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            // Mock data - Replace with actual API response
-            const mockData = {
-                firstName: 'Alice',
-                lastName: 'Johnson',
-                email: 'alice.johnson@hospital.com',
-                phone: '+60 12-111 2222',
-                role: 'Nurse',
-                id: 'ST000006',
-                dateOfBirth: '1990-03-15',
-                gender: 'female',
-                address: '456 Staff Avenue, Kuala Lumpur',
-                yearsOfExperience: '8',
-                department: 'Emergency',
-                joiningDate: '2016-05-10',
-                salary: '5000',
-                emergencyContact: '+60 12-999 8888',
-                bloodGroup: 'A+',
-                status: 'Active',
-            };
-
-            setFormData(mockData);
+            const staffData = await getStaffById(id)
+            setFormData(staffData);
         } catch (error) {
             console.error('Error fetching staff data:', error);
             alert('Failed to load staff data. Please try again.');
@@ -142,22 +122,25 @@ export default function EditMStaff() {
             return;
         }
 
-        setIsSubmitting(true);
-
         try {
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            console.log('Form submitted:', formData);
-
-            // Show success message
-            alert('Staff information updated successfully!');
-
-            // Navigate back to staff list
-            navigate('/managerStaffInfo');
+            setIsSubmitting(true);
+            const payload = {
+                ...formData,
+                yearsOfExperience: parseInt(formData.yearsOfExperience, 10),
+                salary: parseFloat(formData.salary),
+            };
+            console.log('Submitting staff data: ', payload);
+            const response = await updateStaff(id, payload);
+            console.log('Staff updated successfully:', response);
+            alert('Staff updated successfully!');
+            navigate(`/managerViewStaff/${id}`);
         } catch (error) {
             console.error('Error updating staff:', error);
-            alert('Failed to update staff. Please try again.');
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+                alert(error.response?.data?.message || 'Failed to update staff. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -175,11 +158,8 @@ export default function EditMStaff() {
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
                     <div className="text-center">
-                        <svg className="animate-spin h-12 w-12 text-primary mx-auto mb-4" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        <p className="text-muted text-lg">Loading staff information...</p>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading staff...</p>
                     </div>
                 </div>
             </Layout>
@@ -358,9 +338,9 @@ export default function EditMStaff() {
                                     }`}
                                 >
                                     <option value="">Select gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
                                 </select>
                                 {errors.gender && <p className="text-accent-danger text-xs mt-1">{errors.gender}</p>}
                             </div>
@@ -507,7 +487,7 @@ export default function EditMStaff() {
                                     className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                                     placeholder="5000"
                                     min="0"
-                                    step="100"
+                                    step="0.01"
                                 />
                             </div>
 

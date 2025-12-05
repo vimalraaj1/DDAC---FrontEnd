@@ -1,17 +1,21 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState, useEffect } from 'react';
+import {useState, useEffect, useMemo, useCallback} from 'react';
 import { FaCalendarAlt, FaClock, FaUserMd, FaUser, FaUserTie, FaIdCard, FaArrowLeft, FaStethoscope, FaNotesMedical } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {registerAppointment} from "../../../services/appointmentManagementService.js";
+import {bookAppointment, getDateAndTimeAfterSelectDoctor} from "../../../services/availabilityManagementService.js";
+import {getPatients} from "../../../services/patientManagementService.js";
+import {getStaffs} from "../../../services/staffManagementService.js";
+import {getDoctors} from "../../../services/doctorManagementService.js";
 
 export default function AddNewAppointment() {
     const navigate = useNavigate();
-
-    const [generatedId, setGeneratedId] = useState('');
+    
     const [formData, setFormData] = useState({
         date: '',
         time: '',
-        status: 'scheduled',
+        status: 'Approved',
         patientId: '',
         doctorId: '',
         staffId: '',
@@ -21,71 +25,135 @@ export default function AddNewAppointment() {
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isGeneratingId, setIsGeneratingId] = useState(true);
-
-    // Mock data for dropdowns (replace with API calls)
-    const patients = [
-        { id: 'PT000001', name: 'Ahmad Ibrahim' },
-        { id: 'PT000002', name: 'Siti Abdullah' },
-        { id: 'PT000003', name: 'Raj Kumar' },
-        { id: 'PT000004', name: 'Mei Wong' },
-        { id: 'PT000005', name: 'Hassan Ali' },
-        { id: 'PT000006', name: 'Lakshmi Devi' }
-    ];
-
-    const doctors = [
-        { id: 'DR000001', name: 'Dr. Sarah Wilson', specialization: 'Cardiology' },
-        { id: 'DR000002', name: 'Dr. Michael Chen', specialization: 'Neurology' },
-        { id: 'DR000003', name: 'Dr. Emily Rodriguez', specialization: 'Pediatrics' },
-        { id: 'DR000004', name: 'Dr. James Kumar', specialization: 'Orthopedics' },
-        { id: 'DR000005', name: 'Dr. Lisa Thompson', specialization: 'Dermatology' }
-    ];
-
-    const staff = [
-        { id: 'ST000001', name: 'Alice Johnson', role: 'Nurse' },
-        { id: 'ST000002', name: 'Bob Martinez', role: 'Receptionist' },
-        { id: 'ST000003', name: 'Carol Lee', role: 'Lab Technician' },
-        { id: 'ST000004', name: 'David Kim', role: 'Pharmacist' },
-        { id: 'ST000005', name: 'Emma Wilson', role: 'Nurse' }
-    ];
+    const [dataLoading, setDataLoading] = useState(true);
+    const [dateLoading, setDateLoading] = useState(true);
+    const [patientsList, setPatientsList] = useState([]);
+    const [doctorsList, setDoctorsList] = useState([]);
+    const [staffsList, setStaffsList] = useState([]);
+    const [doctorAvailability, setDoctorAvailability] = useState([]);
 
     const appointmentStatuses = [
-        'scheduled',
-        'completed',
-        'cancelled',
-        'no-show'
+        'Scheduled',
+        'Approved',
+        'Rejected',
+        'Completed',
+        'Cancelled',
+        'No show'
     ];
 
-    // Generate Appointment ID on component mount
-    useEffect(() => {
-        generateAppointmentId();
-    }, []);
-
-    const generateAppointmentId = async () => {
+    const fetchInitialData = useCallback(async () => {
         try {
-            setIsGeneratingId(true);
+            setDataLoading(true);
 
-            // Simulate API call to get last appointment ID
-            await new Promise(resolve => setTimeout(resolve, 500));
+            const [patientsData, doctorsData, staffData] = await Promise.all([
+                getPatients(),
+                getDoctors(),
+                getStaffs()
+            ]);
 
-            // Mock: Get last appointment ID from database
-            const lastAppointmentId = 'APT000006'; // This should come from your API
+            // Assuming your service returns objects that need formatting for the dropdowns
+            setPatientsList(patientsData.map(p => ({
+                id: p.id,
+                name: `${p.firstName} ${p.lastName}`
+            })));
+            setDoctorsList(doctorsData.map(d => ({
+                id: d.id,
+                name: `Dr. ${d.firstName} ${d.lastName}`,
+                specialization: d.specialization
+            })));
+            setStaffsList(staffData.map(s => ({
+                id: s.id,
+                name: `${s.firstName} ${s.lastName}`,
+                role: s.role
+            })));
 
-            // Extract number from last ID
-            const lastNumber = parseInt(lastAppointmentId.replace('APT', ''));
-            // Generate new ID
-            const newNumber = lastNumber + 1;
-            const newId = `APT${String(newNumber).padStart(6, '0')}`;
-            setGeneratedId(newId);
         } catch (error) {
-            console.error('Error generating appointment ID:', error);
-            // Fallback to default if API fails
-            setGeneratedId('APT000001');
+            console.error('Error fetching initial data:', error);
+            alert('Failed to load required data (Patients, Doctors, Staff). Please check the console.');
         } finally {
-            setIsGeneratingId(false);
+            setDataLoading(false);
         }
+    }, []);
+    
+    useEffect(() => {
+        fetchInitialData();
+    }, [fetchInitialData]);
+
+    // Effect to fetch dates when doctor changes
+    useEffect(() => {
+        const fetchAvailability = async () => {
+            const doctorId = formData.doctorId;
+            if (doctorId) {
+                setDateLoading(true);
+                try {
+                    const data = await getDateAndTimeAfterSelectDoctor(doctorId);
+                    setDoctorAvailability(data);
+                } catch (error) {
+                    console.error('Error fetching doctor availability:', error);
+                    setDoctorAvailability([]);
+                    alert('Failed to load doctor availability.');
+                }
+                finally {
+                    setDateLoading(false);
+                }
+            } else {
+                setDoctorAvailability([]);
+            }
+        };
+        fetchAvailability();
+    }, [formData.doctorId]);
+
+
+    const availableDates = useMemo(() => {
+        const uniqueDates = [...new Set (doctorAvailability.map(item => item.date))];
+        return uniqueDates.sort();
+    }, [doctorAvailability]);
+
+    const availableTimes = useMemo(() => {
+        if (!formData.date) return [];
+        return doctorAvailability.filter(item => item.date === formData.date)
+            .map(item => ({id: item.id, time: item.time}))
+            .sort((a, b) => a.time.localeCompare(b.time));
+    }, [doctorAvailability, formData.date]);
+
+    const getSelectedAvailabilityId = useCallback(() => {
+        if (!formData.date || !formData.time) return null;
+        const availability = doctorAvailability.find(
+            item => item.date === formData.date && item.time === formData.time
+        );
+        return availability?.id || null;
+    }, [doctorAvailability, formData.date, formData.time]);
+    
+    const handleDoctorChange = (e) => {
+        const newDoctorId = e.target.value;
+        setFormData(prev => ({
+            ...prev,
+            doctorId: newDoctorId,
+            date: '',
+            time: ''
+        }));
+        setErrors(prev => ({
+            ...prev,
+            doctorId: '',
+            date: '',
+            time: ''
+        }));
     };
 
+    const handleDateChange = (e) => {
+        const newDate = e.target.value;
+        setFormData(prev => ({
+            ...prev,
+            date: newDate,
+            time: ''
+        }));
+        setErrors(prev => ({
+            ...prev,
+            date: '',
+            time: ''
+        }));
+    };
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -128,23 +196,33 @@ export default function AddNewAppointment() {
             return;
         }
         setIsSubmitting(true);
-
         try {
-            // Prepare data with generated ID
-            const appointmentData = {
-                id: generatedId,
-                ...formData
+            const availabilityId = getSelectedAvailabilityId();
+            if (!availabilityId) {
+                alert('Unable to find availability slot. Please try again.');
+                return;
+            }
+            const payload = {
+                ...formData,
             };
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            console.log('Form submitted:', appointmentData);
-            // Show success message
-            alert(`Appointment created successfully! ID: ${generatedId}`);
-            // Navigate back to appointments list
+            console.log('Submitting appointment data: ', payload);
+            console.log('Booking availability ID:', availabilityId);
+            
+            const appointmentResponse = await registerAppointment(payload);
+            console.log('Appointment created successfully:', appointmentResponse);
+            await bookAppointment(availabilityId, appointmentResponse.id);
+            console.log('Availability booked successfully');
+            alert('Appointment added successfully!');
             navigate('/managerAppointmentInfo');
         } catch (error) {
-            console.error('Error creating appointment:', error);
-            alert('Failed to create appointment. Please try again.');
+            console.error('Error adding appointment:', error);
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+                console.error('Backend Validation Errors:', error.response.data.errors);
+                alert('Failed to add appointment. Please try again.');
+            } else {
+                alert(error.response?.data?.message || 'Failed to add appointment. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -155,27 +233,24 @@ export default function AddNewAppointment() {
             navigate('/managerAppointmentInfo');
         }
     };
-
-    const SimpleLoadingSpinner = ({ loadingText = "Loading..." }) => (
-        <div className="flex items-center justify-center h-screen">
-            <div className="text-center">
-                <div className="h-12 w-12 border-4 border-t-4 border-gray-200 border-t-[var-(--primary)] rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-muted text-lg">{loadingText}</p>
-            </div>
-        </div>
-    );
-
-    // Loading state while generating ID
-    if (isGeneratingId) {
+    
+    if (dataLoading) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
-                    <SimpleLoadingSpinner loadingText="Generating Appointment ID..."/>
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading required data...</p>
+                    </div>
                 </div>
             </Layout>
         );
     }
 
+    const isDoctorSelected = !!formData.doctorId;
+    const isDateSelected = !!formData.date;
+    const disabledClass = 'bg-gray-100 text-gray-500 cursor-not-allowed';
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">
@@ -193,99 +268,8 @@ export default function AddNewAppointment() {
                         <span>Back to Appointments</span>
                     </button>
                 </div>
-
-                {/* Generated Appointment ID Display */}
-                <div className="bg-primary bg-opacity-10 border border-primary rounded-xl p-4 mb-6">
-                    <div className="flex items-center gap-3">
-                        <FaIdCard className="text-primary" size={24} />
-                        <div>
-                            <p className="text-sm text-ondark">Auto-Generated Appointment ID</p>
-                            <p className="text-2xl font-bold text-ondark">{generatedId}</p>
-                        </div>
-                    </div>
-                </div>
-
+                
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Appointment Details Card */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="bg-primary bg-opacity-10 p-3 rounded-lg">
-                                <FaCalendarAlt className="text-ondark" size={24} />
-                            </div>
-                            <div>
-                                <h2 className="text-xl font-semibold text-heading">Appointment Details</h2>
-                                <p className="text-sm text-muted">Date, time, and status information</p>
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Date */}
-                            <div>
-                                <label className="block text-sm font-medium text-heading mb-2">
-                                    Appointment Date <span className="text-accent-danger">*</span>
-                                </label>
-                                <div className="relative">
-                                    <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" size={16} />
-                                    <input
-                                        type="date"
-                                        name="date"
-                                        value={formData.date}
-                                        onChange={handleChange}
-                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
-                                            errors.date ? 'border-accent-danger' : 'border-input'
-                                        }`}
-                                    />
-                                </div>
-                                {errors.date && <p className="text-accent-danger text-xs mt-1">{errors.date}</p>}
-                            </div>
-
-                            {/* Time */}
-                            <div>
-                                <label className="block text-sm font-medium text-heading mb-2">
-                                    Appointment Time <span className="text-accent-danger">*</span>
-                                </label>
-                                <div className="relative">
-                                    <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" size={16} />
-                                    <input
-                                        type="time"
-                                        name="time"
-                                        value={formData.time}
-                                        onChange={handleChange}
-                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
-                                            errors.time ? 'border-accent-danger' : 'border-input'
-                                        }`}
-                                    />
-                                </div>
-                                {errors.time && <p className="text-accent-danger text-xs mt-1">{errors.time}</p>}
-                            </div>
-
-                            {/* Status */}
-                            <div>
-                                <label className="block text-sm font-medium text-heading mb-2">
-                                    Status <span className="text-accent-danger">*</span>
-                                </label>
-                                <select
-                                    name="status"
-                                    value={formData.status}
-                                    onChange={handleChange}
-                                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
-                                        errors.status ? 'border-accent-danger' : 'border-input'
-                                    }`}
-                                >
-                                    <option value="">Select status</option>
-                                    {appointmentStatuses.map(status => (
-                                        <option key={status} value={status}>
-                                            {status.split('-').map(word =>
-                                                word.charAt(0).toUpperCase() + word.slice(1)
-                                            ).join(' ')}
-                                        </option>
-                                    ))}
-                                </select>
-                                {errors.status && <p className="text-accent-danger text-xs mt-1">{errors.status}</p>}
-                            </div>
-                        </div>
-                    </div>
-
                     {/* Patient & Doctor Information Card */}
                     <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
                         <div className="flex items-center gap-3 mb-6">
@@ -315,7 +299,7 @@ export default function AddNewAppointment() {
                                         }`}
                                     >
                                         <option value="">Select patient</option>
-                                        {patients.map(patient => (
+                                        {patientsList.map(patient => (
                                             <option key={patient.id} value={patient.id}>
                                                 {patient.name} ({patient.id})
                                             </option>
@@ -335,13 +319,13 @@ export default function AddNewAppointment() {
                                     <select
                                         name="doctorId"
                                         value={formData.doctorId}
-                                        onChange={handleChange}
+                                        onChange={handleDoctorChange}
                                         className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
                                             errors.doctorId ? 'border-accent-danger' : 'border-input'
                                         }`}
                                     >
                                         <option value="">Select doctor</option>
-                                        {doctors.map(doctor => (
+                                        {doctorsList.map(doctor => (
                                             <option key={doctor.id} value={doctor.id}>
                                                 {doctor.name} - {doctor.specialization}
                                             </option>
@@ -367,14 +351,115 @@ export default function AddNewAppointment() {
                                         }`}
                                     >
                                         <option value="">Select staff</option>
-                                        {staff.map(member => (
-                                            <option key={member.id} value={member.id}>
-                                                {member.name} - {member.role}
+                                        {staffsList.map(staff => (
+                                            <option key={staff.id} value={staff.id}>
+                                                {staff.name} - {staff.role}
                                             </option>
                                         ))}
                                     </select>
                                 </div>
                                 {errors.staffId && <p className="text-accent-danger text-xs mt-1">{errors.staffId}</p>}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Appointment Details Card */}
+                    <div className="bg-card rounded-xl shadow-soft p-6 border border-color">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="bg-primary bg-opacity-10 p-3 rounded-lg">
+                                <FaCalendarAlt className="text-ondark" size={24} />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-semibold text-heading">Appointment Details</h2>
+                                <p className="text-sm text-muted">Date, time, and status information</p>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Date */}
+                            <div>
+                                <label className="block text-sm font-medium text-heading mb-2">
+                                    Appointment Date <span className="text-accent-danger">*</span>
+                                </label>
+                                <div className="relative">
+                                    <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" size={16} />
+                                    <select
+                                        name="date"
+                                        value={formData.date}
+                                        onChange={handleDateChange}
+                                        disabled={dateLoading || !isDoctorSelected || availableDates.length === 0}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
+                                            errors.date ? 'border-accent-danger' : 'border-input'
+                                        } ${!isDoctorSelected || availableDates.length === 0 ? disabledClass : ''}`}
+                                    >
+                                        <option value="">
+                                            {!isDoctorSelected ? 'Select a doctor first' : 
+                                                dateLoading ? "Loading the available dates..." :
+                                                availableDates.length === 0 ? 'No availability found' : 'Select available date'}
+                                        </option>
+                                        {availableDates.map(date => (
+                                            <option key={date} value={date}>
+                                                {date}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {errors.date && <p className="text-accent-danger text-xs mt-1">{errors.date}</p>}
+                            </div>
+
+                            {/* Time */}
+                            <div>
+                                <label className="block text-sm font-medium text-heading mb-2">
+                                    Appointment Time <span className="text-accent-danger">*</span>
+                                </label>
+                                <div className="relative">
+                                    <FaClock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted" size={16} />
+                                    <select
+                                        name="time"
+                                        value={formData.time}
+                                        onChange={handleChange}
+                                        disabled={!isDateSelected || availableTimes.length === 0}
+                                        className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
+                                            errors.time ? 'border-accent-danger' : 'border-input'
+                                        } ${!isDateSelected || availableTimes.length === 0 ? disabledClass : ''}`}
+                                    >
+                                        <option value="">
+                                            {!isDateSelected ? 'Select a date first' :
+                                                availableTimes.length === 0 ? 'No times found' : 'Select available time'}
+                                        </option>
+                                        {availableTimes.map(timeSlot => (
+                                            <option key={timeSlot.id} value={timeSlot.time}>
+                                                {timeSlot.time}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {errors.time && <p className="text-accent-danger text-xs mt-1">{errors.time}</p>}
+                            </div>
+
+                            {/* Status */}
+                            <div>
+                                <label className="block text-sm font-medium text-heading mb-2">
+                                    Status <span className="text-accent-danger">*</span>
+                                </label>
+                                <select
+                                    name="status"
+                                    value={formData.status}
+                                    onChange={handleChange}
+                                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
+                                        errors.status ? 'border-accent-danger' : 'border-input'
+                                    }`}
+                                >
+                                    <option value="">Select status</option>
+                                    {appointmentStatuses.map(status => (
+                                        <option key={status} value={status}>
+                                            {status.split('-').map(word =>
+                                                word.charAt(0).toUpperCase() + word.slice(1)
+                                            ).join(' ')}
+                                        </option>
+                                    ))}
+                                </select>
+                                {errors.status && <p className="text-accent-danger text-xs mt-1">{errors.status}</p>}
                             </div>
                         </div>
                     </div>

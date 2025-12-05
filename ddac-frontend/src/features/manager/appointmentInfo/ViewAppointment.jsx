@@ -1,59 +1,71 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     FaArrowLeft, FaEdit, FaTrash, FaCalendarAlt, FaClock,
     FaIdCard, FaCheckCircle, FaUserMd, FaUser, FaUserTie,
     FaStethoscope, FaNotesMedical, FaExclamationTriangle,
-    FaTimesCircle, FaBan, FaHospital, FaPhone, FaEnvelope
+    FaTimesCircle, FaBan, FaHospital, FaPhone, FaEnvelope, FaCalendarCheck, FaThumbsUp
 } from 'react-icons/fa';
+import {deleteDoctor, getDoctorById} from "../../../services/doctorManagementService.js";
+import {
+    CountNumberOfAppointmentsByDoctorId,
+    CountNumberOfUniquePatientsByDoctorId, deleteAppointment, getAppointmentById, GetAppointmentWithDetailsById
+} from "../../../services/appointmentManagementService.js";
+import {FaThumbsDown} from "react-icons/fa6";
+import {unbookAppointment} from "../../../services/availabilityManagementService.js";
 
 export default function ViewAppointment() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState('details');
+    const [appointment, setAppointment] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
+    useEffect(() => {
+        getAppointmentInfo();
+    }, []);
 
-    // Mock data - Replace with actual API call
-    const appointment = {
-        id: id || 'APT000001',
-        date: '2025-11-28',
-        time: '10:00',
-        status: 'scheduled',
-        purpose: 'General Checkup and Blood Pressure Monitoring',
-        cancellationReason: '',
+    const getAppointmentInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-        // Patient Info
-        patientId: 'PT000001',
-        patientName: 'Ahmad Ibrahim',
-        patientPhone: '+60 12-345 6789',
-        patientEmail: 'ahmad.ibrahim@email.com',
-        patientBloodType: 'O+',
-
-        // Doctor Info
-        doctorId: 'DR000001',
-        doctorName: 'Dr. Sarah Wilson',
-        doctorSpecialization: 'Cardiology',
-        doctorPhone: '+60 12-999 1111',
-        doctorEmail: 'sarah.wilson@hospital.com',
-
-        // Staff Info
-        staffId: 'ST000001',
-        staffName: 'Alice Johnson',
-        staffRole: 'Nurse',
-        staffPhone: '+60 12-888 2222',
-
-        // Meta Info
-        createdDate: '2025-11-20',
-        lastModified: '2025-11-22'
-    };
-
+            const data = await GetAppointmentWithDetailsById(id);
+            console.log('Fetched appointment:', data);
+            if (data && typeof data === 'object') {
+                setAppointment(data);
+            } else {
+                throw new Error('Appointment not found or invalid data format.');
+            }
+        }
+        catch (err) {
+            console.error('Error fetching appointment:', err);
+            setError(err.message || 'Failed to fetch appointment');
+            setAppointment(null);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
     // Status configuration
     const statusConfig = {
         scheduled: {
             color: 'bg-primary bg-opacity-10 text-ondark border-primary',
             icon: FaCalendarAlt,
             label: 'Scheduled'
+        },
+        approved: {
+            color: 'bg-accent-success bg-opacity-10 text-ondark border-accent-success',
+            icon: FaThumbsUp,
+            label: 'Approved'
+        },
+        rejected: {
+            color: 'bg-accent-danger bg-opacity-10 text-ondark border-accent-success',
+            icon: FaThumbsDown,
+            label: 'Rejected'
         },
         completed: {
             color: 'bg-accent-success bg-opacity-10 text-ondark border-accent-success',
@@ -72,17 +84,40 @@ export default function ViewAppointment() {
         }
     };
 
-    const currentStatus = statusConfig[appointment.status] || statusConfig.scheduled;
-    const StatusIcon = currentStatus.icon;
+    let currentStatus = statusConfig.scheduled; // Default safe value
+    let StatusIcon = currentStatus.icon;
+    if(appointment) {
+        currentStatus = statusConfig[appointment.status.toLowerCase()] || statusConfig.scheduled;
+        StatusIcon = currentStatus.icon;
+    }
 
     const handleEdit = () => {
         navigate(`/managerEditAppointment/${id}`);
     };
 
-    const handleDelete = () => {
-        if (window.confirm(`Are you sure you want to delete appointment ${appointment.id}?`)) {
-            console.log('Delete appointment:', id);
-            navigate('/managerAppointmentInfo');
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this appointment?')) {
+            try {
+                try {
+                    await unbookAppointment(id);
+                    console.log('Unbook timeslot successful:', id);
+                } catch (unbookError) {
+                    if (unbookError.response && unbookError.response.status === 404) {
+                        console.warn(`Old slot was already unbooked (404 Not Found) for Appointment ID: ${id}. Proceeding with deletion.`);
+                    } else {
+                        console.error('Critical unbook error, stopping deletion:', unbookError);
+                        alert('Failed to free the time slot due to a server error. Deletion aborted.');
+                        return;
+                    }
+                }
+                await deleteAppointment(id);
+                console.log('Delete appointment successful:', id);
+                alert('Appointment record deleted successfully');
+                navigate(`/managerAppointmentInfo`);
+            } catch (err) {
+                console.error('Error deleting appointment:', err);
+                alert('Failed to delete appointment');
+            }
         }
     };
 
@@ -94,6 +129,41 @@ export default function ViewAppointment() {
         { id: 'details', label: 'Appointment Details', icon: FaCalendarAlt },
         { id: 'people', label: 'People Involved', icon: FaUserMd }
     ];
+
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading appointment...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaCalendarCheck size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Appointment</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getAppointmentInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout role="manager">
@@ -117,7 +187,7 @@ export default function ViewAppointment() {
                             <span>Edit</span>
                         </button>
                         <button
-                            onClick={handleDelete}
+                            onClick={() => handleDelete(id)}
                             className="flex items-center gap-2 px-5 py-2.5 bg-accent-danger bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
                         >
                             <FaTrash size={16} />
@@ -176,18 +246,18 @@ export default function ViewAppointment() {
                                 <div className="grid grid-cols-3 gap-4 mt-6">
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Patient</p>
-                                        <p className="text-heading text-sm font-bold">{appointment.patientName}</p>
-                                        <p className="text-muted text-xs">{appointment.patientId}</p>
+                                        <p className="text-heading text-sm font-bold">{appointment.patient.firstName} {appointment.patient.lastName}</p>
+                                        <p className="text-muted text-xs">{appointment.patient.id}</p>
                                     </div>
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Doctor</p>
-                                        <p className="text-heading text-sm font-bold">{appointment.doctorName}</p>
-                                        <p className="text-muted text-xs">{appointment.doctorSpecialization}</p>
+                                        <p className="text-heading text-sm font-bold">Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}</p>
+                                        <p className="text-muted text-xs">{appointment.doctor.specialization}</p>
                                     </div>
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Assigned Staff</p>
-                                        <p className="text-heading text-sm font-bold">{appointment.staffName}</p>
-                                        <p className="text-muted text-xs">{appointment.staffRole}</p>
+                                        <p className="text-heading text-sm font-bold">{`${appointment.staff?.firstName} ${appointment.staff?.lastName}` || "No staff"}</p>
+                                        <p className="text-muted text-xs">{appointment.staff?.role}</p>
                                     </div>
                                 </div>
                             </div>
@@ -242,16 +312,16 @@ export default function ViewAppointment() {
                                             label="Status"
                                             value={currentStatus.label}
                                             valueColor={
-                                                appointment.status === 'completed' ? 'text-accent-success' :
-                                                    appointment.status === 'cancelled' ? 'text-accent-danger' :
-                                                        appointment.status === 'no-show' ? 'text-accent-warning' :
-                                                            'text-primary'
+                                                appointment.status.toLowerCase() === 'completed' ? 'text-accent-success' :
+                                                    appointment.status.toLowerCase() === 'cancelled' ? 'text-accent-danger' :
+                                                        appointment.status.toLowerCase() === 'no-show' ? 'text-accent-warning' :
+                                                            appointment.status.toLowerCase() === 'approved' ? 'text-accent-success' :
+                                                                appointment.status.toLowerCase() === 'rejected' ? 'text-accent-danger' :
+                                                                    'text-primary'
                                             }
                                         />
                                         <InfoItem icon={FaCalendarAlt} label="Date" value={appointment.date} />
                                         <InfoItem icon={FaClock} label="Time" value={appointment.time} />
-                                        <InfoItem icon={FaCalendarAlt} label="Created On" value={appointment.createdDate} />
-                                        <InfoItem icon={FaClock} label="Last Modified" value={appointment.lastModified} />
                                     </div>
                                 </div>
 
@@ -269,17 +339,17 @@ export default function ViewAppointment() {
                                 </div>
 
                                 {/* Cancellation Reason (if cancelled) */}
-                                {appointment.status === 'cancelled' && appointment.cancellationReason && (
+                                {appointment.status.toLowerCase() === 'cancelled' && appointment.cancellationReason && (
                                     <div className="bg-accent-danger bg-opacity-5 rounded-xl p-6 border-2 border-accent-danger">
                                         <div className="flex items-start gap-3">
                                             <div className="bg-accent-danger bg-opacity-10 p-3 rounded-lg">
                                                 <FaExclamationTriangle className="text-ondark" size={24} />
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="text-heading font-semibold text-lg mb-2 flex items-center gap-2">
+                                                <h3 className="text-ondark font-semibold text-lg mb-2 flex items-center gap-2">
                                                     <span>Cancellation Reason</span>
                                                 </h3>
-                                                <p className="text-body leading-relaxed">{appointment.cancellationReason}</p>
+                                                <p className="text-ondark leading-relaxed">{appointment.cancellationReason}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -302,15 +372,15 @@ export default function ViewAppointment() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem icon={FaUser} label="Patient Name" value={appointment.patientName} />
-                                        <InfoItem icon={FaIdCard} label="Patient ID" value={appointment.patientId} />
-                                        <InfoItem icon={FaPhone} label="Phone Number" value={appointment.patientPhone} />
-                                        <InfoItem icon={FaEnvelope} label="Email Address" value={appointment.patientEmail} />
+                                        <InfoItem icon={FaUser} label="Patient Name" value={`${appointment.patient.firstName} ${appointment.patient.lastName}`}/>
+                                        <InfoItem icon={FaIdCard} label="Patient ID" value={appointment.patient.id} />
+                                        <InfoItem icon={FaPhone} label="Phone Number" value={appointment.patient.phone} />
+                                        <InfoItem icon={FaEnvelope} label="Email Address" value={appointment.patient.email} />
                                     </div>
 
                                     <div className="mt-6 pt-6 border-t border-color">
                                         <button
-                                            onClick={() => navigate(`/managerViewPatient/${appointment.patientId}`)}
+                                            onClick={() => navigate(`/managerViewPatient/${appointment.patient.id}`)}
                                             className="inline-flex items-center gap-2 px-4 py-2 bg-primary bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
                                         >
                                             <FaUser size={14} />
@@ -332,18 +402,18 @@ export default function ViewAppointment() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem icon={FaUserMd} label="Doctor Name" value={appointment.doctorName} />
-                                        <InfoItem icon={FaStethoscope} label="Specialization" value={appointment.doctorSpecialization} />
-                                        <InfoItem icon={FaIdCard} label="Doctor ID" value={appointment.doctorId} />
-                                        <InfoItem icon={FaPhone} label="Phone Number" value={appointment.doctorPhone} />
+                                        <InfoItem icon={FaUserMd} label="Doctor Name" value={`Dr. ${appointment.doctor.firstName} ${appointment.doctor.lastName}`}/>
+                                        <InfoItem icon={FaStethoscope} label="Specialization" value={appointment.doctor.doctorSpecialization} />
+                                        <InfoItem icon={FaIdCard} label="Doctor ID" value={appointment.doctor.id} />
+                                        <InfoItem icon={FaPhone} label="Phone Number" value={appointment.doctor.phone} />
                                         <div className="md:col-span-2">
-                                            <InfoItem icon={FaEnvelope} label="Email Address" value={appointment.doctorEmail} />
+                                            <InfoItem icon={FaEnvelope} label="Email Address" value={appointment.doctor.email} />
                                         </div>
                                     </div>
 
                                     <div className="mt-6 pt-6 border-t border-color">
                                         <button
-                                            onClick={() => navigate(`/managerViewDoctor/${appointment.doctorId}`)}
+                                            onClick={() => navigate(`/managerViewDoctor/${appointment.doctor.id}`)}
                                             className="inline-flex items-center gap-2 px-4 py-2 bg-accent-success bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
                                         >
                                             <FaUserMd size={14} />
@@ -365,21 +435,23 @@ export default function ViewAppointment() {
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <InfoItem icon={FaUserTie} label="Staff Name" value={appointment.staffName} />
-                                        <InfoItem icon={FaHospital} label="Role" value={appointment.staffRole} />
-                                        <InfoItem icon={FaIdCard} label="Staff ID" value={appointment.staffId} />
-                                        <InfoItem icon={FaPhone} label="Phone Number" value={appointment.staffPhone} />
+                                        <InfoItem icon={FaUserTie} label="Staff Name" value={`${appointment.staff?.firstName} ${appointment.staff?.lastName}`}/>
+                                        <InfoItem icon={FaHospital} label="Role" value={appointment.staff?.role} />
+                                        <InfoItem icon={FaIdCard} label="Staff ID" value={appointment.staff?.id} />
+                                        <InfoItem icon={FaPhone} label="Phone Number" value={appointment.staff?.phone} />
                                     </div>
 
-                                    <div className="mt-6 pt-6 border-t border-color">
-                                        <button
-                                            onClick={() => navigate(`/managerViewStaff/${appointment.staffId}`)}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-accent-sky bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
-                                        >
-                                            <FaUserTie size={14} />
-                                            <span>View Full Staff Profile</span>
-                                        </button>
-                                    </div>
+                                    {appointment.staff && (
+                                        <div className="mt-6 pt-6 border-t border-color">
+                                            <button
+                                                onClick={() => navigate(`/managerViewStaff/${appointment.staff?.id}`)}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-accent-sky bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
+                                            >
+                                                <FaUserTie size={14} />
+                                                <span>View Full Staff Profile</span>
+                                            </button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -399,7 +471,7 @@ function InfoItem({ icon: Icon, label, value, valueColor = 'text-heading' }) {
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-muted text-sm mb-1">{label}</p>
-                <p className={`${valueColor} font-medium break-words`}>{value || 'Not provided'}</p>
+                <p className={`${valueColor} font-medium break-words`}>{value || 'No information'}</p>
             </div>
         </div>
     );

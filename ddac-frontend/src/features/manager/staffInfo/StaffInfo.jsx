@@ -1,95 +1,49 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaUserTie, FaEnvelope, FaPhone } from 'react-icons/fa';
+import {useEffect, useState} from 'react';
+import {FaSearch, FaEdit, FaTrash, FaEye, FaUserTie, FaEnvelope, FaPhone, FaUserMd} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {deleteStaff, getStaffs} from "../../../services/staffManagementService.js";
 
 export default function StaffInfo() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('all');
+    const [staffs, setStaffs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    // Sample staff data (replace with API call later)
-    const staffMembers = [
-        {
-            id: 12489234934130,
-            firstName: "Alice",
-            lastName: "Johnson",
-            role: "Nurse",
-            email: "alice.johnson@hospital.com",
-            phone: "+60 12-111 2222",
-            department: "Emergency",
-            status: "active",
-            avatar: "AJ",
-            yearsOfExperience: 8
-        },
-        {
-            id: 2,
-            firstName: "Bob",
-            lastName: "Martinez",
-            role: "Receptionist",
-            email: "bob.martinez@hospital.com",
-            phone: "+60 12-222 3333",
-            department: "Outpatient",
-            status: "active",
-            avatar: "BM",
-            yearsOfExperience: 3
-        },
-        {
-            id: 3,
-            firstName: "Carol",
-            lastName: "Lee",
-            role: "Lab Technician",
-            email: "carol.lee@hospital.com",
-            phone: "+60 12-333 4444",
-            department: "Laboratory",
-            status: "active",
-            avatar: "CL",
-            yearsOfExperience: 5
-        },
-        {
-            id: 4,
-            firstName: "David",
-            lastName: "Kim",
-            role: "Pharmacist",
-            email: "david.kim@hospital.com",
-            phone: "+60 12-444 5555",
-            department: "Pharmacy",
-            status: "on-leave",
-            avatar: "DK",
-            yearsOfExperience: 6
-        },
-        {
-            id: 5,
-            firstName: "Emma",
-            lastName: "Wilson",
-            role: "Nurse",
-            email: "emma.wilson@hospital.com",
-            phone: "+60 12-555 6666",
-            department: "ICU",
-            status: "active",
-            avatar: "EW",
-            yearsOfExperience: 12
-        },
-        {
-            id: 6,
-            firstName: "Frank",
-            lastName: "Garcia",
-            role: "Administrator",
-            email: "frank.garcia@hospital.com",
-            phone: "+60 12-666 7777",
-            department: "Administration",
-            status: "active",
-            avatar: "FG",
-            yearsOfExperience: 15
-        },
-    ];
+    useEffect(() => {
+        getStaffsInfo();
+    }, [])
 
+    const getStaffsInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await getStaffs();
+            console.log('Fetched staffs:', data);
+            if (Array.isArray(data)) {
+                setStaffs(data);
+            } else {
+                throw new Error('Invalid response format');
+            }
+        }
+        catch (err) {
+            console.error('Error fetching staffs:', err);
+            setError(err.message || 'Failed to fetch staffs');
+            setStaffs([]);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
     // Get unique roles for filter
-    const roles = [...new Set(staffMembers.map(staff => staff.role))];
+    const roles = [...new Set(staffs.map(staff => staff.role))];
 
     // Filter staff
-    const filteredStaff = staffMembers.filter(staff => {
+    const filteredStaff = staffs.filter(staff => {
         const matchesSearch = staff.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             staff.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             staff.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -109,12 +63,58 @@ export default function StaffInfo() {
         navigate(`/managerEditStaff/${id}`);
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this staff member?')) {
-            console.log('Delete staff:', id);
-            // Call delete API
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this staff?')) {
+            try {
+                await deleteStaff(id);
+                console.log('Delete staff successful:', id);
+                alert('Staff record deleted successfully');
+                try {
+                    await getStaffsInfo();
+                } catch (refreshErr) {
+                    console.error('Error refreshing staff list:', refreshErr);
+                }
+            } catch (err) {
+                console.error('Error deleting staff:', err);
+                alert('Failed to delete staff');
+            }
         }
     };
+
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading staffs...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaUserTie size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Staffs</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getStaffsInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
 
     return (
         <Layout role="manager">
@@ -133,7 +133,7 @@ export default function StaffInfo() {
                                 <FaUserTie size={24} className="text-ondark" />
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">{staffMembers.length}</h3>
+                                <h3 className="text-heading text-2xl font-bold">{staffs.length}</h3>
                                 <p className="text-muted text-sm">Total Staff</p>
                             </div>
                         </div>
@@ -146,7 +146,7 @@ export default function StaffInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {staffMembers.filter(s => s.status === 'active').length}
+                                    {staffs.filter(s => s.status.toLowerCase() === 'active').length}
                                 </h3>
                                 <p className="text-muted text-sm">Active Staff</p>
                             </div>
@@ -160,7 +160,7 @@ export default function StaffInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {staffMembers.filter(s => s.status === 'on-leave').length}
+                                    {staffs.filter(s => s.status.toLowerCase() === 'on leave').length}
                                 </h3>
                                 <p className="text-muted text-sm">On Leave</p>
                             </div>
@@ -266,7 +266,7 @@ export default function StaffInfo() {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-heading text-sm font-bold">{`${staff.firstName} ${staff.lastName}`}</p>
-                                                    <p className="text-muted text-xs">{staff.id} years exp.</p>
+                                                    <p className="text-muted text-xs">{staff.id}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -293,11 +293,11 @@ export default function StaffInfo() {
                                         </td>
                                         <td className="py-4 px-6">
                                                 <span className={`inline-flex px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                                                    staff.status === 'active'
+                                                    staff.status.toLowerCase() === 'active'
                                                         ? 'bg-accent-success bg-opacity-10 text-body'
                                                         : 'bg-accent-warning bg-opacity-10 text-body'
                                                 }`}>
-                                                    {staff.status === 'active' ? 'Active' : 'On Leave'}
+                                                    {staff.status.toLowerCase() === 'active' ? 'Active' : 'On Leave'}
                                                 </span>
                                         </td>
                                         <td className="py-4 px-4">
@@ -350,7 +350,7 @@ export default function StaffInfo() {
                 <div className="mt-6 flex items-center justify-between">
                     <p className="text-muted text-sm">
                         Showing <span className="font-semibold text-heading">{filteredStaff.length}</span> of{' '}
-                        <span className="font-semibold text-heading">{staffMembers.length}</span> staff members
+                        <span className="font-semibold text-heading">{staffs.length}</span> staff members
                     </p>
                 </div>
             </div>

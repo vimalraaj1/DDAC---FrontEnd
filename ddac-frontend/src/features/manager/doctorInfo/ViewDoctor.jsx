@@ -1,6 +1,6 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     FaArrowLeft, FaEdit, FaTrash, FaUserMd, FaEnvelope, FaPhone,
@@ -8,44 +8,78 @@ import {
     FaBriefcase, FaDollarSign, FaTint, FaHospital, FaUserCircle,
     FaCheckCircle, FaClock
 } from 'react-icons/fa';
+import {deleteDoctor, getDoctorById, getDoctors} from "../../../services/doctorManagementService.js";
+import {
+    CountNumberOfAppointmentsByDoctorId,
+    CountNumberOfUniquePatientsByDoctorId
+} from "../../../services/appointmentManagementService.js";
 
 export default function ViewDoctor() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState('personal');
+    const [numOfPatients, setNumOfPatients] = useState(0);
+    const [numOfAppointments, setNumOfAppointments] = useState(0);
+    const [doctor, setDoctor] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Mock data - Replace with actual API call
-    const doctor = {
-        id: id || '12457245972459724579',
-        firstName: 'Sarah',
-        lastName: 'Wilson',
-        email: 'sarah.wilson@hospital.com',
-        phone: '+60 12-345 6789',
-        specialization: 'Cardiology',
-        licenseNumber: 'MD-12345',
-        dateOfBirth: '1985-05-15',
-        gender: 'Female',
-        address: '123 Medical Drive, Bandar Sunway, Selangor, Malaysia 47500',
-        yearsOfExperience: '10',
-        department: 'Outpatient',
-        joiningDate: '2015-03-20',
-        salary: '15000',
-        emergencyContact: '+60 12-999 8888',
-        bloodGroup: 'O+',
-        status: 'active',
-        totalPatients: 245,
-        appointmentsToday: 8,
-        rating: 4.8
-    };
+    useEffect(() => {
+        getDoctorInfo();
+    }, []);
 
+    const getDoctorInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await getDoctorById(id);
+            console.log('Fetched doctor:', data);
+            if (data && typeof data === 'object') {
+                setDoctor(data);
+                const doctorId = data.id
+                let patientCount = 0;
+                let appointmentCount = 0;
+                try {
+                    const count = await CountNumberOfUniquePatientsByDoctorId(doctorId);
+                    patientCount = count;
+                    const countA = await CountNumberOfAppointmentsByDoctorId(doctorId);
+                    appointmentCount = countA;
+                } catch (err) {
+                    console.error(`Error fetching patient and appointment count for doctor ${doctor.id}:`, err);
+                }
+                setNumOfPatients(patientCount);
+                setNumOfAppointments(appointmentCount);
+            } else {
+                throw new Error('Doctor not found or invalid data format.');
+            }
+        }
+        catch (err) {
+            console.error('Error fetching doctor:', err);
+            setError(err.message || 'Failed to fetch doctor');
+            setDoctor(null);
+            setNumOfPatients(0);
+            setNumOfAppointments(0);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
     const handleEdit = () => {
         navigate(`/managerEditDoctor/${id}`);
     };
 
-    const handleDelete = () => {
-        if (window.confirm(`Are you sure you want to delete Dr. ${doctor.firstName} ${doctor.lastName} ?`)) {
-            console.log('Delete doctor:', id);
-            navigate('/managerDoctorInfo');
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this doctor?')) {
+            try {
+                await deleteDoctor(id);
+                console.log('Delete doctor successful:', id);
+                alert('Doctor record deleted successfully');
+                navigate(`/managerDoctorInfo`);
+            } catch (err) {
+                console.error('Error deleting doctor:', err);
+                alert('Failed to delete doctor');
+            }
         }
     };
 
@@ -59,6 +93,41 @@ export default function ViewDoctor() {
         { id: 'employment', label: 'Employment', icon: FaBriefcase }
     ];
 
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading doctor...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaUserMd size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Doctor</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getDoctorInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">
@@ -81,7 +150,7 @@ export default function ViewDoctor() {
                             <span>Edit</span>
                         </button>
                         <button
-                            onClick={handleDelete}
+                            onClick={() => handleDelete(id)}
                             className="flex items-center gap-2 px-5 py-2.5 bg-accent-danger bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
                         >
                             <FaTrash size={16} />
@@ -104,7 +173,7 @@ export default function ViewDoctor() {
                                     {doctor.firstName.charAt(0).toUpperCase()}{doctor.lastName.charAt(0).toUpperCase()}
                                 </div>
                                 <div className={`absolute bottom-2 right-2 w-6 h-6 rounded-full border-4 border-card ${
-                                    doctor.status === 'active' ? 'bg-accent-success' : 'bg-accent-warning'
+                                    doctor.status.toLowerCase() === 'active' ? 'bg-accent-success' : 'bg-accent-warning'
                                 }`}></div>
                             </div>
 
@@ -119,11 +188,11 @@ export default function ViewDoctor() {
                                                   {doctor.specialization}
                                             </span>
                                             <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${
-                                                doctor.status === 'active'
+                                                doctor.status.toLowerCase() === 'active'
                                                     ? 'bg-accent-success bg-opacity-10 text-ondark'
                                                     : 'bg-accent-warning bg-opacity-10 text-ondark'
                                             }`}>
-                                            {doctor.status === 'active' ? (
+                                            {doctor.status.toLowerCase() === 'active' ? (
                                                 <>
                                                     <FaCheckCircle size={12} />
                                                     Active
@@ -144,15 +213,15 @@ export default function ViewDoctor() {
                                 <div className="grid grid-cols-3 gap-4 mt-6">
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Total Patients</p>
-                                        <p className="text-heading text-2xl font-bold">{doctor.totalPatients}</p>
+                                        <p className="text-heading text-2xl font-bold">{numOfPatients}</p>
                                     </div>
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Experience</p>
                                         <p className="text-heading text-2xl font-bold">{doctor.yearsOfExperience} yrs</p>
                                     </div>
                                     <div className="bg-main rounded-lg p-4">
-                                        <p className="text-muted text-xs mb-1">Today's Appointments</p>
-                                        <p className="text-heading text-2xl font-bold">{doctor.appointmentsToday}</p>
+                                        <p className="text-muted text-xs mb-1">Total Appointments</p>
+                                        <p className="text-heading text-2xl font-bold">{numOfAppointments}</p>
                                     </div>
                                 </div>
                             </div>
@@ -207,8 +276,8 @@ export default function ViewDoctor() {
                                 <InfoItem icon={FaIdCard} label="License Number" value={doctor.licenseNumber} />
                                 <InfoItem icon={FaBriefcase} label="Years of Experience" value={`${doctor.yearsOfExperience} years`} />
                                 <InfoItem icon={FaHospital} label="Department" value={doctor.department} />
-                                <InfoItem icon={FaUserMd} label="Total Patients Treated" value={doctor.totalPatients} />
-                                <InfoItem icon={FaCalendar} label="Today's Appointments" value={doctor.appointmentsToday} />
+                                <InfoItem icon={FaUserMd} label="Total Patients Treated" value={numOfPatients} />
+                                <InfoItem icon={FaCalendar} label="Total Appointments" value={numOfAppointments} />
                             </div>
                         )}
 
@@ -220,8 +289,8 @@ export default function ViewDoctor() {
                                 <InfoItem
                                     icon={FaCheckCircle}
                                     label="Employment Status"
-                                    value={doctor.status === 'active' ? 'Active' : 'On Leave'}
-                                    valueColor={doctor.status === 'active' ? 'text-accent-success' : 'text-accent-warning'}
+                                    value={doctor.status.toLowerCase() === 'active' ? 'Active' : 'On Leave'}
+                                    valueColor={doctor.status.toLowerCase() === 'active' ? 'text-accent-success' : 'text-accent-warning'}
                                 />
                             </div>
                         )}
@@ -241,7 +310,7 @@ function InfoItem({ icon: Icon, label, value, valueColor = 'text-heading' }) {
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-muted text-sm mb-1">{label}</p>
-                <p className={`${valueColor} font-medium break-words`}>{value || 'Not provided'}</p>
+                <p className={`${valueColor} font-medium break-words`}>{value || 'No information'}</p>
             </div>
         </div>
     );

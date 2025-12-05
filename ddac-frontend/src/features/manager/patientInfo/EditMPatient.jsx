@@ -3,6 +3,8 @@ import Layout from '../../../components/Layout.jsx';
 import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaCalendar, FaMapMarkerAlt, FaArrowLeft, FaHeartbeat, FaUserInjured } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
+import {getPatientById} from "../../../services/patientManagementService.js";
+import {updatePatient} from "../../../services/patientManagementService.js";
 
 export default function EditMPatient() {
     const navigate = useNavigate();
@@ -17,7 +19,7 @@ export default function EditMPatient() {
         phone: '',
         email: '',
         address: '',
-        bloodType: '',
+        bloodGroup: '',
         allergies: '',
         conditions: '',
         medications: '',
@@ -34,34 +36,12 @@ export default function EditMPatient() {
     useEffect(() => {
         fetchPatientData();
     }, [id]);
-
+    
     const fetchPatientData = async () => {
         try {
             setIsLoading(true);
-
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Mock data - Replace with actual API response
-            const mockData = {
-                id: 'PT000001',
-                firstName: 'Ahmad',
-                lastName: 'Ibrahim',
-                dateOfBirth: '1990-03-15',
-                gender: 'male',
-                phone: '+60 12-345 6789',
-                email: 'ahmad.ibrahim@email.com',
-                address: '123 Patient Street, Kuala Lumpur',
-                bloodType: 'O+',
-                allergies: 'Penicillin',
-                conditions: 'Hypertension',
-                medications: 'Lisinopril 10mg daily',
-                emergencyName: 'Siti Ibrahim',
-                emergencyRelationship: 'Spouse',
-                emergencyContact: '+60 13-456 7890'
-            };
-
-            setFormData(mockData);
+            const patientData = await getPatientById(id)
+            setFormData(patientData);
         } catch (error) {
             console.error('Error fetching patient data:', error);
             alert('Failed to load patient data. Please try again.');
@@ -105,7 +85,6 @@ export default function EditMPatient() {
         }
         if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required';
         if (!formData.gender) newErrors.gender = 'Gender is required';
-        if (!formData.bloodType) newErrors.bloodType = 'Blood type is required';
         if (!formData.address) newErrors.address = 'Address is required';
 
         setErrors(newErrors);
@@ -122,19 +101,22 @@ export default function EditMPatient() {
         setIsSubmitting(true);
 
         try {
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            console.log('Form submitted:', formData);
-
-            // Show success message
-            alert('Patient information updated successfully!');
-
-            // Navigate back to patients list
+            setIsSubmitting(true);
+            const payload = {
+                ...formData,
+            }
+            console.log('Submitting patient data: ', payload);
+            const response = await updatePatient(id, payload);
+            console.log('Staff updated successfully:', response);
+            alert('Patient updated successfully!');
             navigate('/managerPatientInfo');
         } catch (error) {
             console.error('Error updating patient:', error);
-            alert('Failed to update patient. Please try again.');
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+                alert(error.response?.data?.message || 'Failed to update patient. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -152,11 +134,8 @@ export default function EditMPatient() {
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
                     <div className="text-center">
-                        <svg className="animate-spin h-12 w-12 text-primary mx-auto mb-4" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        <p className="text-muted text-lg">Loading patient information...</p>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading patient...</p>
                     </div>
                 </div>
             </Layout>
@@ -335,27 +314,27 @@ export default function EditMPatient() {
                                     }`}
                                 >
                                     <option value="">Select gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
                                 </select>
                                 {errors.gender && <p className="text-accent-danger text-xs mt-1">{errors.gender}</p>}
                             </div>
 
-                            {/* Blood Type */}
+                            {/* Blood Group */}
                             <div>
                                 <label className="block text-sm font-medium text-heading mb-2">
-                                    Blood Type <span className="text-accent-danger">*</span>
+                                    Blood Group
                                 </label>
                                 <select
-                                    name="bloodType"
-                                    value={formData.bloodType}
+                                    name="bloodGroup"
+                                    value={formData.bloodGroup}
                                     onChange={handleChange}
                                     className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all bg-card ${
-                                        errors.bloodType ? 'border-accent-danger' : 'border-input'
+                                        errors.bloodGroup ? 'border-accent-danger' : 'border-input'
                                     }`}
                                 >
-                                    <option value="">Select blood type</option>
+                                    <option value="">Select blood group</option>
                                     <option value="A+">A+</option>
                                     <option value="A-">A-</option>
                                     <option value="B+">B+</option>
@@ -366,7 +345,7 @@ export default function EditMPatient() {
                                     <option value="O-">O-</option>
                                     <option value="Golden Blood">Golden Blood</option>
                                 </select>
-                                {errors.bloodType && <p className="text-accent-danger text-xs mt-1">{errors.bloodType}</p>}
+                                {/*{errors.bloodGroup && <p className="text-accent-danger text-xs mt-1">{errors.bloodGroup}</p>}*/}
                             </div>
                         </div>
                     </div>

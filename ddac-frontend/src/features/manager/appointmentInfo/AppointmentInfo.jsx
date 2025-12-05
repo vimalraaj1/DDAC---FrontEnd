@@ -1,96 +1,65 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
-import { FaSearch, FaEdit, FaTrash, FaEye, FaCalendarCheck, FaCalendarAlt, FaClock, FaUserMd, FaUser } from 'react-icons/fa';
+import {useEffect, useState} from 'react';
+import {
+    FaSearch,
+    FaEdit,
+    FaTrash,
+    FaEye,
+    FaCalendarCheck,
+    FaCalendarAlt,
+    FaClock,
+    FaUserMd,
+    FaUser,
+    FaThumbsUp, FaBan
+} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import {FaRegCalendarXmark} from "react-icons/fa6";
+import {FaRegCalendarXmark, FaThumbsDown} from "react-icons/fa6";
+import {
+    CountNumberOfUniquePatientsByDoctorId,
+    deleteAppointment, getAppointments, GetAppointmentsWithDetails
+} from "../../../services/appointmentManagementService.js";
+import {getDoctorById, getDoctors} from "../../../services/doctorManagementService.js";
+import {getPatientById, getPatients} from "../../../services/patientManagementService.js";
+import {getStaffById, getStaffs} from "../../../services/staffManagementService.js";
+import {unbookAppointment} from "../../../services/availabilityManagementService.js";
 
 export default function AppointmentInfo() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
+    const [appointments, setAppointments] = useState([]);
+    const [doctors, setDoctors] = useState([]);
+    const [patients, setPatients] = useState([]);
+    const [staffs, setStaffs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    // Sample appointment data (replace with API call later)
-    const appointments = [
-        {
-            id: 'APT000001',
-            date: '2024-11-25',
-            time: '09:00',
-            status: 'scheduled',
-            patientId: 'PT000001',
-            patientName: 'Ahmad Ibrahim',
-            doctorId: 'DR000001',
-            doctorName: 'Dr. Sarah Wilson',
-            staffId: 'ST000001',
-            purpose: 'General Checkup',
-            cancellationReason: ''
-        },
-        {
-            id: 'APT000002',
-            date: '2024-11-25',
-            time: '10:30',
-            status: 'completed',
-            patientId: 'PT000002',
-            patientName: 'Siti Abdullah',
-            doctorId: 'DR000002',
-            doctorName: 'Dr. Michael Chen',
-            staffId: 'ST000002',
-            purpose: 'Follow-up Consultation',
-            cancellationReason: ''
-        },
-        {
-            id: 'APT000003',
-            date: '2024-11-26',
-            time: '14:00',
-            status: 'scheduled',
-            patientId: 'PT000003',
-            patientName: 'Raj Kumar',
-            doctorId: 'DR000001',
-            doctorName: 'Dr. Sarah Wilson',
-            staffId: 'ST000001',
-            purpose: 'Cardiac Screening',
-            cancellationReason: ''
-        },
-        {
-            id: 'APT000004',
-            date: '2024-11-26',
-            time: '15:30',
-            status: 'cancelled',
-            patientId: 'PT000004',
-            patientName: 'Mei Wong',
-            doctorId: 'DR000003',
-            doctorName: 'Dr. Emily Rodriguez',
-            staffId: 'ST000003',
-            purpose: 'Pediatric Consultation',
-            cancellationReason: 'Patient requested reschedule'
-        },
-        {
-            id: 'APT000005',
-            date: '2024-11-27',
-            time: '11:00',
-            status: 'scheduled',
-            patientId: 'PT000005',
-            patientName: 'Hassan Ali',
-            doctorId: 'DR000004',
-            doctorName: 'Dr. James Kumar',
-            staffId: 'ST000004',
-            purpose: 'Orthopedic Evaluation',
-            cancellationReason: ''
-        },
-        {
-            id: 'APT000006',
-            date: '2024-11-27',
-            time: '16:00',
-            status: 'no-show',
-            patientId: 'PT000006',
-            patientName: 'Lakshmi Devi',
-            doctorId: 'DR000005',
-            doctorName: 'Dr. Lisa Thompson',
-            staffId: 'ST000005',
-            purpose: 'Dermatology Consultation',
-            cancellationReason: ''
+    useEffect(() => {
+        getAppointmentsInfo()
+    }, [])
+
+    const getAppointmentsInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await GetAppointmentsWithDetails();
+            console.log('Fetched appointments:', data);
+            if (Array.isArray(data)) {
+                setAppointments(data);
+            } else {
+                throw new Error('Invalid response format');
+            }
         }
-    ];
+        catch (err) {
+            console.error('Error fetching appointments:', err);
+            setError(err.message || 'Failed to fetch appointments');
+            setAppointments([]);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     // Get unique statuses for filter
     const statuses = [...new Set(appointments.map(apt => apt.status))];
@@ -119,8 +88,10 @@ export default function AppointmentInfo() {
     const filteredAppointments = appointments.filter(appointment => {
         const matchesSearch =
             appointment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            appointment.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            appointment.patient.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            appointment.patient.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            appointment.doctor.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            appointment.doctor.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
             appointment.purpose.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesStatus = filterStatus === 'all' || appointment.status === filterStatus;
         return matchesSearch && matchesStatus;
@@ -128,17 +99,21 @@ export default function AppointmentInfo() {
 
     // Get status badge color
     const getStatusColor = (status) => {
-        switch(status) {
+        switch(status.toLowerCase()) {
             case 'scheduled':
-                return 'bg-accent-sky bg-opacity-10 text-body';
+                return 'bg-accent-sky bg-opacity-10 text-ondark';
+            case 'approved':
+                return 'bg-accent-success bg-opacity-10 text-ondark';
+            case 'rejected':
+                return 'bg-accent-danger bg-opacity-10 text-ondark';
             case 'completed':
-                return 'bg-accent-success bg-opacity-10 text-body';
+                return 'bg-accent-success bg-opacity-10 text-ondark';
             case 'cancelled':
-                return 'bg-accent-danger bg-opacity-10 text-body';
+                return 'bg-accent-danger bg-opacity-10 text-ondark';
             case 'no-show':
-                return 'bg-accent-warning bg-opacity-10 text-body';
+                return 'bg-accent-warning bg-opacity-10 text-ondark';
             default:
-                return 'bg-primary bg-opacity-10 text-body';
+                return 'bg-primary bg-opacity-10 text-ondark';
         }
     };
 
@@ -159,13 +134,71 @@ export default function AppointmentInfo() {
         navigate(`/managerEditAppointment/${id}`);
     };
 
-    const handleDelete = (id) => {
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this appointment?')) {
-            console.log('Delete appointment:', id);
-            // Call delete API
+            try {
+                try {
+                    await unbookAppointment(id);
+                    console.log('Unbook timeslot successful:', id);
+                } catch (unbookError) {
+                    if (unbookError.response && unbookError.response.status === 404) {
+                        console.warn(`Old slot was already unbooked (404 Not Found) for Appointment ID: ${id}. Proceeding with deletion.`);
+                    } else {
+                        console.error('Critical unbook error, stopping deletion:', unbookError);
+                        alert('Failed to free the time slot due to a server error. Deletion aborted.');
+                        return;
+                    }
+                }
+                await deleteAppointment(id);
+                console.log('Delete appointment successful:', id);
+                alert('Appointment record deleted successfully');
+                try {
+                    await getAppointmentsInfo();
+                } catch (refreshErr) {
+                    console.error('Error refreshing appointment list:', refreshErr);
+                }
+            } catch (err) {
+                console.error('Error deleting appointment:', err);
+                alert('Failed to delete appointment');
+            }
         }
     };
 
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading appointments...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaCalendarCheck size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Appointment</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getAppointmentsInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">
@@ -196,13 +229,13 @@ export default function AppointmentInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {appointments.filter(a => a.status === 'scheduled').length}
+                                    {appointments.filter(a => a.status.toLowerCase() === 'scheduled').length}
                                 </h3>
                                 <p className="text-muted text-sm">Scheduled</p>
                             </div>
                         </div>
                     </div>
-
+                    
                     <div className="bg-card rounded-xl shadow-soft p-6">
                         <div className="flex items-center gap-4">
                             <div className="bg-accent-success bg-opacity-10 p-3 rounded-lg">
@@ -210,7 +243,7 @@ export default function AppointmentInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {appointments.filter(a => a.status === 'completed').length}
+                                    {appointments.filter(a => a.status.toLowerCase() === 'completed').length}
                                 </h3>
                                 <p className="text-muted text-sm">Completed</p>
                             </div>
@@ -224,7 +257,7 @@ export default function AppointmentInfo() {
                             </div>
                             <div>
                                 <h3 className="text-heading text-2xl font-bold">
-                                    {appointments.filter(a => a.status === 'cancelled').length}
+                                    {appointments.filter(a => a.status.toLowerCase() === 'cancelled').length}
                                 </h3>
                                 <p className="text-muted text-sm">Cancelled</p>
                             </div>
@@ -321,7 +354,7 @@ export default function AppointmentInfo() {
                                                 </div>
                                                 <div className="min-w-0">
                                                     <p className="text-heading text-sm font-bold break-all">{appointment.id}</p>
-                                                    <p className="text-muted text-xs break-all">{appointment.staffId}</p>
+                                                    <p className="text-muted text-xs break-all">{appointment.staff?.id || "N/A"}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -341,7 +374,7 @@ export default function AppointmentInfo() {
                                             <div>
                                                 <p className="text-heading font-medium text-sm flex items-center gap-1">
                                                     {/*<FaUser className="text-muted" size={12} />*/}
-                                                    {appointment.patientName}
+                                                    {appointment.patient.firstName} {appointment.patient.lastName}
                                                 </p>
                                                 <p className="text-muted text-xs">{appointment.patientId}</p>
                                             </div>
@@ -350,7 +383,7 @@ export default function AppointmentInfo() {
                                             <div>
                                                 <p className="text-heading font-medium text-sm flex items-center gap-1">
                                                     {/*<FaUserMd className="text-muted" size={12} />*/}
-                                                    {appointment.doctorName}
+                                                    Dr. {appointment.doctor.firstName} {appointment.doctor.lastName}
                                                 </p>
                                                 <p className="text-muted text-xs">{appointment.doctorId}</p>
                                             </div>

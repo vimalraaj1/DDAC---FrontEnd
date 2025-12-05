@@ -1,6 +1,6 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     FaArrowLeft, FaEdit, FaTrash, FaUser, FaEnvelope, FaPhone,
@@ -8,42 +8,82 @@ import {
     FaCheckCircle, FaHeartbeat, FaAllergies, FaPills, FaExclamationTriangle,
     FaUserInjured, FaHospital, FaStethoscope, FaNotesMedical
 } from 'react-icons/fa';
+import {deleteDoctor} from "../../../services/doctorManagementService.js";
+import {getStaffById} from "../../../services/staffManagementService.js";
+import {averageStaffRating} from "../../../services/commentManagementService.js";
+import {deletePatient, getPatientById} from "../../../services/patientManagementService.js";
+import {HasAppointment, TotalVisits, UpcomingAppointments} from "../../../services/appointmentManagementService.js";
 
 export default function ViewPatient() {
     const navigate = useNavigate();
     const { id } = useParams();
     const [activeTab, setActiveTab] = useState('personal');
+    const [totalVisits, setTotalVisits] = useState(0);
+    const [upcomingAppointments, setUpcomingAppointments] = useState(0);
+    const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [patient, setPatient] = useState(null);
 
-    // Mock data - Replace with actual API call
-    const patient = {
-        id: id || 'PT000001',
-        firstName: 'Ahmad',
-        lastName: 'Ibrahim',
-        email: 'ahmad.ibrahim@email.com',
-        phone: '+60 12-345 6789',
-        dateOfBirth: '1990-03-15',
-        gender: 'Male',
-        address: '123 Patient Street, Petaling Jaya, Selangor, Malaysia 46000',
-        bloodType: 'O+',
-        allergies: 'Penicillin, Shellfish',
-        conditions: 'Hypertension, Type 2 Diabetes',
-        medications: 'Lisinopril 10mg daily, Metformin 500mg twice daily',
-        emergencyName: 'Siti Ibrahim',
-        emergencyRelationship: 'Spouse',
-        emergencyContact: '+60 13-456 7890',
-        totalVisits: 12,
-        upcomingAppointments: 2,
-        registrationDate: '2023-01-15'
-    };
+    useEffect(() => {
+        getPatientInfo()
+    }, [])
 
+    const getPatientInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await getPatientById(id);
+            console.log('Fetched patient:', data);
+            if (data && typeof data === 'object') {
+                setPatient(data);
+                const patientId = data.id;
+                let visits = 0;
+                let appointments = 0;
+                try {
+                    const visit = await TotalVisits(patientId);
+                    visits = visit;
+                    const appointment = await UpcomingAppointments(patientId);
+                    appointments = appointment;
+                } catch (err) {
+                    console.error(`Error fetching average rating for staff ${patientId}:`, err);
+                }
+                setTotalVisits(visits);
+                setUpcomingAppointments(appointments);
+            } else {
+                throw new Error('Patient not found or invalid data format.');
+            }
+        }
+        catch (err) {
+            console.error('Error fetching patient:', err);
+            setError(err.message || 'Failed to fetch patient');
+            setPatient(null);
+        } finally {
+            setLoading(false);
+        }
+    }
+    
     const handleEdit = () => {
         navigate(`/managerEditPatient/${id}`);
     };
 
-    const handleDelete = () => {
-        if (window.confirm(`Are you sure you want to delete ${patient.firstName} ${patient.lastName}'s record?`)) {
-            console.log('Delete patient:', id);
-            navigate('/managerPatientInfo');
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this patient?')) {
+            try {
+                const hasAppointment = await HasAppointment(id);
+                if (hasAppointment === false) {
+                    await deletePatient(id);
+                    console.log('Delete patient successful:', id);
+                    alert('Patient record deleted successfully');
+                    navigate(`/managerPatientInfo`);
+                } else{
+                    console.log('Deletion blocked: Patient has associated appointments.', id);
+                    alert('Patient record cannot be deleted as it is associated with appointments!');
+                }
+            } catch (err) {
+                console.error('Error deleting patient:', err);
+                alert('Failed to delete patient');
+            }
         }
     };
 
@@ -57,6 +97,41 @@ export default function ViewPatient() {
         { id: 'emergency', label: 'Emergency Contact', icon: FaUserInjured }
     ];
 
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading patient...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaUserInjured size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Patient</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getPatientInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">
@@ -79,8 +154,8 @@ export default function ViewPatient() {
                             <span>Edit</span>
                         </button>
                         <button
-                            onClick={handleDelete}
-                            className="flex items-center gap-2 px-5 py-2.5 bg-accent-danger bg-opacity-10 text-accent-danger rounded-lg font-medium hover:bg-opacity-20 transition-colors"
+                            onClick={() => handleDelete(id)}
+                            className="flex items-center gap-2 px-5 py-2.5 bg-accent-danger bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
                         >
                             <FaTrash size={16} />
                             <span>Delete</span>
@@ -115,7 +190,7 @@ export default function ViewPatient() {
                                             </span>
                                             <span className="inline-flex items-center gap-2 px-3 py-1 bg-accent-danger bg-opacity-10 text-ondark rounded-full text-sm font-medium">
                                                 <FaTint size={14} />
-                                                {patient.bloodType}
+                                                {patient.bloodGroup || "No Info"}
                                             </span>
                                         </div>
                                         <p className="text-muted text-sm">Patient ID: {patient.id}</p>
@@ -126,11 +201,11 @@ export default function ViewPatient() {
                                 <div className="grid grid-cols-3 gap-4 mt-6">
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Total Visits</p>
-                                        <p className="text-heading text-2xl font-bold">{patient.totalVisits}</p>
+                                        <p className="text-heading text-2xl font-bold">{totalVisits}</p>
                                     </div>
                                     <div className="bg-main rounded-lg p-4">
                                         <p className="text-muted text-xs mb-1">Upcoming</p>
-                                        <p className="text-heading text-2xl font-bold">{patient.upcomingAppointments}</p>
+                                        <p className="text-heading text-2xl font-bold">{upcomingAppointments}</p>
                                     </div>
                                 </div>
                             </div>
@@ -170,8 +245,7 @@ export default function ViewPatient() {
                                 <InfoItem icon={FaIdCard} label="Patient ID" value={patient.id} />
                                 <InfoItem icon={FaCalendar} label="Date of Birth" value={patient.dateOfBirth} />
                                 <InfoItem icon={FaUserCircle} label="Gender" value={patient.gender} />
-                                <InfoItem icon={FaTint} label="Blood Type" value={patient.bloodType} valueColor="text-accent-danger" />
-                                <InfoItem icon={FaCalendar} label="Registration Date" value={patient.registrationDate} />
+                                <InfoItem icon={FaTint} label="Blood Type" value={patient.bloodGroup} valueColor="text-accent-danger" />
                                 <InfoItem icon={FaEnvelope} label="Email Address" value={patient.email} />
                                 <InfoItem icon={FaPhone} label="Phone Number" value={patient.phone} />
                                 <div className="md:col-span-2">
@@ -321,8 +395,8 @@ export default function ViewPatient() {
                                         <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
                                             <FaTint className="text-accent-danger" size={20} />
                                             <div>
-                                                <p className="text-muted text-xs">Blood Type</p>
-                                                <p className="text-heading font-semibold">{patient.bloodType}</p>
+                                                <p className="text-muted text-xs">Blood Group</p>
+                                                <p className="text-heading font-semibold">{patient.bloodGroup || "No Information"}</p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-3 p-3 bg-card rounded-lg">
@@ -352,7 +426,7 @@ function InfoItem({ icon: Icon, label, value, valueColor = 'text-heading' }) {
             </div>
             <div className="flex-1 min-w-0">
                 <p className="text-muted text-sm mb-1">{label}</p>
-                <p className={`${valueColor} font-medium break-words`}>{value || 'Not provided'}</p>
+                <p className={`${valueColor} font-medium break-words`}>{value || 'No information'}</p>
             </div>
         </div>
     );

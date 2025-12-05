@@ -3,13 +3,12 @@ import Layout from '../../../components/Layout.jsx';
 import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaUserTie, FaIdCard, FaCalendar, FaMapMarkerAlt, FaArrowLeft, FaBriefcase } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {registerDoctor} from "../../../services/doctorManagementService.js";
+import {registerStaff} from "../../../services/staffManagementService.js";
 
 export default function AddNewStaff() {
     const navigate = useNavigate();
-
-    const [generatedId, setGeneratedId] = useState('');
     const [formData, setFormData] = useState({
-        id: '',
         firstName: '',
         lastName: '',
         email: '',
@@ -20,16 +19,15 @@ export default function AddNewStaff() {
         address: '',
         yearsOfExperience: '',
         department: '',
-        joiningDate: '',
+        joiningDate: null,
         salary: '',
         emergencyContact: '',
         bloodGroup: '',
-        status: 'active',
+        status: 'Active',
     });
 
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isGeneratingId, setIsGeneratingId] = useState(true);
 
     const staffRoles = [
         'Nurse',
@@ -52,38 +50,6 @@ export default function AddNewStaff() {
         'Maintenance',
         'IT Department'
     ];
-
-    // Generate Staff ID on component mount
-    useEffect(() => {
-        generateStaffId();
-    }, []);
-
-    const generateStaffId = async () => {
-        try {
-            setIsGeneratingId(true);
-
-            // Simulate API call to get last staff ID
-            // Replace with actual API call: const response = await fetch('YOUR_API_URL/staff/last-id');
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            // Mock: Get last staff ID from database
-            // In real scenario, fetch from API: const data = await response.json();
-            const lastStaffId = 'ST000005'; // This should come from your API
-
-            // Extract number from last ID
-            const lastNumber = parseInt(lastStaffId.replace('ST', ''));
-            // Generate new ID
-            const newNumber = lastNumber + 1;
-            const newId = `ST${String(newNumber).padStart(6, '0')}`;
-            setGeneratedId(newId);
-        } catch (error) {
-            console.error('Error generating staff ID:', error);
-            // Fallback to default if API fails
-            setGeneratedId('ST000001');
-        } finally {
-            setIsGeneratingId(false);
-        }
-    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -136,21 +102,26 @@ export default function AddNewStaff() {
         setIsSubmitting(true);
 
         try {
-            // Prepare data with generated ID
-            const staffData = {
-                id: generatedId,
-                ...formData
+            setIsSubmitting(true);
+            const payload = {
+                ...formData,
+                yearsOfExperience: parseInt(formData.yearsOfExperience, 10),
+                salary: parseFloat(formData.salary),
             };
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            console.log('Form submitted:', staffData);
-            // Show success message
-            alert(`Staff member added successfully! ID: ${generatedId}`);
-            // Navigate back to staff list
+            console.log('Submitting staff data: ', payload);
+            const response = await registerStaff(payload);
+            console.log('Staff created successfully:', response);
+            alert('Staff added successfully!');
             navigate('/managerStaffInfo');
         } catch (error) {
             console.error('Error adding staff:', error);
-            alert('Failed to add staff member. Please try again.');
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+                console.error('Backend Validation Errors:', error.response.data.errors);
+                alert('Failed to add staff. Please try again.');
+            } else {
+                alert(error.response?.data?.message || 'Failed to add staff. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -161,26 +132,6 @@ export default function AddNewStaff() {
             navigate('/managerStaffInfo');
         }
     };
-
-    const SimpleLoadingSpinner = ({ loadingText = "Loading..." }) => (
-        <div className="flex items-center justify-center h-screen">
-            <div className="text-center">
-                <div className="h-12 w-12 border-4 border-t-4 border-gray-200 border-t-[var-(--primary)] rounded-full animate-spin mx-auto mb-4"></div>
-                <p className="text-muted text-lg">{loadingText}</p>
-            </div>
-        </div>
-    );
-
-    // Loading state while generating ID
-    if (isGeneratingId) {
-        return (
-            <Layout role="manager">
-                <div className="flex items-center justify-center h-screen">
-                    <SimpleLoadingSpinner loadingText="Generating Staff ID..."/>
-                </div>
-            </Layout>
-        );
-    }
 
     return (
         <Layout role="manager">
@@ -198,17 +149,6 @@ export default function AddNewStaff() {
                         <FaArrowLeft size={16} />
                         <span>Back to Staff</span>
                     </button>
-                </div>
-
-                {/* Generated Staff ID Display */}
-                <div className="bg-primary bg-opacity-10 border border-primary rounded-xl p-4 mb-6">
-                    <div className="flex items-center gap-3">
-                        <FaIdCard className="text-primary" size={24} />
-                        <div>
-                            <p className="text-sm text-ondark">Auto-Generated Staff ID</p>
-                            <p className="text-2xl font-bold text-ondark">{generatedId}</p>
-                        </div>
-                    </div>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
@@ -343,9 +283,9 @@ export default function AddNewStaff() {
                                     }`}
                                 >
                                     <option value="">Select gender</option>
-                                    <option value="male">Male</option>
-                                    <option value="female">Female</option>
-                                    <option value="other">Other</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
                                 </select>
                                 {errors.gender && <p className="text-accent-danger text-xs mt-1">{errors.gender}</p>}
                             </div>
@@ -495,7 +435,7 @@ export default function AddNewStaff() {
                                     className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all"
                                     placeholder="5000"
                                     min="0"
-                                    step="100"
+                                    step="0.01"
                                 />
                             </div>
                         </div>
