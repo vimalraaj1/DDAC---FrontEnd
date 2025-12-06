@@ -28,9 +28,6 @@ export default function AppointmentInfo() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
     const [appointments, setAppointments] = useState([]);
-    const [doctors, setDoctors] = useState([]);
-    const [patients, setPatients] = useState([]);
-    const [staffs, setStaffs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();

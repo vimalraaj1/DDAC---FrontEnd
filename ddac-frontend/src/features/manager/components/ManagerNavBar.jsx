@@ -8,6 +8,7 @@ import {
     FaStethoscope, FaUserCircle,
 } from "react-icons/fa";
 import {FaUserDoctor, FaUserGroup, FaHospital, FaMessage} from "react-icons/fa6";
+import wellspring_logo from "../../../assets/wellspring_logo.png"
 
 export default function ManagerNavBar({ role = "manager" }) {
     const location = useLocation();
@@ -37,17 +38,14 @@ export default function ManagerNavBar({ role = "manager" }) {
     return (
         <aside className="bg-primary w-64 min-h-screen flex flex-col">
             {/* Logo/Brand */}
-            <div className="p-6 border-primary-hover">
+            <div className="p-1 border-primary-hover flex justify-center items-center">
                 <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
-                    <div className="bg-white rounded-lg p-2">
-                        <FaHospital className="text-primary" size={24} />
-                    </div>
-                    <h1 className="text-ondark text-xl font-bold">WellSpring Healthcare</h1>
+                    <img src={wellspring_logo} alt="WellSpring Healthcare Logo" className="w-35 h-auto content-center" />
                 </Link>
             </div>
 
             {/* Navigation Menu */}
-            <nav className="flex-1 px-4 py-6">
+            <nav className="flex-1 px-4 py-2">
                 <ul className="space-y-2">
                     {menuItems.map((item) => {
                         const Icon = item.icon;

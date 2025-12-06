@@ -33,7 +33,7 @@ export default function DepartmentPieChart({ data }) {
                     nameKey="name"
                     cx="50%"
                     cy="50%"
-                    outerRadius={85}
+                    outerRadius={80}
                     fill={colors[0]}
                     label
                 >

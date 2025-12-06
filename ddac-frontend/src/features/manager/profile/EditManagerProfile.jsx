@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarkerAlt, FaBriefcase, FaSave, FaTimes, FaIdCard, FaMoneyBillWave, FaClock, FaCheckCircle, FaArrowLeft } from 'react-icons/fa';
 import Layout from '../../../components/Layout.jsx';
-import {Navigate, useNavigate} from 'react-router-dom';
+import {Navigate, useNavigate, useParams} from 'react-router-dom';
+import {getStaffById} from "../../../services/staffManagementService.js";
+import {getManagerById, updateManager} from "../../../services/managerManagementService.js";
+import {updatePatient} from "../../../services/patientManagementService.js";
 
 export default function EditManagerProfile() {
+    const {id} = useParams();
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         id: '',
@@ -12,7 +16,7 @@ export default function EditManagerProfile() {
         email: '',
         phone: '',
         dateOfBirth: '',
-        gender: 'male',
+        gender: 'Male',
         address: '',
         bloodGroup: '',
         emergencyContact: '',
@@ -20,7 +24,7 @@ export default function EditManagerProfile() {
         joiningDate: '',
         yearsOfExperience: '',
         salary: '',
-        status: 'active'
+        status: 'Active'
     });
 
     const [isLoading, setIsLoading] = useState(true);
@@ -44,46 +48,24 @@ export default function EditManagerProfile() {
         'Inactive'
     ];
 
-    // Fetch manager profile data on component mount
     useEffect(() => {
         fetchProfileData();
-    }, []);
+    }, [id]);
 
     const fetchProfileData = async () => {
         try {
             setIsLoading(true);
-
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Mock data - Replace with actual API response
-            const mockData = {
-                id: 'MG000001',
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'john.doe@hospital.com',
-                phone: '+60 12-345 6789',
-                dateOfBirth: '1985-05-15',
-                gender: 'male',
-                address: '123 Manager Street, Kuala Lumpur, 50000',
-                bloodGroup: 'O+',
-                emergencyContact: '+60 13-456 7890',
-                position: 'Operations Manager',
-                joiningDate: '2020-03-15',
-                yearsOfExperience: 10,
-                salary: 12000,
-                status: 'Active'
-            };
-
-            setFormData(mockData);
+            const profileData = await getManagerById(id)
+            setFormData(profileData);
         } catch (error) {
             console.error('Error fetching profile data:', error);
             alert('Failed to load profile data. Please try again.');
+            navigate('/managerProfile');
         } finally {
             setIsLoading(false);
         }
     };
-
+    
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -146,33 +128,28 @@ export default function EditManagerProfile() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+        
         if (!validateForm()) {
             return;
         }
-
+        
         setIsSubmitting(true);
-
         try {
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
-            // Convert salary and experience to numbers
-            const dataToSave = {
+            const payload = {
                 ...formData,
-                salary: Number(formData.salary),
-                yearsOfExperience: Number(formData.yearsOfExperience)
-            };
-
-            console.log('Saving profile data:', dataToSave);
-
-            alert('Profile updated successfully!');
-            // Navigate back or reload - Replace with your navigation logic
+            }
+            console.log('Submitting profile data: ', payload);
+            const response = await updateManager(id, payload);
+            console.log('Manager profile updated successfully:', response);
+            alert('Manager profile updated successfully!');
             navigate('/managerProfile');
-
         } catch (error) {
-            console.error('Error saving profile:', error);
-            alert('Failed to save profile. Please try again.');
+            console.error('Error updating profile:', error);
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+                alert(error.response?.data?.message || 'Failed to update manager profile. Please try again.');
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -180,7 +157,6 @@ export default function EditManagerProfile() {
 
     const handleCancel = () => {
         if (window.confirm('Are you sure you want to cancel? All changes will be lost.')) {
-            // Navigate back - Replace with your navigation logic
             navigate('/managerProfile');
         }
     };

@@ -1,54 +1,58 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
 import { useState, useEffect } from 'react';
-import { FaUser, FaEnvelope, FaPhone, FaCalendar, FaMapMarkerAlt, FaBriefcase, FaEdit, FaIdCard, FaMoneyBillWave, FaClock, FaCheckCircle } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+import {
+    FaUser,
+    FaEnvelope,
+    FaPhone,
+    FaCalendar,
+    FaMapMarkerAlt,
+    FaBriefcase,
+    FaEdit,
+    FaIdCard,
+    FaMoneyBillWave,
+    FaClock,
+    FaCheckCircle,
+    FaUserCircle
+} from 'react-icons/fa';
+import {useNavigate, useParams} from 'react-router-dom';
+import {getStaffs} from "../../../services/staffManagementService.js";
+import {getManagerById} from "../../../services/managerManagementService.js";
+import {getPatientById} from "../../../services/patientManagementService.js";
+import {TotalVisits, UpcomingAppointments} from "../../../services/appointmentManagementService.js";
 
 export default function ManagerProfile() {
+    const [profile, setProfile] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
+    const { id } = useParams();
 
-    const [profileData, setProfileData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Fetch manager profile data on component mount
     useEffect(() => {
-        fetchProfileData();
-    }, []);
+        getProfileInfo();
+    }, [])
 
-    const fetchProfileData = async () => {
+    const getProfileInfo = async () => {
         try {
-            setIsLoading(true);
+            setLoading(true);
+            setError(null);
 
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Mock data - Replace with actual API response from logged-in manager
-            const mockData = {
-                id: 'MG000001',
-                firstName: 'John',
-                lastName: 'Doe',
-                email: 'john.doe@hospital.com',
-                phone: '+60 12-345 6789',
-                dateOfBirth: '1985-05-15',
-                gender: 'male',
-                address: '123 Manager Street, Kuala Lumpur, 50000',
-                bloodGroup: 'O+',
-                emergencyContact: '+60 13-456 7890',
-                position: 'Operations Manager',
-                joiningDate: '2020-03-15',
-                yearsOfExperience: 10,
-                salary: 12000,
-                status: 'active'
-            };
-
-            setProfileData(mockData);
-        } catch (error) {
-            console.error('Error fetching profile data:', error);
-            alert('Failed to load profile data. Please try again.');
-        } finally {
-            setIsLoading(false);
+            const data = await getManagerById(id);
+            console.log('Fetched profile info:', data);
+            if (data && typeof data === 'object') {
+                setProfile(data);
+            } else {
+                throw new Error('Manager profile not found or invalid data format.');
+            }
         }
-    };
+        catch (err) {
+            console.error('Error fetching profile:', err);
+            setError(err.message || 'Failed to fetch profile');
+            setProfile(null);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     // Calculate age from date of birth
     const calculateAge = (dob) => {
@@ -113,7 +117,7 @@ export default function ManagerProfile() {
     };
 
     // Loading state
-    if (isLoading) {
+    if (loading) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
@@ -126,7 +130,28 @@ export default function ManagerProfile() {
         );
     }
 
-    if (!profileData) {
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaUserCircle size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Profile</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getProfileInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (!profile) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
@@ -139,8 +164,8 @@ export default function ManagerProfile() {
         );
     }
 
-    const statusDisplay = getStatusDisplay(profileData.status);
-    const tenure = calculateTenure(profileData.joiningDate);
+    const statusDisplay = getStatusDisplay(profile.status);
+    const tenure = calculateTenure(profile.joiningDate);
 
     return (
         <Layout role="manager">
@@ -152,7 +177,7 @@ export default function ManagerProfile() {
                         <p className="text-muted mt-1">View and manage your personal information</p>
                     </div>
                     <button
-                        onClick={() => handleEditProfile(profileData.id)}
+                        onClick={() => handleEditProfile(profile.id)}
                         className="flex items-center gap-2 px-6 py-3 bg-primary text-ondark rounded-lg font-medium hover:bg-primary-hover transition-colors"
                     >
                         <FaEdit size={18} />
@@ -165,19 +190,19 @@ export default function ManagerProfile() {
                     <div className="flex items-center gap-6">
                         {/* Avatar */}
                         <div className="w-24 h-24 rounded-full bg-primary text-ondark flex items-center justify-center text-3xl font-bold flex-shrink-0">
-                            {profileData.firstName.charAt(0)}{profileData.lastName.charAt(0)}
+                            {profile.firstName.charAt(0)}{profile.lastName.charAt(0)}
                         </div>
 
                         {/* Profile Info */}
                         <div className="flex-1">
                             <h2 className="text-3xl font-bold mb-2 text-primary">
-                                {profileData.firstName} {profileData.lastName}
+                                {profile.firstName} {profile.lastName}
                             </h2>
-                            <p className="text-xl mb-3 opacity-90 text-primary">{profileData.position}</p>
+                            <p className="text-xl mb-3 opacity-90 text-primary">{profile.position}</p>
                             <div className="flex items-center gap-4 flex-wrap">
                                 <div className="flex items-center gap-2 text-primary">
                                     <FaIdCard size={16} />
-                                    <span className="text-sm font-medium">{profileData.id}</span>
+                                    <span className="text-sm font-medium">{profile.id}</span>
                                 </div>
                                 <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${statusDisplay.color.replace('text-', 'text-ondark ')}`}>
                                     {statusDisplay.icon}
@@ -193,7 +218,7 @@ export default function ManagerProfile() {
                                 <p className="text-sm opacity-80">Years Here</p>
                             </div>
                             <div className="text-center text-primary">
-                                <p className="text-3xl font-bold">{profileData.yearsOfExperience}</p>
+                                <p className="text-3xl font-bold">{profile.yearsOfExperience}</p>
                                 <p className="text-sm opacity-80">Total Experience</p>
                             </div>
                         </div>
@@ -219,7 +244,7 @@ export default function ManagerProfile() {
                                 <FaEnvelope size={12} />
                                 Email Address
                             </p>
-                            <p className="text-body font-medium">{profileData.email}</p>
+                            <p className="text-body font-medium">{profile.email}</p>
                         </div>
 
                         {/* Phone */}
@@ -228,7 +253,7 @@ export default function ManagerProfile() {
                                 <FaPhone size={12} />
                                 Phone Number
                             </p>
-                            <p className="text-body font-medium">{profileData.phone}</p>
+                            <p className="text-body font-medium">{profile.phone}</p>
                         </div>
 
                         {/* Date of Birth */}
@@ -238,14 +263,14 @@ export default function ManagerProfile() {
                                 Date of Birth
                             </p>
                             <p className="text-body font-medium">
-                                {formatDate(profileData.dateOfBirth)} ({calculateAge(profileData.dateOfBirth)} years)
+                                {formatDate(profile.dateOfBirth)} ({calculateAge(profile.dateOfBirth)} years)
                             </p>
                         </div>
 
                         {/* Gender */}
                         <div>
                             <p className="text-xs text-muted mb-2">Gender</p>
-                            <p className="text-body font-medium capitalize">{profileData.gender}</p>
+                            <p className="text-body font-medium capitalize">{profile.gender}</p>
                         </div>
 
                         {/* Blood Group */}
@@ -253,7 +278,7 @@ export default function ManagerProfile() {
                             <p className="text-xs text-muted mb-2">Blood Group</p>
                             <p className="text-body font-medium">
                                 <span className="inline-flex items-center px-3 py-1 rounded-full bg-accent-danger bg-opacity-10 text-ondark font-semibold">
-                                    {profileData.bloodGroup}
+                                    {profile.bloodGroup}
                                 </span>
                             </p>
                         </div>
@@ -264,7 +289,7 @@ export default function ManagerProfile() {
                                 <FaPhone size={12} />
                                 Emergency Contact
                             </p>
-                            <p className="text-body font-medium">{profileData.emergencyContact}</p>
+                            <p className="text-body font-medium">{profile.emergencyContact}</p>
                         </div>
                     </div>
 
@@ -274,7 +299,7 @@ export default function ManagerProfile() {
                             <FaMapMarkerAlt size={12} />
                             Residential Address
                         </p>
-                        <p className="text-body font-medium">{profileData.address}</p>
+                        <p className="text-body font-medium">{profile.address}</p>
                     </div>
                 </div>
 
@@ -297,7 +322,7 @@ export default function ManagerProfile() {
                                 <FaBriefcase size={12} />
                                 Position
                             </p>
-                            <p className="text-body font-medium">{profileData.position}</p>
+                            <p className="text-body font-medium">{profile.position}</p>
                         </div>
 
                         {/* Joining Date */}
@@ -307,7 +332,7 @@ export default function ManagerProfile() {
                                 Joining Date
                             </p>
                             <p className="text-body font-medium">
-                                {formatDate(profileData.joiningDate)} ({tenure} years)
+                                {formatDate(profile.joiningDate)} ({tenure} years)
                             </p>
                         </div>
 
@@ -317,7 +342,7 @@ export default function ManagerProfile() {
                                 <FaClock size={12} />
                                 Total Experience
                             </p>
-                            <p className="text-body font-medium">{profileData.yearsOfExperience} years</p>
+                            <p className="text-body font-medium">{profile.yearsOfExperience} years</p>
                         </div>
 
                         {/* Salary */}
@@ -326,7 +351,7 @@ export default function ManagerProfile() {
                                 <FaMoneyBillWave size={12} />
                                 Monthly Salary
                             </p>
-                            <p className="text-body font-medium">RM {profileData.salary.toLocaleString()}</p>
+                            <p className="text-body font-medium">RM {profile.salary.toLocaleString()}</p>
                         </div>
 
                         {/* Status */}

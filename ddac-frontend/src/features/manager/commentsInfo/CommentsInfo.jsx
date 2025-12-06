@@ -1,108 +1,47 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
+import {useEffect, useState} from 'react';
 import { FaSearch, FaTrash, FaEye, FaStar, FaRegStar, FaCommentAlt, FaUserMd, FaUser, FaUserTie } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
+import {FaMessage} from "react-icons/fa6";
+import {deleteDoctor, getDoctors} from "../../../services/doctorManagementService.js";
+import {CountNumberOfUniquePatientsByDoctorId} from "../../../services/appointmentManagementService.js";
+import {deleteComment, getComments} from "../../../services/commentManagementService.js";
 
 export default function CommentsInfo() {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRating, setFilterRating] = useState('all');
+    const [comments, setComments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const navigate = useNavigate();
 
-    // Sample comments data (replace with API call later)
-    const comments = [
-        {
-            id: 'CM000001',
-            patientId: 'PT000001',
-            patientName: 'Ahmad Ibrahim',
-            doctorId: 'DR000001',
-            doctorName: 'Dr. Sarah Wilson',
-            staffId: 'ST000001',
-            staffName: 'Alice Johnson',
-            appointmentId: 'APT000001',
-            comment: 'Excellent service! Dr. Wilson was very professional and attentive. The staff was friendly and helpful.',
-            doctorRating: 5,
-            staffRating: 5,
-            overallRating: 5,
-            time: '2024-11-20T14:30:00'
-        },
-        {
-            id: 'CM000002',
-            patientId: 'PT000002',
-            patientName: 'Siti Abdullah',
-            doctorId: 'DR000002',
-            doctorName: 'Dr. Michael Chen',
-            staffId: 'ST000002',
-            staffName: 'Bob Martinez',
-            appointmentId: 'APT000002',
-            comment: 'Good experience overall. Doctor was knowledgeable but waiting time was a bit long.',
-            doctorRating: 4,
-            staffRating: 3,
-            overallRating: 4,
-            time: '2024-11-19T10:15:00'
-        },
-        {
-            id: 'CM000003',
-            patientId: 'PT000003',
-            patientName: 'Raj Kumar',
-            doctorId: 'DR000001',
-            doctorName: 'Dr. Sarah Wilson',
-            staffId: 'ST000001',
-            staffName: 'Alice Johnson',
-            appointmentId: 'APT000003',
-            comment: 'Very satisfied with the cardiac screening. Dr. Wilson explained everything clearly.',
-            doctorRating: 5,
-            staffRating: 4,
-            overallRating: 5,
-            time: '2024-11-18T16:45:00'
-        },
-        {
-            id: 'CM000004',
-            patientId: 'PT000004',
-            patientName: 'Mei Wong',
-            doctorId: 'DR000003',
-            doctorName: 'Dr. Emily Rodriguez',
-            staffId: 'ST000003',
-            staffName: 'Carol Lee',
-            appointmentId: 'APT000004',
-            comment: 'The consultation was okay, but I felt rushed. Staff was helpful though.',
-            doctorRating: 3,
-            staffRating: 4,
-            overallRating: 3,
-            time: '2024-11-17T11:20:00'
-        },
-        {
-            id: 'CM000005',
-            patientId: 'PT000005',
-            patientName: 'Hassan Ali',
-            doctorId: 'DR000004',
-            doctorName: 'Dr. James Kumar',
-            staffId: 'ST000004',
-            staffName: 'David Kim',
-            appointmentId: 'APT000005',
-            comment: 'Outstanding care! Both doctor and staff exceeded my expectations. Highly recommend.',
-            tags: 'Professional, Friendly, Great Service',
-            doctorRating: 5,
-            staffRating: 5,
-            overallRating: 5,
-            time: '2024-11-16T09:00:00'
-        },
-        {
-            id: 'CM000006',
-            patientId: 'PT000006',
-            patientName: 'Lakshmi Devi',
-            doctorId: 'DR000005',
-            doctorName: 'Dr. Lisa Thompson',
-            staffId: 'ST000005',
-            staffName: 'Emma Wilson',
-            appointmentId: 'APT000006',
-            comment: 'Not satisfied with the service. Long wait and doctor seemed distracted.',
-            doctorRating: 2,
-            staffRating: 2,
-            overallRating: 2,
-            time: '2024-11-15T13:30:00'
+    // Fetch doctors on component mount
+    useEffect(() => {
+        getCommentsInfo();
+    }, []);
+
+    const getCommentsInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const data = await getComments();
+            console.log('Fetched comments:', data);
+            if (Array.isArray(data)) {
+                setComments(data);
+            } else {
+                throw new Error('Invalid response format');
+            }
         }
-    ];
+        catch (err) {
+            console.error('Error fetching comments:', err);
+            setError(err.message || 'Failed to fetch comments');
+            setComments([]);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     // Format date and time
     const formatDateTime = (timestamp) => {
@@ -149,14 +88,21 @@ export default function CommentsInfo() {
 
     // Filter comments
     const filteredComments = comments.filter(comment => {
+        const idString = String(comment.id ?? '');
+        const doctorIdString = String(comment.doctorId ?? '');
+        const patientIdString = String(comment.patientId ?? '');
+        const commentTextString = comment.commentText?.toLowerCase() ?? '';
+        
         const matchesSearch =
-            comment.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            comment.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            comment.doctorName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            comment.comment.toLowerCase().includes(searchTerm.toLowerCase());
+            idString.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            doctorIdString.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            patientIdString.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            commentTextString.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesRating = filterRating === 'all' ||
-            comment.overallRating === parseInt(filterRating);
+            comment.overallRating === parseInt(filterRating) || 
+            comment.doctorRating === parseInt(filterRating) ||
+            comment.staffRating === parseInt(filterRating);
 
         return matchesSearch && matchesRating;
     });
@@ -166,12 +112,58 @@ export default function CommentsInfo() {
         navigate(`/managerViewComments/${id}`);
     };
 
-    const handleDelete = (id) => {
-        if (window.confirm('Are you sure you want to delete this comment? This action cannot be undone.')) {
-            console.log('Delete comment:', id);
-            // Call delete API
+    const handleDelete = async (id) => {
+        if (window.confirm('Are you sure you want to delete this comment?')) {
+            try {
+                await deleteComment(id);
+                console.log('Delete comment successful:', id);
+                alert('Comment record deleted successfully');
+                try {
+                    await getCommentsInfo();
+                } catch (refreshErr) {
+                    console.error('Error refreshing comment list:', refreshErr);
+                }
+            } catch (err) {
+                console.error('Error deleting comment:', err);
+                alert('Failed to delete comment');
+            }
         }
     };
+
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading comments...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaMessage size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Comments</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getCommentsInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
 
     const ratingCounts = getRatingCounts();
 
@@ -334,7 +326,7 @@ export default function CommentsInfo() {
                                         </td>
                                         <td className="py-4 px-6">
                                             <p className="text-body text-sm break-all">
-                                                {comment.comment}
+                                                {comment.commentText}
                                             </p>
                                         </td>
                                         <td className="py-4 px-6">

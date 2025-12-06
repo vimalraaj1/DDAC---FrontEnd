@@ -3,59 +3,50 @@ import Layout from '../../../components/Layout.jsx';
 import { useState, useEffect } from 'react';
 import { FaArrowLeft, FaStar, FaRegStar, FaUser, FaUserMd, FaUserTie, FaCalendarAlt, FaClock, FaCommentAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
+import {FaMessage} from "react-icons/fa6";
+import {getCommentById} from "../../../services/commentManagementService.js";
+import {GetAppointmentWithDetailsById} from "../../../services/appointmentManagementService.js";
 
 export default function ViewComments() {
     const navigate = useNavigate();
-    const { id } = useParams(); 
+    const { id } = useParams();
+    const [comment, setComment] = useState(null);
+    const [appointment, setAppointment] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const [commentData, setCommentData] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Fetch comment data on component mount
     useEffect(() => {
-        fetchCommentData();
-    }, [id]);
+        getCommentInfo();
+    }, []);
 
-    const fetchCommentData = async () => {
+    const getCommentInfo = async () => {
         try {
-            setIsLoading(true);
+            setLoading(true);
+            setError(null);
 
-            // Simulate API call - Replace with your actual API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Mock data - Replace with actual API response
-            const mockData = {
-                id: 'CM000001',
-                patientId: 'PT000001',
-                patientName: 'Ahmad Ibrahim',
-                patientEmail: 'ahmad.ibrahim@email.com',
-                patientPhone: '+60 12-345 6789',
-                doctorId: 'DR000001',
-                doctorName: 'Dr. Sarah Wilson',
-                doctorSpecialization: 'Cardiology',
-                staffId: 'ST000001',
-                staffName: 'Alice Johnson',
-                staffRole: 'Nurse',
-                appointmentId: 'APT000001',
-                appointmentDate: '2024-11-20',
-                appointmentTime: '09:00',
-                comment: 'Excellent service! Dr. Wilson was very professional and attentive to my concerns. She took the time to explain my condition in detail and answered all my questions patiently. The staff was also very friendly and helpful throughout my visit. The clinic was clean and well-organized. I highly recommend this hospital for cardiac care. Overall, it was a wonderful experience and I felt well taken care of.',
-                tags: 'Professional, Friendly, Great Service',
-                doctorRating: 5,
-                staffRating: 5,
-                overallRating: 5,
-                time: '2024-11-20T14:30:00'
-            };
-
-            setCommentData(mockData);
-        } catch (error) {
-            console.error('Error fetching comment data:', error);
-            alert('Failed to load comment data. Please try again.');
-            navigate('/managerCommentsInfo');
-        } finally {
-            setIsLoading(false);
+            const data = await getCommentById(id);
+            console.log('Fetched comment:', data);
+            if (data && typeof data === 'object') {
+                setComment(data);
+                const appointmentId = data.appointmentId;
+                try{
+                    const appointmentData = await GetAppointmentWithDetailsById(appointmentId);
+                    setAppointment(appointmentData);
+                } catch (err) {
+                    console.error(`Error fetching appointment information for ${appointmentId}:`, err);
+                }
+            } else {
+                throw new Error('Comment not found or invalid data format.');
+            }
         }
-    };
+        catch (err) {
+            console.error('Error fetching comment:', err);
+            setError(err.message || 'Failed to fetch comment');
+            setComment(null);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     // Render star rating
     const renderStars = (rating, size = 20) => {
@@ -122,23 +113,41 @@ export default function ViewComments() {
     };
 
     // Loading state
-    if (isLoading) {
+    if (loading) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
                     <div className="text-center">
-                        <svg className="animate-spin h-12 w-12 text-primary mx-auto mb-4" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        <p className="text-muted text-lg">Loading profile...</p>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading comment...</p>
                     </div>
                 </div>
             </Layout>
         );
     }
 
-    if (!commentData) {
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaMessage size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Comment</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getCommentInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (!comment) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
@@ -191,12 +200,12 @@ export default function ViewComments() {
                             <FaCommentAlt className="text-primary" size={24} />
                             <div>
                                 <p className="text-sm text-ondark">Review ID</p>
-                                <p className="text-2xl font-bold text-ondark">{commentData.id}</p>
+                                <p className="text-2xl font-bold text-ondark">{comment.id}</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-2 text-ondark">
                             <FaClock size={16} />
-                            <span className="text-sm">Submitted: {formatDateTime(commentData.time)}</span>
+                            <span className="text-sm">Submitted: {formatDateTime(comment.time)}</span>
                         </div>
                     </div>
                 </div>
@@ -206,9 +215,9 @@ export default function ViewComments() {
                     <div className="text-center">
                         <h2 className="text-lg font-semibold text-heading mb-4">Overall Rating</h2>
                         <div className="flex justify-center mb-2">
-                            {renderStars(commentData.overallRating, 32)}
+                            {renderStars(comment.overallRating, 32)}
                         </div>
-                        <p className="text-4xl font-bold text-primary">{commentData.overallRating}.0</p>
+                        <p className="text-4xl font-bold text-primary">{comment.overallRating}.0</p>
                         <p className="text-muted text-sm mt-1">out of 5 stars</p>
                     </div>
                 </div>
@@ -230,15 +239,15 @@ export default function ViewComments() {
                             <div className="flex items-center justify-between">
                                 <span className="text-body">Rating:</span>
                                 <div className="flex items-center gap-2">
-                                    {renderStars(commentData.doctorRating, 18)}
-                                    <span className="text-lg font-bold text-heading ml-2">{commentData.doctorRating}.0</span>
+                                    {renderStars(comment.doctorRating, 18)}
+                                    <span className="text-lg font-bold text-heading ml-2">{comment.doctorRating}.0</span>
                                 </div>
                             </div>
                             <div className="border-t border-color pt-4">
                                 <p className="text-sm text-muted mb-2">Doctor Information:</p>
-                                <p className="text-heading font-semibold">{commentData.doctorName}</p>
-                                <p className="text-body text-sm">{commentData.doctorSpecialization}</p>
-                                <p className="text-muted text-xs mt-1">{commentData.doctorId}</p>
+                                <p className="text-heading font-semibold">{`Dr. ${appointment.doctor.firstName} ${appointment.doctor.lastName}`}</p>
+                                <p className="text-body text-sm">{appointment.doctor.specialization}</p>
+                                <p className="text-muted text-xs mt-1">{comment.doctorId}</p>
                             </div>
                         </div>
                     </div>
@@ -259,15 +268,15 @@ export default function ViewComments() {
                             <div className="flex items-center justify-between">
                                 <span className="text-body">Rating:</span>
                                 <div className="flex items-center gap-2">
-                                    {renderStars(commentData.staffRating, 18)}
-                                    <span className="text-lg font-bold text-heading ml-2">{commentData.staffRating}.0</span>
+                                    {renderStars(comment.staffRating, 18)}
+                                    <span className="text-lg font-bold text-heading ml-2">{comment.staffRating}.0</span>
                                 </div>
                             </div>
                             <div className="border-t border-color pt-4">
                                 <p className="text-sm text-muted mb-2">Staff Information:</p>
-                                <p className="text-heading font-semibold">{commentData.staffName}</p>
-                                <p className="text-body text-sm">{commentData.staffRole}</p>
-                                <p className="text-muted text-xs mt-1">{commentData.staffId}</p>
+                                <p className="text-heading font-semibold">{`${appointment.staff?.firstName} ${appointment.staff?.lastName}`}</p>
+                                <p className="text-body text-sm">{appointment.staff?.role}</p>
+                                <p className="text-muted text-xs mt-1">{comment.staffId}</p>
                             </div>
                         </div>
                     </div>
@@ -287,7 +296,7 @@ export default function ViewComments() {
 
                     <div className="bg-main bg-opacity-50 rounded-lg p-6">
                         <p className="text-body leading-relaxed whitespace-pre-wrap">
-                            {commentData.comment}
+                            {comment.commentText}
                         </p>
                     </div>
 
@@ -297,7 +306,7 @@ export default function ViewComments() {
                                 Tags:
                             </p>
     
-                            {splitTags(commentData.tags).map((tag, index) => (
+                            {splitTags(comment.tags).map((tag, index) => (
                                 <span
                                     key={index}
                                     className="
@@ -331,19 +340,19 @@ export default function ViewComments() {
                         <div className="space-y-3">
                             <div>
                                 <p className="text-xs text-muted mb-1">Patient ID</p>
-                                <p className="text-heading font-semibold">{commentData.patientId}</p>
+                                <p className="text-heading font-semibold">{comment.patientId}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted mb-1">Full Name</p>
-                                <p className="text-body">{commentData.patientName}</p>
+                                <p className="text-body">{`${appointment.patient.firstName} ${appointment.patient.lastName}`}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted mb-1">Email</p>
-                                <p className="text-body">{commentData.patientEmail}</p>
+                                <p className="text-body">{appointment.patient.email}</p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted mb-1">Phone</p>
-                                <p className="text-body">{commentData.patientPhone}</p>
+                                <p className="text-body">{appointment.patient.phone}</p>
                             </div>
                         </div>
                     </div>
@@ -363,20 +372,20 @@ export default function ViewComments() {
                         <div className="space-y-3">
                             <div>
                                 <p className="text-xs text-muted mb-1">Appointment ID</p>
-                                <p className="text-heading font-semibold">{commentData.appointmentId}</p>
+                                <p className="text-heading font-semibold">{comment.appointmentId}</p>
                             </div>
                             <div>
-                                <p className="text-xs text-muted mb-1">Date</p>
+                                <p className="text-xs text-muted mb-1">Datee</p>
                                 <p className="text-body flex items-center gap-2">
                                     <FaCalendarAlt className="text-muted" size={14} />
-                                    {formatDate(commentData.appointmentDate)}
+                                    {appointment.date}
                                 </p>
                             </div>
                             <div>
                                 <p className="text-xs text-muted mb-1">Time</p>
                                 <p className="text-body flex items-center gap-2">
                                     <FaClock className="text-muted" size={14} />
-                                    {formatTime(commentData.appointmentTime)}
+                                    {appointment.time}
                                 </p>
                             </div>
                         </div>

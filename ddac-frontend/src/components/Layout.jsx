@@ -7,7 +7,7 @@ import { FaArrowRightFromBracket } from "react-icons/fa6";
 import { useContext, useState } from "react";
 import { LogOutDialog } from "../features/customer/components/LogoutDialog.js";
 import { CustomerContext } from "../features/customer/CustomerContext.js";
-
+import wellspring_logo from "../assets/wellspring_logo.png";
 export default function Layout({ children, role }) {
     const context = role === "customer" ? useContext(CustomerContext) : null;
     const patient = context?.patient;

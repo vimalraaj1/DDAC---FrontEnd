@@ -30,3 +30,13 @@ export const getTransactionsByPatientId = async (patientId) => {
     const res = await api.get(`${BASE_URL}/${patientId}/patient`);
     return res.data;
 }
+
+export const exportAllTransactionsToCsvAsync = async () => {
+    const res = await api.get(`${BASE_URL}/export-all-transactions`);
+    return res.data;
+}
+
+export const exportTransactionsToCsvAsync = async (id) => {
+    const res = await api.get(`${BASE_URL}/${id}/export-transaction`);
+    return res.data;
+}
