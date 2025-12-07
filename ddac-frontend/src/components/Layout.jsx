@@ -12,14 +12,17 @@ export default function Layout({ children, role }) {
     const context = role === "customer" ? useContext(CustomerContext) : null;
     const patient = context?.patient;
 
-  const navigate = useNavigate();
-  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const navigate = useNavigate();
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [user, setUser] = useState(null);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("userRole");
-    localStorage.removeItem("userName");
-    navigate("/login");
+      localStorage.removeItem("id");
+      localStorage.removeItem("token");
+      localStorage.removeItem("userRole");
+      localStorage.removeItem("userName");
+      setUser(null);
+      navigate("/login");
   };
   return (
     <div className="flex min-h-screen bg-main">

@@ -16,23 +16,28 @@ import {
     FaUserCircle
 } from 'react-icons/fa';
 import {useNavigate, useParams} from 'react-router-dom';
-import {getStaffs} from "../../../services/staffManagementService.js";
 import {getManagerById} from "../../../services/managerManagementService.js";
-import {getPatientById} from "../../../services/patientManagementService.js";
-import {TotalVisits, UpcomingAppointments} from "../../../services/appointmentManagementService.js";
+import { useManager } from '../ManagerProvider.jsx';
 
 export default function ManagerProfile() {
     const [profile, setProfile] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
-    const { id } = useParams();
+    const { manager, loading: contextLoading } = useManager();
 
     useEffect(() => {
-        getProfileInfo();
-    }, [])
+        if (contextLoading) {
+            return;
+        }
+        if (!manager) {
+            setLoading(false);
+            return;
+        }
+        getProfileInfo(manager.id);
+    }, [manager, contextLoading]);
 
-    const getProfileInfo = async () => {
+    const getProfileInfo = async (id) => {
         try {
             setLoading(true);
             setError(null);
@@ -117,7 +122,7 @@ export default function ManagerProfile() {
     };
 
     // Loading state
-    if (loading) {
+    if (contextLoading || loading) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">

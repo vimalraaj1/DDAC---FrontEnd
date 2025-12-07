@@ -65,6 +65,7 @@ import EditManagerProfile from "../features/manager/profile/EditManagerProfile.j
 import AppointmentReport from "../features/manager/report/AppointmentReport.jsx";
 import DoctorStaffReport from "../features/manager/report/DoctorStaffReport.jsx";
 import CustomerReceiptDisplay from "../features/customer/payments/components/CustomerReceiptDisplay.jsx";
+import {ManagerProvider} from "../features/manager/ManagerProvider.jsx";
 
 export default function AppRouter() {
   return (
@@ -196,34 +197,34 @@ export default function AppRouter() {
         <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
 
         {/* Manager Routes */}
-        <Route path="/managerDashboard" element={<ProtectedRoute allowedRoles={['manager']}><ManagerDashboard/></ProtectedRoute>}/>
-        <Route path="/managerDoctorInfo" element={<ProtectedRoute allowedRoles={['manager']}><DoctorInfo/></ProtectedRoute>}/>
-        <Route path="/managerAddNewDoctor" element={<ProtectedRoute allowedRoles={['manager']}><AddNewDoctor/></ProtectedRoute>}/>
-        <Route path="/managerViewDoctor/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewDoctor/></ProtectedRoute>}/>
-        <Route path="/managerEditDoctor/:id" element={<ProtectedRoute allowedRoles={['manager']}><EditMDoctor/></ProtectedRoute>}/>
-        <Route path="/managerStaffInfo" element={<ProtectedRoute allowedRoles={['manager']}><StaffInfo/></ProtectedRoute>}/>
-        <Route path="/managerAddNewStaff" element={<ProtectedRoute allowedRoles={['manager']}><AddNewStaff/></ProtectedRoute>}/>
-        <Route path="/managerViewStaff/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewStaff/></ProtectedRoute>}/>
-        <Route path="/managerEditStaff/:id" element={<ProtectedRoute allowedRoles={['manager']}><EditMStaff/></ProtectedRoute>}/>
-        <Route path="/managerPatientInfo" element={<ProtectedRoute allowedRoles={['manager']}><PatientInfo/></ProtectedRoute>}/>
-        <Route path="/managerAddNewPatient" element={<ProtectedRoute allowedRoles={['manager']}><AddNewPatient/></ProtectedRoute>}/>
-        <Route path="/managerViewPatient/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewPatient/></ProtectedRoute>}/>
-        <Route path="/managerEditPatient/:id" element={<ProtectedRoute allowedRoles={['manager']}><EditMPatient/></ProtectedRoute>}/>
-        <Route path="/managerAppointmentInfo" element={<ProtectedRoute allowedRoles={['manager']}><AppointmentInfo/></ProtectedRoute>}/>
-        <Route path="/managerAddNewAppointment" element={<ProtectedRoute allowedRoles={['manager']}><AddNewAppointment/></ProtectedRoute>}/>
-        <Route path="/managerViewAppointment/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewAppointment/></ProtectedRoute>}/>
-        <Route path="/managerEditAppointment/:id" element={<ProtectedRoute allowedRoles={['manager']}><EditMAppointment/></ProtectedRoute>}/>
-        <Route path="/managerTransactionInfo" element={<ProtectedRoute allowedRoles={['manager']}><TransactionInfo/></ProtectedRoute>}/>
-        <Route path="/managerViewTransaction/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewTransaction/></ProtectedRoute>}/>
-        <Route path="/managerCommentsInfo" element={<ProtectedRoute allowedRoles={['manager']}><CommentsInfo/></ProtectedRoute>}/>
-        <Route path="/managerViewComments/:id" element={<ProtectedRoute allowedRoles={['manager']}><ViewComments/></ProtectedRoute>}/>
-        <Route path="/managerReports" element={<ProtectedRoute allowedRoles={['manager']}><ManagerReports/></ProtectedRoute>}/>
-        <Route path="/managerFinancialReport" element={<ProtectedRoute allowedRoles={['manager']}><FinancialReport/></ProtectedRoute>}/>
-        <Route path="/managerAppointmentReport" element={<ProtectedRoute allowedRoles={['manager']}><AppointmentReport/></ProtectedRoute>}/>
-        <Route path="/managerDoctorStaffReport" element={<ProtectedRoute allowedRoles={['manager']}><DoctorStaffReport/></ProtectedRoute>}/>
-        <Route path="/managerProfile" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProfile/></ProtectedRoute>}/>
-        <Route path="/managerEditProfile/:id" element={<ProtectedRoute allowedRoles={['manager']}><EditManagerProfile/></ProtectedRoute>}/>
-
+        <Route path="/managerDashboard" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ManagerDashboard/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerDoctorInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><DoctorInfo/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerAddNewDoctor" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><AddNewDoctor/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewDoctor/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewDoctor/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerEditDoctor/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><EditMDoctor/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerStaffInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><StaffInfo/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerAddNewStaff" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><AddNewStaff/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewStaff/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewStaff/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerEditStaff/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><EditMStaff/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerPatientInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><PatientInfo/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerAddNewPatient" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><AddNewPatient/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewPatient/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewPatient/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerEditPatient/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><EditMPatient/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerAppointmentInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><AppointmentInfo/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerAddNewAppointment" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><AddNewAppointment/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewAppointment/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewAppointment/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerEditAppointment/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><EditMAppointment/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerTransactionInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><TransactionInfo/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewTransaction/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewTransaction/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerCommentsInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><CommentsInfo/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewComments/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewComments/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerReports" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ManagerReports/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerFinancialReport" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><FinancialReport/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerAppointmentReport" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><AppointmentReport/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerDoctorStaffReport" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><DoctorStaffReport/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerProfile" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ManagerProfile/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerEditProfile/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><EditManagerProfile/></ManagerProvider></ProtectedRoute>}/>
+              
           {/* Unauthorized Route */}
         <Route 
           path="/unauthorized" 

@@ -1,7 +1,6 @@
 import AuthForm from "./AuthForm";
 import { login } from "./authService";
 import { useNavigate } from "react-router-dom";
-import ManagerDashboard from "../manager/ManagerDashboard.jsx";
 
 export default function Login() {
     const navigate = useNavigate();
