@@ -22,7 +22,7 @@ export default function CreateAppointment() {
     date: "",
     time: "",
     purpose: "",
-    status: "Pending",
+    status: "Scheduled",
     cancellationReason: null,
   });
 
@@ -266,7 +266,7 @@ export default function CreateAppointment() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 >
-                  <option value="Pending">Pending</option>
+                  <option value="Scheduled">Scheduled</option>
                   <option value="Approved">Approved</option>
                   <option value="Completed">Completed</option>
                   <option value="Cancelled">Cancelled</option>

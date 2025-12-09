@@ -56,7 +56,7 @@ export default function PrescriptionForm() {
         notes: e.target.notes?.value || "",
       };
       await prescriptionService.createPrescription(prescriptionData);
-      navigate(`/staff/payments/new?appointmentId=${appointmentId}`);
+      navigate(`/staff/payment/new?appointmentId=${appointmentId}`);
     } catch (error) {
       console.error("Error creating prescription:", error);
       alert("Error creating prescription. Please try again.");

@@ -18,7 +18,7 @@ import { formatStaffDate } from "../utils/dateFormat";
 
 export default function StaffDashboard() {
   const [stats, setStats] = useState({
-    pendingAppointments: 0,
+    scheduledAppointments: 0,
     completedAppointments: 0,
     totalPatients: 0,
     todayAppointments: 0,
@@ -49,9 +49,9 @@ export default function StaffDashboard() {
         .catch(() => []);
       const patients = await patientService.getAllPatients().catch(() => []);
 
-      const pendingApps =
+      const scheduledApps =
         allAppointments?.filter(
-          (a) => (a.status || "").toLowerCase() === "pending"
+          (a) => (a.status || "").toLowerCase() === "scheduled"
         ) || [];
       const completedApps =
         allAppointments?.filter(
@@ -64,7 +64,7 @@ export default function StaffDashboard() {
         ) || [];
 
       setStats({
-        pendingAppointments: pendingApps.length,
+        scheduledAppointments: scheduledApps.length,
         completedAppointments: completedApps.length,
         totalPatients: patients.length,
         todayAppointments: todayApps.length,
@@ -83,11 +83,11 @@ export default function StaffDashboard() {
 
   const statCards = [
     {
-      title: "Pending Appointments",
-      value: stats.pendingAppointments,
+      title: "Scheduled Appointments",
+      value: stats.scheduledAppointments,
       icon: FaClock,
       color: "bg-yellow-500",
-      link: "/staff/appointments?filter=pending",
+      link: "/staff/appointments?filter=scheduled",
     },
     {
       title: "Completed Today",

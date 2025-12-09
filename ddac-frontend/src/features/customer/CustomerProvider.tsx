@@ -27,7 +27,6 @@ export function CustomerProvider({children}: {children: ReactNode}){
         <CustomerContext.Provider value={{patient, setPatient, loading}}>
             {children}
         </CustomerContext.Provider>
-
     );
 }
 

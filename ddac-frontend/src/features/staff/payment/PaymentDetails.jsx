@@ -222,39 +222,33 @@ export default function PaymentDetails() {
         receiptData['medication'] = Number(fees.medicationFee);
       }
       
-      // Check if a pending transaction already exists for this appointment
+      // Backend should have created a pending transaction when appointment was completed
+      // Frontend should only update existing transactions, never create new ones
       const existingTransactions = await paymentService.getPaymentsByAppointment(appointmentId);
       const pendingTransaction = existingTransactions?.find(
         (txn) => (txn.status || "").toLowerCase() === "pending"
       );
       
-      // Only create a new transaction if no pending one exists
       if (!pendingTransaction) {
-        await paymentService.createPayment({
-          appointmentId: appointmentId,
-          amount: getTotalAmount(),
-          status: 'Pending',
-          currency: 'MYR',
-          paymentTime: new Date().toISOString(),
-          receipt: receiptData,
-        });
-      } else {
-        // Update existing pending transaction with latest receipt data
-        // Backend requires all these fields even for updates
-        const updatePayload = {
-          amount: getTotalAmount(),
-          currency: pendingTransaction.currency || 'MYR',
-          status: pendingTransaction.status || 'Pending',
-          paymentMethod: pendingTransaction.paymentMethod || 'Stripe',
-          paymentIntentId: pendingTransaction.paymentIntentId || '',
-          chargeId: pendingTransaction.chargeId || '',
-          cardLast4: pendingTransaction.cardLast4 || null,
-          receipt: receiptData,
-        };
-        console.log('Updating payment with ID:', pendingTransaction.id);
-        console.log('Update payload:', JSON.stringify(updatePayload, null, 2));
-        await paymentService.updatePayment(pendingTransaction.id, updatePayload);
+        toast.error("No pending transaction found. The backend should create a transaction when an appointment is completed.");
+        return;
       }
+      
+      // Update existing pending transaction with latest receipt data
+      // Backend requires all these fields even for updates
+      const updatePayload = {
+        amount: getTotalAmount(),
+        currency: pendingTransaction.currency || 'MYR',
+        status: pendingTransaction.status || 'Pending',
+        paymentMethod: pendingTransaction.paymentMethod || 'Stripe',
+        paymentIntentId: pendingTransaction.paymentIntentId || '',
+        chargeId: pendingTransaction.chargeId || '',
+        cardLast4: pendingTransaction.cardLast4 || null,
+        receipt: receiptData,
+      };
+      console.log('Updating payment with ID:', pendingTransaction.id);
+      console.log('Update payload:', JSON.stringify(updatePayload, null, 2));
+      await paymentService.updatePayment(pendingTransaction.id, updatePayload);
       
       console.log('Creating Stripe session with:', { appointmentId, amount: getTotalAmount(), currency: 'MYR', receipt: receiptData });
       const checkoutData = await paymentService.createStripeSession(appointmentId, {
@@ -322,15 +316,31 @@ export default function PaymentDetails() {
         receiptData['medication'] = Number(fees.medicationFee);
       }
       
-      await paymentService.createPayment({
-        appointmentId,
+      // Backend should have created a pending transaction when appointment was completed
+      // Frontend should only update existing transactions, never create new ones
+      const existingTransactions = await paymentService.getPaymentsByAppointment(appointmentId);
+      const pendingTransaction = existingTransactions?.find(
+        (txn) => (txn.status || "").toLowerCase() === "pending"
+      );
+      
+      if (!pendingTransaction) {
+        toast.error("No pending transaction found. The backend should create a transaction when an appointment is completed.");
+        return;
+      }
+      
+      // Update the pending transaction to Paid status
+      await paymentService.updatePayment(pendingTransaction.id, {
         amount: getTotalAmount(),
-        currency: "MYR",
-        paymentMethod: "Manual",
+        currency: pendingTransaction.currency || "MYR",
         status: "Paid",
+        paymentMethod: "Manual",
         paymentTime: new Date().toISOString(),
         receipt: receiptData,
+        paymentIntentId: pendingTransaction.paymentIntentId || '',
+        chargeId: pendingTransaction.chargeId || '',
+        cardLast4: pendingTransaction.cardLast4 || null,
       });
+      
       await paymentService.markAppointmentAsPaid(appointmentId);
       toast.success("Manual payment recorded successfully!");
       await loadData();

@@ -28,7 +28,7 @@ let appointmentsDB = [
     date: "Friday, November 29, 2025",
     time: "11:00 AM - 11:45 AM",
     location: "Dermatology Wing, Room 201",
-    status: "Pending",
+    status: "Scheduled",
   },
   {
     id: "4",

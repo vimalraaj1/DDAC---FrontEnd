@@ -10,6 +10,7 @@ import jsPDF from "jspdf";
 export default function ReceiptDisplay() {
   const [searchParams] = useSearchParams();
   const transactionId = searchParams.get("transactionId");
+  const appointmentId = searchParams.get("appointmentId");
   const navigate = useNavigate();
   const printRef = useRef();
   
@@ -19,40 +20,65 @@ export default function ReceiptDisplay() {
   const [receipt, setReceipt] = useState(null);
 
   useEffect(() => {
-    if (transactionId) {
+    if (transactionId || appointmentId) {
       loadReceiptData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [transactionId]);
+  }, [transactionId, appointmentId]);
 
   const loadReceiptData = async () => {
     try {
       setLoading(true);
       
-      // Load transaction
-      const txnData = await getPaymentById(transactionId);
-      
-      // Only allow viewing receipts for Paid transactions
-      if (txnData.status !== 'Paid') {
-        alert("Receipt can only be generated for paid transactions");
-        navigate(-1);
-        return;
+      // If appointmentId is provided, get transaction from appointment
+      if (appointmentId && !transactionId) {
+        const apptData = await getAppointmentById(appointmentId);
+        if (apptData) {
+          setAppointment(apptData);
+          // Try to get transaction for this appointment
+          const { getPaymentsByAppointment } = await import("../services/paymentService");
+          const transactions = await getPaymentsByAppointment(appointmentId);
+          const paidTransaction = transactions?.find(t => t.status === 'Paid');
+          if (paidTransaction) {
+            setTransaction(paidTransaction);
+            if (paidTransaction.receipt) {
+              const receiptData = typeof paidTransaction.receipt === 'string' 
+                ? JSON.parse(paidTransaction.receipt) 
+                : paidTransaction.receipt;
+              setReceipt(receiptData);
+            }
+            setLoading(false);
+            return;
+          }
+        }
       }
       
-      setTransaction(txnData);
-      
-      // Parse receipt data
-      if (txnData.receipt) {
-        const receiptData = typeof txnData.receipt === 'string' 
-          ? JSON.parse(txnData.receipt) 
-          : txnData.receipt;
-        setReceipt(receiptData);
-      }
-      
-      // Load appointment details
-      if (txnData.appointmentId) {
-        const apptData = await getAppointmentById(txnData.appointmentId);
-        setAppointment(apptData);
+      // Load transaction by transactionId
+      if (transactionId) {
+        const txnData = await getPaymentById(transactionId);
+        
+        // Only allow viewing receipts for Paid transactions
+        if (txnData.status !== 'Paid') {
+          alert("Receipt can only be generated for paid transactions");
+          navigate(-1);
+          return;
+        }
+        
+        setTransaction(txnData);
+        
+        // Parse receipt data
+        if (txnData.receipt) {
+          const receiptData = typeof txnData.receipt === 'string' 
+            ? JSON.parse(txnData.receipt) 
+            : txnData.receipt;
+          setReceipt(receiptData);
+        }
+        
+        // Load appointment details
+        if (txnData.appointmentId) {
+          const apptData = await getAppointmentById(txnData.appointmentId);
+          setAppointment(apptData);
+        }
       }
       
     } catch (error) {
@@ -121,7 +147,7 @@ export default function ReceiptDisplay() {
       const imgY = 10;
 
       pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      pdf.save(`Receipt_${transactionId}_${new Date().toISOString().split('T')[0]}.pdf`);
+      pdf.save(`Receipt_${transaction?.id || appointmentId}_${new Date().toISOString().split('T')[0]}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Failed to generate PDF. Please try again.');
@@ -305,3 +331,4 @@ export default function ReceiptDisplay() {
     </Layout>
   );
 }
+
