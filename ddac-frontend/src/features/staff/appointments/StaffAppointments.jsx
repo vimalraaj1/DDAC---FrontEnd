@@ -3,6 +3,7 @@ import StaffNavBar from "../components/StaffNavBar";
 import AppointmentForm from "./AppointmentForm";
 import Layout from "../../../components/Layout";
 import * as appointmentService from "../services/appointmentService";
+import * as paymentService from "../services/paymentService";
 import * as patientService from "../services/patientService";
 import * as doctorService from "../services/doctorService";
 
@@ -35,6 +36,20 @@ export default function StaffAppointments() {
   };
 
   const handleUpdate = async (data) => {
+    // Requirement: When Staff completes an appointment, call backend to create payment intent
+    if (data.status === 'Completed' && editing.status !== 'Completed') {
+      try {
+        await paymentService.createStripeSession(editing.id, { 
+          amount: 2, // Initial amount to create the transaction record
+          currency: 'MYR' 
+        });
+      } catch (error) {
+        console.error("Failed to create payment intent:", error);
+        // We continue with the update even if this fails, 
+        // as the staff can manually trigger payment later from Payment module if needed
+      }
+    }
+
     await appointmentService.updateAppointment(editing.id, data);
     setEditing(null);
     fetchAppointments();

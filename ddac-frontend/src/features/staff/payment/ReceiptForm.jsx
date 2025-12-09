@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Layout from "../../../components/Layout";
 import { getAppointmentById } from "../services/appointmentService";
-import { createPayment } from "../services/paymentService";
+import * as paymentService from "../services/paymentService";
+import { toast } from "sonner";
 import { FaPlus, FaTrash, FaPills, FaStethoscope, FaXRay, FaSyringe, FaReceipt } from "react-icons/fa";
 
 const APPOINTMENT_TYPES = [
@@ -129,23 +130,34 @@ export default function ReceiptForm() {
 
       const totalAmount = parseFloat(calculateTotal());
 
-      // Create transaction with receipt
-      const transactionData = {
-        appointmentId: appointmentId,
+      // Backend should have created a pending transaction when appointment was completed
+      // Frontend should only update existing transactions, never create new ones
+      const existingTransactions = await paymentService.getPaymentsByAppointment(appointmentId);
+      const pendingTransaction = existingTransactions?.find(
+        (txn) => (txn.status || "").toLowerCase() === "pending"
+      );
+      
+      if (!pendingTransaction) {
+        toast.error("No pending transaction found. The backend should create a transaction when an appointment is completed.");
+        return;
+      }
+      
+      // Update existing pending transaction with receipt data
+      await paymentService.updatePayment(pendingTransaction.id, {
         amount: totalAmount,
-        status: 'Pending',
-        currency: 'MYR',
-        paymentTime: new Date().toISOString(),
+        currency: pendingTransaction.currency || 'MYR',
+        status: pendingTransaction.status || 'Pending',
+        paymentMethod: pendingTransaction.paymentMethod || '',
+        paymentIntentId: pendingTransaction.paymentIntentId || '',
+        chargeId: pendingTransaction.chargeId || '',
+        cardLast4: pendingTransaction.cardLast4 || null,
         receipt: receiptData,
-        notes: 'Receipt created by staff'
-      };
+      });
 
-      await createPayment(transactionData);
-
-      alert("Receipt created successfully! Redirecting to payment...");
+      toast.success("Receipt created successfully! Redirecting to payment...");
       
       // Redirect to payment page
-      navigate(`/staff/payments/form?appointmentId=${appointmentId}`);
+      navigate(`/staff/payment/${appointmentId}`);
       
     } catch (error) {
       console.error("Error creating receipt:", error);
@@ -356,3 +368,4 @@ export default function ReceiptForm() {
     </Layout>
   );
 }
+

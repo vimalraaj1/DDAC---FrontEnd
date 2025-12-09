@@ -104,8 +104,9 @@ export default function PatientForm() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-900">Blood Group</label>
+                  <label className="block text-sm font-medium text-gray-900">Blood Group *</label>
                   <input type="text" name="bloodGroup" className="input-field" value={patient.bloodGroup} onChange={handleChange} />
+                  <required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-900">Emergency Contact</label>

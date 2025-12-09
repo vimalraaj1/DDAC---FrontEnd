@@ -4,6 +4,7 @@ import Layout from "../../../components/Layout";
 import DataTable from "../components/DataTable";
 import StatusBadge from "../components/StatusBadge";
 import * as appointmentService from "../services/appointmentService";
+import * as paymentService from "../services/paymentService";
 import * as patientService from "../services/patientService";
 import * as doctorService from "../services/doctorService";
 import { FaPlus, FaCalendarAlt, FaClock, FaCheckCircle } from "react-icons/fa";
@@ -16,13 +17,20 @@ export default function AppointmentList() {
   const navigate = useNavigate();
 
   const [appointments, setAppointments] = useState([]);
+  const [completedPendingPayments, setCompletedPendingPayments] = useState([]);
+  const [completedPaid, setCompletedPaid] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCompleted, setLoadingCompleted] = useState(false);
+  const [errorCompleted, setErrorCompleted] = useState(null);
   const [patientsMap, setPatientsMap] = useState({});
   const [doctorsMap, setDoctorsMap] = useState({});
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
   useEffect(() => {
     loadAppointments();
+    if (filter === "completed-pending" || filter === "completed-paid" || filter === "all") {
+      loadCompletedAppointments();
+    }
   }, [filter]);
 
   const loadAppointments = async () => {
@@ -47,36 +55,201 @@ export default function AppointmentList() {
     }
   };
 
-  const columns = [
-    {
-      key: "patientId",
-      label: "Patient",
-      render: (value, row) => {
-        const pid = value || row.patientId || row.patient?.id;
-        const p = patientsMap[pid];
-        const label = p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : pid || "N/A";
-        return <div className="font-medium">{label}</div>;
+  const loadCompletedAppointments = async () => {
+    try {
+      setLoadingCompleted(true);
+      setErrorCompleted(null);
+      const [pendingPayments, paid] = await Promise.all([
+        appointmentService.getCompletedAppointmentsWithPendingTransactions(),
+        appointmentService.getCompletedAppointmentsWithPaidTransactions(),
+      ]);
+      setCompletedPendingPayments(Array.isArray(pendingPayments) ? pendingPayments : []);
+      setCompletedPaid(Array.isArray(paid) ? paid : []);
+    } catch (error) {
+      console.error("Error loading completed appointments:", error);
+      const errorMessage = error.response?.data?.message || error.message || "Failed to load completed appointments";
+      setErrorCompleted(errorMessage);
+      toast.error(errorMessage);
+      setCompletedPendingPayments([]);
+      setCompletedPaid([]);
+    } finally {
+      setLoadingCompleted(false);
+    }
+  };
+
+  // Helper to get columns based on filter type
+  const getColumns = () => {
+    // For completed-pending and completed-paid filters, use AppointmentPaymentStatusDto fields
+    if (filter === "completed-pending" || filter === "completed-paid") {
+      return [
+        {
+          key: "appointmentId",
+          label: "Appointment ID",
+          render: (value, row) => {
+            const id = row.appointmentId || row.id || row._id || "N/A";
+            return <div className="font-medium">{id}</div>;
+          },
+        },
+        {
+          key: "patientName",
+          label: "Patient",
+          render: (value, row) => {
+            return <div className="font-medium">{row.patientName || "N/A"}</div>;
+          },
+        },
+        {
+          key: "doctorName",
+          label: "Doctor",
+          render: (value, row) => {
+            return <div>{row.doctorName || "N/A"}</div>;
+          },
+        },
+        {
+          key: "appointmentDate",
+          label: "Date",
+          render: (value, row) => {
+            const date = row.appointmentDate || row.date;
+            return date ? formatStaffDate(date) : "N/A";
+          },
+        },
+        {
+          key: "appointmentTime",
+          label: "Time",
+          render: (value, row) => {
+            return row.appointmentTime || row.time || "N/A";
+          },
+        },
+        {
+          key: "transactionAmount",
+          label: "Amount",
+          render: (value, row) => {
+            const amount = row.transactionAmount;
+            return amount ? `RM ${amount.toFixed(2)}` : "N/A";
+          },
+        },
+        {
+          key: "transactionStatus",
+          label: "Payment Status",
+          render: (value, row) => {
+            return <StatusBadge status={row.transactionStatus || "N/A"} />;
+          },
+        },
+      ];
+    }
+    
+    // For completed-paid filter, add more transaction details
+    if (filter === "completed-paid") {
+      return [
+        {
+          key: "appointmentId",
+          label: "Appointment ID",
+          render: (value, row) => {
+            const id = row.appointmentId || row.id || row._id || "N/A";
+            return <div className="font-medium">{id}</div>;
+          },
+        },
+        {
+          key: "patientName",
+          label: "Patient",
+          render: (value, row) => {
+            return <div className="font-medium">{row.patientName || "N/A"}</div>;
+          },
+        },
+        {
+          key: "doctorName",
+          label: "Doctor",
+          render: (value, row) => {
+            return <div>{row.doctorName || "N/A"}</div>;
+          },
+        },
+        {
+          key: "appointmentDate",
+          label: "Date",
+          render: (value, row) => {
+            const date = row.appointmentDate || row.date;
+            return date ? formatStaffDate(date) : "N/A";
+          },
+        },
+        {
+          key: "appointmentTime",
+          label: "Time",
+          render: (value, row) => {
+            return row.appointmentTime || row.time || "N/A";
+          },
+        },
+        {
+          key: "transactionAmount",
+          label: "Amount",
+          render: (value, row) => {
+            const amount = row.transactionAmount;
+            return amount ? `RM ${amount.toFixed(2)}` : "N/A";
+          },
+        },
+        {
+          key: "paymentMethod",
+          label: "Payment Method",
+          render: (value, row) => {
+            return row.paymentMethod || "N/A";
+          },
+        },
+        {
+          key: "cardLast4",
+          label: "Card Last 4",
+          render: (value, row) => {
+            return row.cardLast4 ? `****${row.cardLast4}` : "N/A";
+          },
+        },
+        {
+          key: "paymentTime",
+          label: "Payment Date",
+          render: (value, row) => {
+            return row.paymentTime ? formatStaffDate(row.paymentTime) : "N/A";
+          },
+        },
+        {
+          key: "transactionStatus",
+          label: "Status",
+          render: (value, row) => {
+            return <StatusBadge status={row.transactionStatus || "Paid"} />;
+          },
+        },
+      ];
+    }
+    
+    // Default columns for other filters
+    return [
+      {
+        key: "patientId",
+        label: "Patient",
+        render: (value, row) => {
+          const pid = value || row.patientId || row.patient?.id;
+          const p = patientsMap[pid];
+          const label = p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : pid || "N/A";
+          return <div className="font-medium">{label}</div>;
+        },
       },
-    },
-    {
-      key: "doctorId",
-      label: "Doctor",
-      render: (value, row) => {
-        const did = value || row.doctorId || row.doctor?.id;
-        const d = doctorsMap[did];
-        const label = d ? `${d.firstName || ""} ${d.lastName || ""}`.trim() : did || "N/A";
-        return <div>{label}</div>;
+      {
+        key: "doctorId",
+        label: "Doctor",
+        render: (value, row) => {
+          const did = value || row.doctorId || row.doctor?.id;
+          const d = doctorsMap[did];
+          const label = d ? `${d.firstName || ""} ${d.lastName || ""}`.trim() : did || "N/A";
+          return <div>{label}</div>;
+        },
       },
-    },
-    {
-      key: "date",
-      label: "Date",
-      render: (value) => formatStaffDate(value),
-    },
-    { key: "time", label: "Time" },
-    { key: "purpose", label: "Purpose" },
-    { key: "status", label: "Status", render: (value) => <StatusBadge status={value} /> },
-  ];
+      {
+        key: "date",
+        label: "Date",
+        render: (value) => formatStaffDate(value),
+      },
+      { key: "time", label: "Time" },
+      { key: "purpose", label: "Purpose" },
+      { key: "status", label: "Status", render: (value) => <StatusBadge status={value} /> },
+    ];
+  };
+
+  const columns = getColumns();
 
   const getRowClassName = (row) => {
     const status = (row.status || "").toLowerCase();
@@ -146,6 +319,18 @@ export default function AppointmentList() {
     try {
       setActionLoadingId(appointmentId);
       await appointmentService.completeAppointment(appointmentId, { completedAt: new Date().toISOString() });
+      
+      try {
+        // Create initial pending transaction (Requirement: Create payment intent on completion)
+        await paymentService.createStripeSession(appointmentId, { 
+          amount: 2, // Placeholder amount, will be updated in PaymentDetails
+          currency: 'MYR' 
+        });
+      } catch (err) {
+        console.error("Failed to create initial payment intent:", err);
+        // Continue navigation; staff can retry payment process in the next screen if needed
+      }
+
       toast.success("Appointment marked as completed.");
       // Navigate directly to payment after completing
       navigate(`/staff/payment/${appointmentId}`, {
@@ -165,15 +350,16 @@ export default function AppointmentList() {
   const tabs = [
     { label: "All", filter: "all" },
     { label: "Today", filter: "today" },
-    { label: "Pending", filter: "pending" },
+    { label: "Scheduled", filter: "scheduled" },
     { label: "Approved", filter: "approved" },
-    { label: "Completed", filter: "completed" },
+    { label: "Completed (Pending Payment)", filter: "completed-pending" },
+    { label: "Paid", filter: "completed-paid" },
     { label: "Others", filter: "others" },
   ];
 
   const totalAppointments = appointments.length;
-  const pendingAppointments = appointments.filter(
-    (appointment) => (appointment.status || "").toLowerCase() === "pending"
+  const scheduledAppointments = appointments.filter(
+    (appointment) => (appointment.status || "").toLowerCase() === "scheduled"
   ).length;
   const completedAppointments = appointments.filter(
     (appointment) => (appointment.status || "").toLowerCase() === "completed"
@@ -193,16 +379,28 @@ export default function AppointmentList() {
     );
   };
 
-  const filteredAppointments = appointments.filter((appointment) => {
-    const status = (appointment.status || "").toLowerCase();
-    if (filter === "pending") return status === "pending";
-    if (filter === "completed") return status === "completed";
-    if (filter === "approved") return status === "approved";
-    if (filter === "paid") return status === "paid";
-    if (filter === "today") return isSameDay(appointment.date);
-    if (filter === "others") return status === "cancelled" || status === "rejected" || status === "no show";
-    return true; // "all" or any unknown filter
-  });
+  const getFilteredAppointments = () => {
+    if (filter === "completed-pending") {
+      return completedPendingPayments;
+    }
+    if (filter === "completed-paid") {
+      return completedPaid;
+    }
+    
+    return appointments.filter((appointment) => {
+      const status = (appointment.status || "").toLowerCase();
+      if (filter === "scheduled") return status === "scheduled";
+      if (filter === "pending") return status === "scheduled"; // backward compatibility
+      if (filter === "completed") return status === "completed";
+      if (filter === "approved") return status === "approved";
+      if (filter === "paid") return status === "paid";
+      if (filter === "today") return isSameDay(appointment.date);
+      if (filter === "others") return status === "cancelled" || status === "rejected" || status === "no show";
+      return true; // "all" or any unknown filter
+    });
+  };
+
+  const filteredAppointments = getFilteredAppointments();
 
   return (
     <Layout role="staff">
@@ -223,7 +421,7 @@ export default function AppointmentList() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div className="bg-card rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-4">
                 <div className="bg-primary bg-opacity-10 p-3 rounded-lg">
@@ -238,7 +436,19 @@ export default function AppointmentList() {
 
             <div className="bg-card rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-4">
-                <div className="bg-accent-warning bg-opacity-10 p-3 rounded-lg">
+                <div className="bg-yellow-500 bg-opacity-10 p-3 rounded-lg">
+                  <FaClock size={24} className="text-ondark" />
+                </div>
+                <div>
+                  <h3 className="text-heading text-2xl font-bold">{scheduledAppointments}</h3>
+                  <p className="text-muted text-sm">Scheduled</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-xl shadow-soft p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-blue-500 bg-opacity-10 p-3 rounded-lg">
                   <FaClock size={24} className="text-ondark" />
                 </div>
                 <div>
@@ -250,12 +460,30 @@ export default function AppointmentList() {
 
             <div className="bg-card rounded-xl shadow-soft p-6">
               <div className="flex items-center gap-4">
-                <div className="bg-accent-success bg-opacity-10 p-3 rounded-lg">
+                <div className="bg-purple-500 bg-opacity-10 p-3 rounded-lg">
                   <FaCheckCircle size={24} className="text-ondark" />
                 </div>
                 <div>
-                  <h3 className="text-heading text-2xl font-bold">{completedAppointments}</h3>
-                  <p className="text-muted text-sm">Completed</p>
+                  <h3 className="text-heading text-2xl font-bold">
+                    {loadingCompleted ? "..." : completedPendingPayments.length}
+                  </h3>
+                  <p className="text-muted text-sm">Completed (Unpaid)</p>
+                  <p className="text-muted text-xs mt-1">Transaction: Pending</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-card rounded-xl shadow-soft p-6">
+              <div className="flex items-center gap-4">
+                <div className="bg-green-500 bg-opacity-10 p-3 rounded-lg">
+                  <FaCheckCircle size={24} className="text-ondark" />
+                </div>
+                <div>
+                  <h3 className="text-heading text-2xl font-bold">
+                    {loadingCompleted ? "..." : completedPaid.length}
+                  </h3>
+                  <p className="text-muted text-sm">Paid Appointments</p>
+                  <p className="text-muted text-xs mt-1">Transaction: Paid</p>
                 </div>
               </div>
             </div>
@@ -279,9 +507,20 @@ export default function AppointmentList() {
           </div>
 
           {/* Appointments Table */}
-          {loading ? (
+          {(loading || (loadingCompleted && (filter === "completed-pending" || filter === "completed-paid"))) ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <p className="text-gray-500">Loading appointments...</p>
+            </div>
+          ) : errorCompleted && (filter === "completed-pending" || filter === "completed-paid") ? (
+            <div className="bg-white rounded-lg shadow-md p-8 text-center">
+              <p className="text-red-600 mb-2">Error loading data</p>
+              <p className="text-gray-500 text-sm mb-4">{errorCompleted}</p>
+              <button
+                onClick={loadCompletedAppointments}
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover"
+              >
+                Retry
+              </button>
             </div>
           ) : (
             <DataTable
@@ -289,12 +528,48 @@ export default function AppointmentList() {
               data={filteredAppointments}
               rowClassName={getRowClassName}
               actions={(row) => {
+                // For completed-pending and completed-paid, show different actions
+                if (filter === "completed-pending") {
+                  const appointmentId = row.appointmentId || row.id || row._id;
+                  return (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/staff/payment/${appointmentId}`);
+                        }}
+                        className="px-3 py-1 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700"
+                      >
+                        Process Payment
+                      </button>
+                    </div>
+                  );
+                }
+                
+                if (filter === "completed-paid") {
+                  const appointmentId = row.appointmentId || row.id || row._id;
+                  return (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/staff/payment/receipt/view?appointmentId=${appointmentId}`);
+                        }}
+                        className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
+                      >
+                        View Receipt
+                      </button>
+                    </div>
+                  );
+                }
+                
+                // Default actions for other filters
                 const status = (row.status || "").toLowerCase();
-                const isPending = status === "pending";
+                const isScheduled = status === "scheduled";
                 const isApproved = status === "approved";
                 return (
                   <div className="flex gap-2">
-                    {isPending && (
+                    {isScheduled && (
                       <>
                         <button
                           onClick={(event) => handleApprove(event, row)}
@@ -334,7 +609,7 @@ export default function AppointmentList() {
                 );
               }}
               onRowClick={(row) => {
-                const appointmentId = row.id;
+                const appointmentId = row.appointmentId || row.id || row._id;
                 if (!appointmentId) return;
                 navigate(`/staff/appointments/${appointmentId}`);
               }}

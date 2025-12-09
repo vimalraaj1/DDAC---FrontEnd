@@ -10,16 +10,17 @@ export default function PaymentForm() {
   const [searchParams] = useSearchParams();
   const appointmentId = searchParams.get("appointmentId");
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(false);
   const [appointment, setAppointment] = useState(null);
   const [prescription, setPrescription] = useState(null);
   const [receipt, setReceipt] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState(0);
+  const [existingPayments, setExistingPayments] = useState([]);
+  const [isPaid, setIsPaid] = useState(false);
 
   useEffect(() => {
-    if (appointmentId) {
-      loadData();
-    }
+    if (appointmentId) loadData();
   }, [appointmentId]);
 
   const loadData = async () => {
@@ -28,38 +29,48 @@ export default function PaymentForm() {
       setAppointment(apptData);
 
       const prescData = await prescriptionService.getPrescriptionsByAppointment(appointmentId);
-      if (prescData && prescData.length > 0) {
-        setPrescription(prescData[0]);
-      }
+      if (prescData && prescData.length > 0) setPrescription(prescData[0]);
 
-      // Generate receipt
       const receiptData = await paymentService.generateReceipt(appointmentId, prescData?.[0]?.id);
       setReceipt(receiptData);
       setPaymentAmount(receiptData?.totalAmount || 0);
+
+      // Fetch existing payments for this appointment
+      const payments = await paymentService.getPaymentsByAppointment(appointmentId);
+      setExistingPayments(payments);
+      setIsPaid(payments.some(t => t.status?.toLowerCase() === "paid"));
     } catch (error) {
       console.error("Error loading data:", error);
-      // Mock data
+
+      // fallback mock data
       setAppointment({ id: appointmentId, patient: { firstName: "John", lastName: "Doe" } });
       setReceipt({
-        totalAmount: 150.00,
-        items: [{ description: "Consultation", amount: 100.00 }, { description: "Medication", amount: 50.00 }],
+        totalAmount: 150.0,
+        items: [
+          { description: "Consultation", amount: 100.0 },
+          { description: "Medication", amount: 50.0 }
+        ]
       });
-      setPaymentAmount(150.00);
+      setPaymentAmount(150.0);
     }
   };
 
   const handleStripeCheckout = async () => {
+    if (!appointmentId) return;
+
     try {
       setLoading(true);
-      const checkoutData = await paymentService.createStripeCheckout({
-        appointmentId,
-        amount: paymentAmount,
-        description: "Medical Services Payment",
+
+      // Check if a pending transaction already exists
+      const pendingTransaction = existingPayments?.find(t => t.status?.toLowerCase() === "pending");
+
+      const checkoutData = await paymentService.createStripeSession(appointmentId, {
+        amount: pendingTransaction ? pendingTransaction.amount : paymentAmount,
+        currency: "MYR",
+        receipt: receipt?.items || null
       });
-      // Redirect to Stripe checkout
-      if (checkoutData.url) {
-        window.location.href = checkoutData.url;
-      }
+
+      if (checkoutData.url) window.location.href = checkoutData.url;
     } catch (error) {
       console.error("Error creating Stripe checkout:", error);
       alert("Error processing payment. Please try again.");
@@ -69,6 +80,8 @@ export default function PaymentForm() {
   };
 
   const handleMarkAsPaid = async () => {
+    if (!appointmentId) return;
+
     try {
       setLoading(true);
       await paymentService.markAppointmentAsPaid(appointmentId);
@@ -88,16 +101,17 @@ export default function PaymentForm() {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-6">
             <Link
-              to={appointmentId ? `/staff/appointments/${appointmentId}` : "/staff/payments"}
+              to={appointmentId ? `/staff/appointments/${appointmentId}` : "/staff/payment"}
               className="text-primary hover:underline flex items-center gap-2 mb-4"
             >
-              <FaArrowLeft size={16} />
-              Back
+              <FaArrowLeft size={16} /> Back
             </Link>
             <h1 className="text-3xl font-bold text-gray-900">Process Payment</h1>
             {appointment && (
               <p className="text-gray-600 mt-2">
-                For: {appointment._patient ? `${appointment._patient.firstName || ""} ${appointment._patient.lastName || ""}`.trim() : appointment.patientId || appointment.patientName || "Patient"}
+                For: {appointment._patient
+                  ? `${appointment._patient.firstName || ""} ${appointment._patient.lastName || ""}`.trim()
+                  : appointment.patientId || appointment.patientName || "Patient"}
               </p>
             )}
           </div>
@@ -141,18 +155,18 @@ export default function PaymentForm() {
               <div className="space-y-4">
                 <button
                   onClick={handleStripeCheckout}
-                  disabled={loading}
+                  disabled={loading || isPaid}
                   className="w-full bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary-hover flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   <FaCreditCard size={16} />
-                  {loading ? "Processing..." : "Pay with Stripe"}
+                  {loading ? "Processing..." : isPaid ? "Already Paid" : "Pay with Stripe"}
                 </button>
                 <button
                   onClick={handleMarkAsPaid}
-                  disabled={loading}
+                  disabled={loading || isPaid}
                   className="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50"
                 >
-                  {loading ? "Processing..." : "Mark as Paid (Cash/Other)"}
+                  {loading ? "Processing..." : isPaid ? "Already Paid" : "Mark as Paid (Cash/Other)"}
                 </button>
                 <div className="pt-4 border-t border-gray-200">
                   <p className="text-sm text-gray-600">
@@ -167,4 +181,3 @@ export default function PaymentForm() {
     </Layout>
   );
 }
-

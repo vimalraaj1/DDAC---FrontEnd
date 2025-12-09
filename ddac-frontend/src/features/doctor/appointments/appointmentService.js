@@ -83,7 +83,7 @@ const appointmentService = {
      * @param {Object} appointmentData - Appointment creation data
      * @param {string} appointmentData.date - Appointment date (DateOnly format: YYYY-MM-DD)
      * @param {string} appointmentData.time - Appointment time
-     * @param {string} appointmentData.status - Status (e.g., "Scheduled", "Pending")
+     * @param {string} appointmentData.status - Status (e.g., "Scheduled", "Approved")
      * @param {string} appointmentData.patientId - Patient ID (8 chars max)
      * @param {string} appointmentData.doctorId - Doctor ID (8 chars max)
      * @param {string} appointmentData.staffId - Staff ID (8 chars max)

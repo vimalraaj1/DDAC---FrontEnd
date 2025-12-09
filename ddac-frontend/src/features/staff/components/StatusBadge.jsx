@@ -1,6 +1,6 @@
 export default function StatusBadge({ status }) {
   const statusConfig = {
-    pending: { color: "bg-yellow-100 text-yellow-800", label: "Pending" },
+    scheduled: { color: "bg-yellow-100 text-yellow-800", label: "Scheduled" },
     approved: { color: "bg-green-100 text-green-800", label: "Approved" },
     rejected: { color: "bg-red-100 text-red-800", label: "Rejected" },
     completed: { color: "bg-blue-100 text-blue-800", label: "Completed" },

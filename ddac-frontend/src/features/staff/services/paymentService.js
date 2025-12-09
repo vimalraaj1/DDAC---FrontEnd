@@ -123,3 +123,13 @@ export const getPendingPayments = async () => {
   const response = await staffApi.get(`${TRANSACTION_ENDPOINT}/pending`);
   return response.data;
 };
+
+// Get appointments by payment status
+// Endpoint: GET /api/transactions/appointments/by-payment-status?paymentStatus={Pending|Paid}
+// Returns list of objects with appointment info, patient/doctor names, and latest transaction info
+export const getAppointmentsByPaymentStatus = async (paymentStatus) => {
+  const response = await staffApi.get(`${TRANSACTION_ENDPOINT}/appointments/by-payment-status`, {
+    params: { paymentStatus }
+  });
+  return response.data;
+};

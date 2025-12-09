@@ -15,13 +15,12 @@ import AppointmentDetails from "../features/staff/appointments/AppointmentDetail
 import CreateAppointment from "../features/staff/appointments/CreateAppointment";
 import PrescriptionForm from "../features/staff/prescriptions/PrescriptionForm";
 import PrescriptionList from "../features/staff/prescriptions/PrescriptionList";
-import PaymentForm from "../features/staff/payments/PaymentForm";
-import PaymentList from "../features/staff/payments/PaymentList";
-import PaymentListNew from "../features/staff/payment/PaymentList";
+import PaymentList from "../features/staff/payment/PaymentList";
 import PaymentDetails from "../features/staff/payment/PaymentDetails";
 import PaymentSuccess from "../features/staff/payment/PaymentSuccess";
 import PaymentFailed from "../features/staff/payment/PaymentFailed";
-import ReceiptDisplay from "../features/staff/payments/ReceiptDisplay";
+import PaymentForm from "../features/staff/payment/PaymentForm";
+import ReceiptDisplay from "../features/staff/payment/ReceiptDisplay";
 import DoctorList from "../features/staff/doctorManagement/DoctorList";
 import DoctorDetails from "../features/staff/doctorManagement/DoctorDetails";
 import CustomerRatings from "../features/staff/ratings/CustomerRatings";
@@ -90,10 +89,13 @@ export default function AppRouter() {
           <Route path="/staff/doctors/:id" element={<ProtectedRoute allowedRoles={['staff']}><DoctorDetails/></ProtectedRoute>}/>
           <Route path="/staff/prescriptions" element={<ProtectedRoute allowedRoles={['staff']}><PrescriptionList/></ProtectedRoute>}/>
           <Route path="/staff/prescriptions/new" element={<ProtectedRoute allowedRoles={['staff']}><PrescriptionForm/></ProtectedRoute>}/>
-          <Route path="/staff/payment" element={<ProtectedRoute allowedRoles={['staff']}><PaymentListNew/></ProtectedRoute>}/>
+          <Route path="/staff/payment" element={<ProtectedRoute allowedRoles={['staff']}><PaymentList/></ProtectedRoute>}/>
           <Route path="/staff/payment/:appointmentId" element={<ProtectedRoute allowedRoles={['staff']}><PaymentDetails/></ProtectedRoute>}/>
           <Route path="/staff/payment/success" element={<ProtectedRoute allowedRoles={['staff']}><PaymentSuccess/></ProtectedRoute>}/>
           <Route path="/staff/payment/failed" element={<ProtectedRoute allowedRoles={['staff']}><PaymentFailed/></ProtectedRoute>}/>
+          <Route path="/staff/payment/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
+          <Route path="/staff/payment/receipt/view" element={<ProtectedRoute allowedRoles={['staff']}><ReceiptDisplay/></ProtectedRoute>}/>
+          {/* Legacy routes for backward compatibility */}
           <Route path="/staff/payments" element={<ProtectedRoute allowedRoles={['staff']}><PaymentList/></ProtectedRoute>}/>
           <Route path="/staff/payments/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
           <Route path="/staff/payments/receipt/view" element={<ProtectedRoute allowedRoles={['staff']}><ReceiptDisplay/></ProtectedRoute>}/>

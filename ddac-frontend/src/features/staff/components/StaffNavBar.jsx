@@ -11,12 +11,10 @@ import {
   FaCreditCard,
   FaStar,
 } from "react-icons/fa";
-import {
-  FaHospital,
-} from "react-icons/fa6";
+import { FaHospital } from "react-icons/fa6";
+import wellspring_logo from "../../../assets/wellspring_logo.png"
 
-
-export default function StaffNavBar({role = "staff"}) {
+export default function StaffNavBar({ role = "staff" }) {
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,7 +27,11 @@ export default function StaffNavBar({role = "staff"}) {
   const menuItems = [
     { icon: FaHome, label: "Dashboard", path: "/staff/dashboard" },
     { icon: FaUsers, label: "Patients", path: "/staff/patients" },
-    { icon: FaCalendarCheck, label: "Appointments", path: "/staff/appointments" },
+    {
+      icon: FaCalendarCheck,
+      label: "Appointments",
+      path: "/staff/appointments",
+    },
     { icon: FaUser, label: "Doctors", path: "/staff/doctors" },
     // { icon: FaFilePrescription, label: "Prescriptions", path: "/staff/prescriptions" },
     { icon: FaCreditCard, label: "Payment", path: "/staff/payment" },
@@ -40,14 +42,15 @@ export default function StaffNavBar({role = "staff"}) {
   return (
     <aside className="bg-primary w-64 min-h-screen flex flex-col">
       {/* Logo/Brand */}
-      <div className="p-6 border-b border-primary-hover">
-        <Link to="/staff/dashboard" className="flex items-center gap-3">
-          <div className="bg-white rounded-lg p-2">
-            <FaHospital className="text-primary" size={24} />
-          </div>
-          <h1 className="text-ondark text-xl font-bold">
-            WellSpring Healthcare
-          </h1>
+      <div className="p-1 border-primary-hover flex justify-center items-center">
+        <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
+          {
+            <img
+              src={wellspring_logo}
+              alt="WellSpring Healthcare Logo"
+              className="w-35 h-auto content-center"
+            />
+          }
         </Link>
       </div>
 
@@ -56,7 +59,9 @@ export default function StaffNavBar({role = "staff"}) {
         <ul className="space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
-            const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + "/");
+            const isActive =
+              location.pathname === item.path ||
+              location.pathname.startsWith(item.path + "/");
 
             return (
               <li key={item.path}>

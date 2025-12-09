@@ -40,7 +40,7 @@ export default function ManagerNavBar({ role = "manager" }) {
             {/* Logo/Brand */}
             <div className="p-1 border-primary-hover flex justify-center items-center">
                 <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
-                    <img src={wellspring_logo} alt="WellSpring Healthcare Logo" className="w-35 h-auto content-center" />
+                    {<img src={wellspring_logo} alt="WellSpring Healthcare Logo" className="w-35 h-auto content-center" />}
                 </Link>
             </div>
 

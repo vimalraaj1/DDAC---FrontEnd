@@ -6,6 +6,7 @@ import * as appointmentService from "../services/appointmentService";
 import * as patientService from "../services/patientService";
 import * as doctorService from "../services/doctorService";
 import * as profileService from "../services/profileService";
+import * as paymentService from "../services/paymentService";
 import { FaArrowLeft, FaCheckCircle, FaSpinner, FaTimesCircle } from "react-icons/fa";
 import { toast } from "sonner";
 import { formatStaffDate } from "../utils/dateFormat";
@@ -18,7 +19,7 @@ export default function AppointmentDetails() {
   const [actionLoading, setActionLoading] = useState(false);
   const appointmentIdValue = appointment?.id ?? id;
   const normalizedStatus = (appointment?.status || "").toLowerCase();
-  const canApprove = normalizedStatus === "pending";
+  const canApprove = normalizedStatus === "scheduled";
   const canComplete = normalizedStatus === "approved";
   const isPaid = normalizedStatus === "paid";
 
@@ -124,6 +125,17 @@ export default function AppointmentDetails() {
     try {
       setActionLoading(true);
       await appointmentService.completeAppointment(appointmentIdValue, { completedAt: new Date().toISOString() });
+
+      try {
+        // Create initial pending transaction (Requirement: Create payment intent on completion)
+        await paymentService.createStripeSession(appointmentIdValue, { 
+          amount: 2, // Placeholder amount
+          currency: 'MYR' 
+        });
+      } catch (err) {
+        console.error("Failed to create initial payment intent:", err);
+      }
+
       toast.success("Appointment marked as completed.");
       // Navigate directly to payment after completing
       navigate(`/staff/payment/${appointmentIdValue}`, {

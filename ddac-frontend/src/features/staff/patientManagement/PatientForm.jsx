@@ -396,7 +396,7 @@ export default function PatientForm() {
                     htmlFor="bloodGroup"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Blood Group
+                    Blood Group *
                   </label>
                   <input
                     type="text"
@@ -404,6 +404,7 @@ export default function PatientForm() {
                     name="bloodGroup"
                     value={formData.bloodGroup}
                     onChange={handleChange}
+                    required
                     placeholder="e.g., O+"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />

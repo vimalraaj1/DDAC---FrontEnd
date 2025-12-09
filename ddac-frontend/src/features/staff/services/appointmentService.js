@@ -1,4 +1,5 @@
 import staffApi from "./staffApi";
+import * as paymentService from "./paymentService";
 
 const APPOINTMENT_ENDPOINT = "/appointments";
 
@@ -6,7 +7,7 @@ const mapAppointmentPayload = (payload = {}) => ({
   id: payload.id?.trim() ?? "",
   date: payload.date ?? "",
   time: payload.time ?? "",
-  status: payload.status ?? "Pending",
+  status: payload.status ?? "Scheduled",
   patientId: payload.patientId?.trim() ?? "",
   doctorId: payload.doctorId?.trim() ?? "",
   staffId: payload.staffId?.trim() ?? "",
@@ -21,14 +22,50 @@ const getAppointments = async (params = {}) => {
 
 export const getAllAppointments = () => getAppointments();
 
-export const getPendingAppointments = async () => {
-  const response = await staffApi.get(`${APPOINTMENT_ENDPOINT}/status/pending`);
+export const getScheduledAppointments = async () => {
+  const response = await staffApi.get(`${APPOINTMENT_ENDPOINT}/status/scheduled`);
   return response.data;
 };
+
+// Keep for backward compatibility
+export const getPendingAppointments = getScheduledAppointments;
 
 export const getCompletedAppointments = async () => {
   const response = await staffApi.get(`${APPOINTMENT_ENDPOINT}/status/completed`);
   return response.data;
+};
+
+// Get appointments by payment status using the transactions endpoint
+// Endpoint: GET /api/transactions/appointments/by-payment-status?paymentStatus={Pending|Paid}
+// Returns list of objects with appointment info, patient/doctor names, and latest transaction info
+export const getAppointmentsByPaymentStatus = async (paymentStatus) => {
+  return await paymentService.getAppointmentsByPaymentStatus(paymentStatus);
+};
+
+// Get completed appointments with pending transactions
+// Uses the new backend endpoint that returns appointment + transaction data
+// Conditions: appointmentStatus = "Completed" AND transactionStatus = "Pending"
+export const getCompletedAppointmentsWithPendingTransactions = async () => {
+  try {
+    const data = await getAppointmentsByPaymentStatus("Pending");
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error fetching appointments with pending payments:", error);
+    return [];
+  }
+};
+
+// Get completed appointments with paid transactions
+// Uses the new backend endpoint that returns appointment + transaction data
+// Conditions: appointmentStatus = "Completed" AND transactionStatus = "Paid"
+export const getCompletedAppointmentsWithPaidTransactions = async () => {
+  try {
+    const data = await getAppointmentsByPaymentStatus("Paid");
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error("Error fetching appointments with paid transactions:", error);
+    return [];
+  }
 };
 
 export const getAppointmentById = async (id) => {

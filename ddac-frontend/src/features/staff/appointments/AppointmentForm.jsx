@@ -15,7 +15,7 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
     doctorId: "",
     staffId: "",
     purpose: "",
-    status: "Pending",
+    status: "Scheduled",
     cancellationReason: null,
   });
 
@@ -117,7 +117,7 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
         <div className="space-y-2">
           <label className="block text-sm font-medium text-gray-900">Status</label>
           <select name="status" value={formData.status} onChange={handleChange} className="input-field">
-            <option value="Pending">Pending</option>
+            <option value="Scheduled">Scheduled</option>
             <option value="Approved">Approved</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
