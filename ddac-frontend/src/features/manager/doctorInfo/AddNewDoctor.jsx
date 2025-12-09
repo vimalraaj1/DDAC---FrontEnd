@@ -4,6 +4,7 @@ import {useEffect, useState} from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaStethoscope, FaIdCard, FaCalendar, FaMapMarkerAlt, FaUserMd, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import {registerDoctor} from "../../../services/doctorManagementService.js";
+import {toast, Toaster} from "sonner";
 
 export default function AddNewDoctor() {
     const navigate = useNavigate();
@@ -112,16 +113,16 @@ export default function AddNewDoctor() {
             console.log('Submitting doctor data: ', payload);
             const response = await registerDoctor(payload);
             console.log('Doctor created successfully:', response);
-            alert('Doctor added successfully!');
+            toast.success('Doctor added successfully!');
             navigate('/managerDoctorInfo');
         } catch (error) {
             console.error('Error adding doctor:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
                 console.error('Backend Validation Errors:', error.response.data.errors);
-                alert('Failed to add doctor. Please try again.');
+                toast.error('Failed to add doctor. Please try again.');
             } else {
-                alert(error.response?.data?.message || 'Failed to add doctor. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to add doctor. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

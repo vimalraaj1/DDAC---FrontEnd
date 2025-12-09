@@ -8,13 +8,47 @@ import {
     FaFileInvoiceDollar,
     FaChartBar,
     FaArrowRight,
-    FaUserMd
+    FaUserMd, FaUserInjured, FaFileUpload
 } from 'react-icons/fa';
+import {useEffect, useState} from "react";
+import {getReportsSummary} from "../../../services/reportManagementService.js";
 
 export default function ManagerReports() {
     const navigate = useNavigate();
+    const [reportsData, setReportsData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const reports = [
+    useEffect(() => {
+        getReportsInfo();
+    }, []);
+
+    const getReportsInfo = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const data = await getReportsSummary();
+            console.log('Fetched reports summary:', data);
+            setReportsData(data);
+        } catch (err) {
+            console.error('Error fetching reports:', err);
+            setError(err.message || 'Failed to fetch reports');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const formatCurrency = (amount) => {
+        if (amount === undefined || amount === null || isNaN(amount)) {
+            return 'RM 0.00';
+        }
+        return `RM ${amount.toLocaleString('en-MY', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        })}`;
+    };
+
+    const reports = reportsData ? [
         {
             id: 'financial',
             title: 'Financial Performance Report',
@@ -22,9 +56,9 @@ export default function ManagerReports() {
             icon: FaDollarSign,
             color: 'bg-accent-success',
             stats: [
-                { label: 'Total Revenue', value: 'RM 12,450.00' },
-                { label: 'Success Rate', value: '94%' },
-                { label: 'This Month', value: 'RM 3,200.00' }
+                { label: 'Total Revenue', value: formatCurrency(reportsData.transaction?.totalRevenue) },
+                { label: 'Success Rate', value: `${reportsData.transaction?.successRate}%` },
+                { label: 'This Month', value: formatCurrency(reportsData.transaction?.thisMonthRevenue) }
             ],
             path: '/managerFinancialReport'
         },
@@ -35,9 +69,9 @@ export default function ManagerReports() {
             icon: FaCalendarAlt,
             color: 'bg-primary',
             stats: [
-                { label: 'Total Appointments', value: '248' },
-                { label: 'Completion Rate', value: '89%' },
-                { label: 'This Week', value: '42' }
+                { label: 'Total Appointments', value: reportsData.appointments?.totalAppointments.toString() },
+                { label: 'Completion Rate', value: `${reportsData.appointments?.completionRate}%` },
+                { label: 'This Week', value: reportsData.appointments?.thisWeekAppointments.toString() }
             ],
             path: '/managerAppointmentReport'
         },
@@ -48,14 +82,49 @@ export default function ManagerReports() {
             icon: FaUserMd,
             color: 'bg-accent-sky',
             stats: [
-                { label: 'Active Doctors', value: '42' },
-                { label: 'Avg Appointments', value: '18/doctor' },
-                { label: 'Top Performer', value: 'Dr. Sarah W.' }
+                { label: 'Active Doctors', value: reportsData.doctorStaff.activeDoctors?.toString() },
+                { label: 'Avg Appointments', value: `${reportsData.doctorStaff?.avgAppointmentsPerDoctor}/doctor` },
+                { label: 'Top Performer', value: reportsData.doctorStaff.topPerformerName }
             ],
             path: '/managerDoctorStaffReport'
         }
-    ];
+    ] : [];
 
+    // Loading state
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading Reports...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    // Error state
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <FaFileUpload size={64} className="text-accent-danger mx-auto mb-4" />
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Reports</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={getReportsInfo}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+    
     return (
         <Layout role="manager">
             <div className="w-full max-w-full overflow-hidden">

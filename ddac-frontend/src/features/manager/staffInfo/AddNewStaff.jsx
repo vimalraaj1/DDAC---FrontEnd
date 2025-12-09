@@ -5,6 +5,7 @@ import { FaUser, FaEnvelope, FaPhone, FaUserTie, FaIdCard, FaCalendar, FaMapMark
 import { useNavigate } from 'react-router-dom';
 import {registerDoctor} from "../../../services/doctorManagementService.js";
 import {registerStaff} from "../../../services/staffManagementService.js";
+import {toast} from "sonner";
 
 export default function AddNewStaff() {
     const navigate = useNavigate();
@@ -111,16 +112,16 @@ export default function AddNewStaff() {
             console.log('Submitting staff data: ', payload);
             const response = await registerStaff(payload);
             console.log('Staff created successfully:', response);
-            alert('Staff added successfully!');
+            toast.success('Staff added successfully!');
             navigate('/managerStaffInfo');
         } catch (error) {
             console.error('Error adding staff:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
                 console.error('Backend Validation Errors:', error.response.data.errors);
-                alert('Failed to add staff. Please try again.');
+                toast.error('Failed to add staff. Please try again.');
             } else {
-                alert(error.response?.data?.message || 'Failed to add staff. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to add staff. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

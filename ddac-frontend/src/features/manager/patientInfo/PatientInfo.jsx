@@ -5,6 +5,7 @@ import {FaSearch, FaEdit, FaTrash, FaEye, FaUser, FaEnvelope, FaPhone, FaUserInj
 import { useNavigate } from 'react-router-dom';
 import {deletePatient, getPatients} from "../../../services/patientManagementService.js";
 import {HasAppointment} from "../../../services/appointmentManagementService.js";
+import {toast} from "sonner";
 
 export default function PatientInfo() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -77,28 +78,35 @@ export default function PatientInfo() {
         navigate(`/managerEditPatient/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this patient?')) {
-            try {
-                const hasAppointment = await HasAppointment(id);
-                if (hasAppointment === false) {
-                    await deletePatient(id);
-                    console.log('Delete patient successful:', id);
-                    alert('Patient record deleted successfully');
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this patient?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
                     try {
-                        await getPatientsInfo();
-                    } catch (refreshErr) {
-                        console.error('Error refreshing patient list:', refreshErr);
+                        const hasAppointment = await HasAppointment(id);
+                        if (hasAppointment === false) {
+                            await deletePatient(id);
+                            console.log('Delete patient successful:', id);
+                            toast.success('Patient record deleted successfully');
+                            try {
+                                await getPatientsInfo();
+                            } catch (refreshErr) {
+                                console.error('Error refreshing patient list:', refreshErr);
+                            }
+                        } else {
+                            console.log('Deletion blocked: Patient has associated appointments.', id);
+                            toast.warning('Patient record cannot be deleted as it is associated with appointments!');
+                        }
+                    } catch (err) {
+                        console.error('Error deleting patient:', err);
+                        toast.error('Failed to delete patient');
                     }
-                } else{
-                    console.log('Deletion blocked: Patient has associated appointments.', id);
-                    alert('Patient record cannot be deleted as it is associated with appointments!');
                 }
-            } catch (err) {
-                console.error('Error deleting patient:', err);
-                alert('Failed to delete patient');
-            }
-        }
+            },
+            duration: 15000
+        });
     };
 
     // Loading state

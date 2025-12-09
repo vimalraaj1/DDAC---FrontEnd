@@ -8,6 +8,7 @@ import {bookAppointment, getDateAndTimeAfterSelectDoctor} from "../../../service
 import {getPatients} from "../../../services/patientManagementService.js";
 import {getStaffs} from "../../../services/staffManagementService.js";
 import {getDoctors} from "../../../services/doctorManagementService.js";
+import {toast} from "sonner";
 
 export default function AddNewAppointment() {
     const navigate = useNavigate();
@@ -69,7 +70,7 @@ export default function AddNewAppointment() {
 
         } catch (error) {
             console.error('Error fetching initial data:', error);
-            alert('Failed to load required data (Patients, Doctors, Staff). Please check the console.');
+            toast.error('Failed to load required data (Patients, Doctors, Staff). Please check the console.');
         } finally {
             setDataLoading(false);
         }
@@ -91,7 +92,7 @@ export default function AddNewAppointment() {
                 } catch (error) {
                     console.error('Error fetching doctor availability:', error);
                     setDoctorAvailability([]);
-                    alert('Failed to load doctor availability.');
+                    toast.error('Failed to load doctor availability.');
                 }
                 finally {
                     setDateLoading(false);
@@ -199,7 +200,7 @@ export default function AddNewAppointment() {
         try {
             const availabilityId = getSelectedAvailabilityId();
             if (!availabilityId) {
-                alert('Unable to find availability slot. Please try again.');
+                toast.warning('Unable to find availability slot. Please try again.');
                 return;
             }
             const payload = {
@@ -212,16 +213,16 @@ export default function AddNewAppointment() {
             console.log('Appointment created successfully:', appointmentResponse);
             await bookAppointment(availabilityId, appointmentResponse.id);
             console.log('Availability booked successfully');
-            alert('Appointment added successfully!');
+            toast.success('Appointment added successfully!');
             navigate('/managerAppointmentInfo');
         } catch (error) {
             console.error('Error adding appointment:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
                 console.error('Backend Validation Errors:', error.response.data.errors);
-                alert('Failed to add appointment. Please try again.');
+                toast.error('Failed to add appointment. Please try again.');
             } else {
-                alert(error.response?.data?.message || 'Failed to add appointment. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to add appointment. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

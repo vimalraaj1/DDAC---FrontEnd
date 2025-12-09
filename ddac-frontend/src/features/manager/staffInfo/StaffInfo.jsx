@@ -4,6 +4,7 @@ import {useEffect, useState} from 'react';
 import {FaSearch, FaEdit, FaTrash, FaEye, FaUserTie, FaEnvelope, FaPhone, FaUserMd} from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import {deleteStaff, getStaffs} from "../../../services/staffManagementService.js";
+import {toast} from "sonner";
 
 export default function StaffInfo() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -63,22 +64,29 @@ export default function StaffInfo() {
         navigate(`/managerEditStaff/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this staff?')) {
-            try {
-                await deleteStaff(id);
-                console.log('Delete staff successful:', id);
-                alert('Staff record deleted successfully');
-                try {
-                    await getStaffsInfo();
-                } catch (refreshErr) {
-                    console.error('Error refreshing staff list:', refreshErr);
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this staff?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        await deleteStaff(id);
+                        console.log('Delete staff successful:', id);
+                        toast.success('Staff record deleted successfully');
+                        try {
+                            await getStaffsInfo();
+                        } catch (refreshErr) {
+                            console.error('Error refreshing staff list:', refreshErr);
+                        }
+                    } catch (err) {
+                        console.error('Error deleting staff:', err);
+                        toast.error('Failed to delete staff');
+                    }
                 }
-            } catch (err) {
-                console.error('Error deleting staff:', err);
-                alert('Failed to delete staff');
-            }
-        }
+            },
+            duration: 15000
+        });
     };
 
     // Loading state

@@ -1,66 +1,137 @@
 import '../../../index.css';
 import Layout from '../../../components/Layout.jsx';
-import { useState } from 'react';
+import {useCallback, useEffect, useRef, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     FaArrowLeft, FaDownload, FaUserMd, FaUserTie,
     FaStar, FaCalendarCheck, FaClock, FaTrophy
 } from 'react-icons/fa';
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import {getDoctorStaffChartDetails, getReportsSummary} from "../../../services/reportManagementService.js";
+import {toast} from "sonner";
+
+const calculateDateRange = (rangeKey) => {
+    const today = new Date();
+    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+    let startDate = new Date(today);
+
+    switch (rangeKey) {
+        case 'week':
+            startDate.setDate(today.getDate() - 6);
+            break;
+        case 'month':
+            startDate.setDate(today.getDate() - 29);
+            break;
+        case 'quarter':
+            startDate.setDate(today.getDate() - 89);
+            break;
+        case 'year':
+            startDate.setDate(today.getDate() - 364);
+            break;
+        default:
+            return { startDate: null, endDate: null };
+    }
+    startDate.setHours(0, 0, 0, 0);
+
+    const formatToISO = (date) => date ? date.toISOString().split('T')[0] : null;
+
+    return {
+        startDate: formatToISO(startDate),
+        endDate: formatToISO(endDate),
+    };
+};
+
+const specialization_colors = ['#E74C3C', '#5DADE2', '#F39C12', '#2ECC71', '#9B59B6', '#95A5A6'];
+
+const mapDoctorChartData = (backendData) => {
+    if (!backendData) {
+        return {
+            workloadByDoctor: [],
+            distributionBySpecialization: [],
+            topDoctorDetails: [],
+        };
+    }
+
+    return {
+        workloadByDoctor: (backendData.workloadByDoctor || []).map(item => ({
+            name: item.category,
+            appointments: item.count,
+        })),
+
+        distributionBySpecialization: (backendData.distributionBySpecialization || []).map((item, index) => ({
+            name: item.category,
+            value: item.count,
+            color: specialization_colors[index % specialization_colors.length]
+        })),
+
+        topDoctorDetails: backendData.topDoctorDetails || []
+    };
+};
 
 export default function DoctorStaffReport() {
     const navigate = useNavigate();
     const [dateRange, setDateRange] = useState('month');
     const [viewType, setViewType] = useState('doctors');
+    const [summaryData, setSummaryData] = useState({
+        ActiveDoctors: 0,
+        AvgAppointmentsPerDoctor: 0,
+        TopPerformerName: 'N/A',
+        AvgRating: 0, 
+        TopPerformerCount: 0 
+    });
+    const [chartData, setChartData] = useState(mapDoctorChartData(null));
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isExporting, setIsExporting] = useState(false);
 
-    // Mock data for doctors
-    const topDoctors = [
-        { name: 'Dr. Sarah Wilson', appointments: 52, rating: 4.9, specialization: 'Cardiology' },
-        { name: 'Dr. Emily Rodriguez', appointments: 48, rating: 4.8, specialization: 'Pediatrics' },
-        { name: 'Dr. Ahmed Hassan', appointments: 45, rating: 4.7, specialization: 'Cardiology' },
-        { name: 'Dr. Michael Chen', appointments: 42, rating: 4.8, specialization: 'Neurology' },
-        { name: 'Dr. James Kumar', appointments: 38, rating: 4.6, specialization: 'Orthopedics' }
-    ];
+    const summaryRef = useRef(null);
+    const barChartRef = useRef(null);
+    const pieChartRef = useRef(null);
+    const tableRef = useRef(null);
 
-    const doctorWorkload = [
-        { name: 'Dr. Sarah W.', appointments: 52 },
-        { name: 'Dr. Emily R.', appointments: 48 },
-        { name: 'Dr. Ahmed H.', appointments: 45 },
-        { name: 'Dr. Michael C.', appointments: 42 },
-        { name: 'Dr. James K.', appointments: 38 },
-        { name: 'Dr. Lisa T.', appointments: 35 }
-    ];
+    const fetchReportData = useCallback(async () => {
+        setLoading(true);
+        setError(null);
 
-    const specializationDistribution = [
-        { name: 'Cardiology', value: 28, color: '#E74C3C' },
-        { name: 'Neurology', value: 18, color: '#5DADE2' },
-        { name: 'Pediatrics', value: 22, color: '#F39C12' },
-        { name: 'Orthopedics', value: 16, color: '#2ECC71' },
-        { name: 'Dermatology', value: 10, color: '#9B59B6' },
-        { name: 'Others', value: 6, color: '#95A5A6' }
-    ];
+        try {
+            const { startDate, endDate } = calculateDateRange(dateRange);
+            const chartJson = await getDoctorStaffChartDetails(startDate, endDate);
+            const mappedChartData = mapDoctorChartData(chartJson);
+            setChartData(mappedChartData);
 
-    // Mock data for staff
-    const topStaff = [
-        { name: 'Alice Johnson', role: 'Nurse', appointments: 68, rating: 4.9 },
-        { name: 'Emma Wilson', role: 'Nurse', appointments: 62, rating: 4.8 },
-        { name: 'Bob Martinez', role: 'Receptionist', appointments: 45, rating: 4.7 },
-        { name: 'Carol Lee', role: 'Lab Technician', appointments: 42, rating: 4.6 },
-        { name: 'David Kim', role: 'Pharmacist', appointments: 38, rating: 4.8 }
-    ];
+            const summaryJson = await getReportsSummary();
+            const doctorStaffSummary = summaryJson.doctorStaff || {};
 
-    const staffByRole = [
-        { role: 'Nurses', count: 15, appointments: 180 },
-        { role: 'Receptionists', count: 8, appointments: 95 },
-        { role: 'Lab Technicians', count: 6, appointments: 68 },
-        { role: 'Pharmacists', count: 5, appointments: 52 },
-        { role: 'Others', count: 10, appointments: 85 }
-    ];
+            const totalAppointmentsInPeriod = mappedChartData.topDoctorDetails.reduce((sum, doc) => sum + doc.appointmentsCount, 0);
+            const avgRating = mappedChartData.topDoctorDetails.length > 0
+                ? (mappedChartData.topDoctorDetails.reduce((sum, doc) => sum + doc.rating, 0) / mappedChartData.topDoctorDetails.length).toFixed(1)
+                : 0;
 
-    const handleExportPDF = () => {
-        alert('PDF export will be implemented');
-        // Implement PDF export logic here
-    };
+            const topDoctorInPeriod = mappedChartData.topDoctorDetails.length > 0
+                ? mappedChartData.topDoctorDetails[0]
+                : null;
+
+            setSummaryData({
+                ActiveDoctors: doctorStaffSummary.activeDoctors || 0,
+                AvgAppointmentsPerDoctor: doctorStaffSummary.avgAppointmentsPerDoctor || 0, 
+                TopPerformerName: topDoctorInPeriod ? topDoctorInPeriod.name : doctorStaffSummary.topPerformerName || 'N/A',
+                AvgRating: parseFloat(avgRating),
+                TopPerformerCount: topDoctorInPeriod ? topDoctorInPeriod.appointmentsCount : 0
+            });
+
+        } catch (err) {
+            console.error('Error fetching doctor report:', err);
+            setError('Could not load doctor report data. Please check the API status.');
+        } finally {
+            setLoading(false);
+        }
+    }, [dateRange]);
+
+    useEffect(() => {
+        fetchReportData();
+    }, [fetchReportData]);
 
     const renderStars = (rating) => {
         return (
@@ -76,6 +147,89 @@ export default function DoctorStaffReport() {
             </div>
         );
     };
+
+    const handleExportPDF = async () => {
+        if (!summaryRef.current || !barChartRef.current || !pieChartRef.current || !tableRef.current) return;
+
+        try {
+            setIsExporting(true);
+            const pdf = new jsPDF('p', 'mm', 'a4');
+            const imgWidth = 210;
+            let yPosition = 10; // Starting y position with a margin
+
+            // --- Helper Function to capture and add a section ---
+            const addSectionToPDF = async (ref, pdfInstance) => {
+                const element = ref.current;
+                const originalBg = element.style.backgroundColor;
+                element.style.backgroundColor = '#ffffff';
+
+                await new Promise(resolve => setTimeout(resolve, 50)); // Small delay for rendering
+
+                const canvas = await html2canvas(element, { scale: 2, useCORS: true, logging: false, backgroundColor: '#ffffff' });
+                element.style.backgroundColor = originalBg;
+
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                // Check if the element will fit on the remaining part of the current page (A4 height is 297mm)
+                if (yPosition + imgHeight > 280) { // Using 280 for a safety margin
+                    pdfInstance.addPage();
+                    yPosition = 10; // Reset position for new page
+                }
+
+                pdfInstance.addImage(canvas.toDataURL('image/png'), 'PNG', 0, yPosition, imgWidth, imgHeight);
+                yPosition += imgHeight + 5; // Move Y position down for the next element, plus a small gap
+            };
+
+            await addSectionToPDF(summaryRef, pdf);
+            await addSectionToPDF(barChartRef, pdf);
+            await addSectionToPDF(pieChartRef, pdf);
+            await addSectionToPDF(tableRef, pdf);
+
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `DoctorStaff_Report_${dateRange}_${date}.pdf`;
+            pdf.save(filename);
+            toast.success('PDF exported successfully!');
+        } catch (error) {
+            console.error('Error exporting PDF:', error);
+            toast.error('Failed to export PDF. Please try again.');
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+                        <p className="text-muted">Loading Doctor Staff Report...</p>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    if (error) {
+        return (
+            <Layout role="manager">
+                <div className="flex items-center justify-center h-screen">
+                    <div className="text-center">
+                        <h2 className="text-heading text-xl font-bold mb-2">Error Loading Report</h2>
+                        <p className="text-muted mb-4">{error}</p>
+                        <button
+                            onClick={fetchReportData}
+                            className="btn-primary"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </Layout>
+        );
+    }
+
+    const { workloadByDoctor, distributionBySpecialization, topDoctorDetails } = chartData;
 
     return (
         <Layout role="manager">
@@ -97,10 +251,20 @@ export default function DoctorStaffReport() {
 
                     <button
                         onClick={handleExportPDF}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-danger text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors"
+                        disabled={isExporting}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-accent-danger text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <FaDownload size={16} />
-                        <span>Export PDF</span>
+                        {isExporting ? (
+                            <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                <span>Exporting...</span>
+                            </>
+                        ) : (
+                            <>
+                                <FaDownload size={16} />
+                                <span>Export PDF</span>
+                            </>
+                        )}
                     </button>
                 </div>
 
@@ -116,27 +280,18 @@ export default function DoctorStaffReport() {
                         <option value="quarter">Last 3 Months</option>
                         <option value="year">Last Year</option>
                     </select>
-
-                    <select
-                        value={viewType}
-                        onChange={(e) => setViewType(e.target.value)}
-                        className="px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-primary text-body bg-card"
-                    >
-                        <option value="doctors">Doctors</option>
-                        <option value="staff">Staff</option>
-                    </select>
                 </div>
 
                 {/* Summary Stats */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div ref={summaryRef} className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
                     <div className="bg-card rounded-xl shadow-soft p-6">
                         <div className="flex items-center gap-4">
                             <div className={`${viewType === 'doctors' ? 'bg-accent-success' : 'bg-accent-sky'} bg-opacity-10 p-3 rounded-lg`}>
                                 {viewType === 'doctors' ? <FaUserMd className="text-ondark" size={24} /> : <FaUserTie className="text-ondark" size={24} />}
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">{viewType === 'doctors' ? '42' : '44'}</h3>
-                                <p className="text-muted text-sm">{viewType === 'doctors' ? 'Active Doctors' : 'Active Staff'}</p>
+                                <h3 className="text-heading text-2xl font-bold">{summaryData.ActiveDoctors}</h3>
+                                <p className="text-muted text-sm">Active Doctors</p>
                             </div>
                         </div>
                     </div>
@@ -147,7 +302,7 @@ export default function DoctorStaffReport() {
                                 <FaCalendarCheck className="text-ondark" size={24} />
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">{viewType === 'doctors' ? '18' : '22'}</h3>
+                                <h3 className="text-heading text-2xl font-bold">{summaryData.AvgAppointmentsPerDoctor}</h3>
                                 <p className="text-muted text-sm">Avg Appointments</p>
                             </div>
                         </div>
@@ -159,7 +314,7 @@ export default function DoctorStaffReport() {
                                 <FaStar className="text-ondark" size={24} />
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">4.8</h3>
+                                <h3 className="text-heading text-2xl font-bold">{summaryData.AvgRating}</h3>
                                 <p className="text-muted text-sm">Avg Rating</p>
                             </div>
                         </div>
@@ -171,7 +326,7 @@ export default function DoctorStaffReport() {
                                 <FaTrophy className="text-ondark" size={24} />
                             </div>
                             <div>
-                                <h3 className="text-heading text-2xl font-bold">{viewType === 'doctors' ? '52' : '68'}</h3>
+                                <h3 className="text-heading text-2xl font-bold">{summaryData.TopPerformerCount}</h3>
                                 <p className="text-muted text-sm">Top Performer</p>
                             </div>
                         </div>
@@ -183,13 +338,13 @@ export default function DoctorStaffReport() {
                     <>
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
                             {/* Doctor Workload - Bar Chart */}
-                            <div className="bg-card rounded-xl shadow-soft p-6">
+                            <div ref={barChartRef} className="bg-card rounded-xl shadow-soft p-6">
                                 <h3 className="text-heading text-lg font-semibold mb-4 flex items-center gap-2">
                                     <FaUserMd className="text-accent-success" />
-                                    <span>Workload Distribution</span>
+                                    <span>Workload Distribution ({dateRange})</span>
                                 </h3>
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <BarChart data={doctorWorkload}>
+                                    <BarChart data={workloadByDoctor}>
                                         <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
                                         <XAxis dataKey="name" stroke="#7A7A7A" angle={-45} textAnchor="end" height={100} />
                                         <YAxis stroke="#7A7A7A" />
@@ -203,15 +358,15 @@ export default function DoctorStaffReport() {
                             </div>
 
                             {/* Specialization Distribution - Pie Chart */}
-                            <div className="bg-card rounded-xl shadow-soft p-6">
+                            <div ref={pieChartRef} className="bg-card rounded-xl shadow-soft p-6">
                                 <h3 className="text-heading text-lg font-semibold mb-4 flex items-center gap-2">
                                     <FaUserMd className="text-primary" />
-                                    <span>By Specialization</span>
+                                    <span>By Specialization ({dateRange})</span>
                                 </h3>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <PieChart>
                                         <Pie
-                                            data={specializationDistribution}
+                                            data={distributionBySpecialization}
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
@@ -220,7 +375,7 @@ export default function DoctorStaffReport() {
                                             fill="#8884d8"
                                             dataKey="value"
                                         >
-                                            {specializationDistribution.map((entry, index) => (
+                                            {distributionBySpecialization.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={entry.color} />
                                             ))}
                                         </Pie>
@@ -231,7 +386,7 @@ export default function DoctorStaffReport() {
                         </div>
 
                         {/* Top Performing Doctors Table */}
-                        <div className="bg-card rounded-xl shadow-soft p-6">
+                        <div ref={tableRef} className="bg-card rounded-xl shadow-soft p-6">
                             <h3 className="text-heading text-lg font-semibold mb-4 flex items-center gap-2">
                                 <FaTrophy className="text-accent-warning" />
                                 <span>Top Performing Doctors</span>
@@ -248,7 +403,7 @@ export default function DoctorStaffReport() {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {topDoctors.map((doctor, index) => (
+                                    {topDoctorDetails.map((doctor, index) => (
                                         <tr key={index} className="border-b border-color hover:bg-main transition-colors">
                                             <td className="py-3 px-4">
                                                 <div className="flex items-center gap-2">

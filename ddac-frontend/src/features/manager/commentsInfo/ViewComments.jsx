@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { FaArrowLeft, FaStar, FaRegStar, FaUser, FaUserMd, FaUserTie, FaCalendarAlt, FaClock, FaCommentAlt, FaTrash } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import {FaMessage} from "react-icons/fa6";
-import {getCommentById} from "../../../services/commentManagementService.js";
+import {deleteComment, getCommentById} from "../../../services/commentManagementService.js";
 import {GetAppointmentWithDetailsById} from "../../../services/appointmentManagementService.js";
+import {toast} from "sonner";
 
 export default function ViewComments() {
     const navigate = useNavigate();
@@ -103,13 +104,25 @@ export default function ViewComments() {
             .filter(tag => tag.length > 0);
     };
 
-    const handleDelete = () => {
-        if (window.confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
-            console.log('Delete comment:', id);
-            // Call delete API
-            // After successful deletion, navigate back
-            navigate('/managerCommentsInfo');
-        }
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this comment?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        await deleteComment(id);
+                        console.log('Delete comment successful:', id);
+                        toast.success('Comment record deleted successfully');
+                        navigate('/managerCommentsInfo');
+                    } catch (err) {
+                        console.error('Error deleting comment:', err);
+                        toast.error('Failed to delete comment');
+                    }
+                }
+            },
+            duration: 15000
+        });
     };
 
     // Loading state

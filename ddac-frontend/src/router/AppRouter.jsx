@@ -59,7 +59,7 @@ import ViewTransaction from "../features/manager/transactionInfo/ViewTransaction
 import CommentsInfo from "../features/manager/commentsInfo/CommentsInfo.jsx";
 import ViewComments from "../features/manager/commentsInfo/ViewComments.jsx";
 import ManagerReports from "../features/manager/report/ManagerReports.jsx";
-import FinancialReport from "../features/manager/report/FInancialReport.jsx";
+import FinancialReport from "../features/manager/report/FinancialReport.jsx";
 import ManagerProfile from "../features/manager/profile/ManagerProfile.jsx";
 import EditManagerProfile from "../features/manager/profile/EditManagerProfile.jsx";
 import AppointmentReport from "../features/manager/report/AppointmentReport.jsx";

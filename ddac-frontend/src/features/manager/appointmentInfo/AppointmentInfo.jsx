@@ -23,6 +23,7 @@ import {getDoctorById, getDoctors} from "../../../services/doctorManagementServi
 import {getPatientById, getPatients} from "../../../services/patientManagementService.js";
 import {getStaffById, getStaffs} from "../../../services/staffManagementService.js";
 import {unbookAppointment} from "../../../services/availabilityManagementService.js";
+import {toast} from "sonner";
 
 export default function AppointmentInfo() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -131,34 +132,41 @@ export default function AppointmentInfo() {
         navigate(`/managerEditAppointment/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this appointment?')) {
-            try {
-                try {
-                    await unbookAppointment(id);
-                    console.log('Unbook timeslot successful:', id);
-                } catch (unbookError) {
-                    if (unbookError.response && unbookError.response.status === 404) {
-                        console.warn(`Old slot was already unbooked (404 Not Found) for Appointment ID: ${id}. Proceeding with deletion.`);
-                    } else {
-                        console.error('Critical unbook error, stopping deletion:', unbookError);
-                        alert('Failed to free the time slot due to a server error. Deletion aborted.');
-                        return;
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this appointment?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        try {
+                            await unbookAppointment(id);
+                            console.log('Unbook timeslot successful:', id);
+                        } catch (unbookError) {
+                            if (unbookError.response && unbookError.response.status === 404) {
+                                console.warn(`Old slot was already unbooked (404 Not Found) for Appointment ID: ${id}. Proceeding with deletion.`);
+                            } else {
+                                console.error('Critical unbook error, stopping deletion:', unbookError);
+                                toast.error('Failed to free the time slot due to a server error. Deletion aborted.');
+                                return;
+                            }
+                        }
+                        await deleteAppointment(id);
+                        console.log('Delete appointment successful:', id);
+                        toast.success('Appointment record deleted successfully');
+                        try {
+                            await getAppointmentsInfo();
+                        } catch (refreshErr) {
+                            console.error('Error refreshing appointment list:', refreshErr);
+                        }
+                    } catch (err) {
+                        console.error('Error deleting appointment:', err);
+                        toast.error('Failed to delete appointment');
                     }
                 }
-                await deleteAppointment(id);
-                console.log('Delete appointment successful:', id);
-                alert('Appointment record deleted successfully');
-                try {
-                    await getAppointmentsInfo();
-                } catch (refreshErr) {
-                    console.error('Error refreshing appointment list:', refreshErr);
-                }
-            } catch (err) {
-                console.error('Error deleting appointment:', err);
-                alert('Failed to delete appointment');
-            }
-        }
+            },
+            duration: 15000
+        });
     };
 
     // Loading state
