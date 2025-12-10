@@ -36,7 +36,6 @@ import { convertTime } from "../../../../../utils/TimeConversion";
 import { sendEmail } from "../../../services/emailManagementService";
 import { bookAppointment } from "../../../services/availabilityManagementService";
 
-
 type TabType = "upcoming" | "past" | "cancelled";
 
 export default function Appointments() {
@@ -88,7 +87,12 @@ export default function Appointments() {
       setLoadingAppointment(true);
       const datas = await getAppointmentsByPatientId(id);
 
-      const formattedAppointments = datas.map((data: any) => ({
+      const sorted = datas.sort(
+        (a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      const formattedAppointments = sorted.map((data: any) => ({
         id: data.appointmentId,
         doctorName: data.doctorFirstName + " " + data.doctorLastName,
         doctorSpecialty: data.doctorSpecialization,
@@ -171,18 +175,18 @@ export default function Appointments() {
       patientId: patient.id,
       status: "Scheduled",
       isBooked: true,
-      staffId: null, 
+      staffId: null,
       cancellationReason: null,
     };
 
     const emailPayload = {
-      patientEmail: "cincainame04@gmail.com", // hard code for now 
+      patientEmail: "cincainame04@gmail.com", // hard code for now
       patientName: patient.firstName + " " + patient.lastName,
       doctorName: appointmentData.doctorName,
       date: appointmentData.date,
       time: appointmentData.time,
       notes: appointmentData.purpose,
-    }
+    };
 
     try {
       await bookAppointment(payload.availabilityId);
@@ -366,10 +370,13 @@ export default function Appointments() {
               ) : appointments && appointments.length > 0 ? (
                 appointments.map((appointment) => {
                   let type: "upcoming" | "past" | "cancelled" = "upcoming";
-                  
-                  if (appointment.status === "Cancelled" || appointment.status === "Rejected") type = "cancelled";
-                  else if (new Date(appointment.date) < today)
-                    type = "past";
+
+                  if (
+                    appointment.status === "Cancelled" ||
+                    appointment.status === "Rejected"
+                  )
+                    type = "cancelled";
+                  else if (new Date(appointment.date) < today) type = "past";
 
                   return (
                     <AppointmentCard

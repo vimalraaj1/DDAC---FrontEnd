@@ -7,11 +7,12 @@ const BASE_URL = "/patients";
 export const getPatients = async () => {
   const res = await api.get(BASE_URL);
   return res.data;
-};
+}
+
 
 // REGISTER new patient
 export const registerPatient = async (patient) => {
-  const res = await api.post(BASE_URL, patient);
+  const res = await api.post(`${BASE_URL}/register`, patient);
   return res.data;
 };
 

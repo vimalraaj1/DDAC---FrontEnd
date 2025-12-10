@@ -19,8 +19,57 @@ export default function AuthForm({title, fields, onSubmit}){
 
     const isLogin = title === "Login";
 
+    const renderField = (field) => {
+        const baseClasses = "input-field";
+        
+        switch(field.type) {
+            case "select":
+                return (
+                    <select
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        required
+                        className={`${baseClasses} cursor-pointer`}
+                    >
+                        {field.options.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                            </option>
+                        ))}
+                    </select>
+                );
+            
+            case "textarea":
+                return (
+                    <textarea
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        required
+                        rows={3}
+                        className={`${baseClasses} resize-none`}
+                        placeholder={`Enter your ${field.label.toLowerCase()}`}
+                    />
+                );
+            
+            default:
+                return (
+                    <input
+                        type={field.type}
+                        name={field.name}
+                        value={formData[field.name]}
+                        onChange={handleChange}
+                        required
+                        className={baseClasses}
+                        placeholder={field.type === "date" ? "" : `Enter your ${field.label.toLowerCase()}`}
+                    />
+                );
+        }
+    };
+
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-soft px-4">
+        <div className="min-h-screen flex items-center justify-center bg-gray-soft px-4 py-8">
             <div className="card-elevated w-full max-w-md">
                 <div className="text-center mb-8">
                     <h1 className="text-3xl font-semibold text-gray-900 mb-2">{title}</h1>
@@ -30,22 +79,42 @@ export default function AuthForm({title, fields, onSubmit}){
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-5">
-                    {fields.map((field)=>(
-                        <div key={field.name} className="space-y-2">
-                            <label className="block text-sm font-medium text-gray-900">
-                                {field.label}
-                            </label>
-                            <input
-                                type={field.type}
-                                name={field.name}
-                                value={formData[field.name]}
-                                onChange={handleChange}
-                                required
-                                className="input-field"
-                                placeholder={`Enter your ${field.label.toLowerCase()}`}
-                            />
-                        </div>
-                    ))}
+                    {/* Two-column layout for first/last name on register */}
+                    {!isLogin && fields[0]?.name === "firstname" && fields[1]?.name === "lastname" ? (
+                        <>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-900">
+                                        {fields[0].label}
+                                    </label>
+                                    {renderField(fields[0])}
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-900">
+                                        {fields[1].label}
+                                    </label>
+                                    {renderField(fields[1])}
+                                </div>
+                            </div>
+                            {fields.slice(2).map((field) => (
+                                <div key={field.name} className="space-y-2">
+                                    <label className="block text-sm font-medium text-gray-900">
+                                        {field.label}
+                                    </label>
+                                    {renderField(field)}
+                                </div>
+                            ))}
+                        </>
+                    ) : (
+                        fields.map((field) => (
+                            <div key={field.name} className="space-y-2">
+                                <label className="block text-sm font-medium text-gray-900">
+                                    {field.label}
+                                </label>
+                                {renderField(field)}
+                            </div>
+                        ))
+                    )}
 
                     <button type="submit" className="btn-primary w-full mt-6">
                         {title}
@@ -57,14 +126,14 @@ export default function AuthForm({title, fields, onSubmit}){
                         {isLogin ? (
                             <>
                                 Don't have an account?{" "}
-                                <Link to="/register" className="text-primary hover:text-[#3B82F6] font-medium">
+                                <Link to="/register" className="text-primary hover:text-[#3B82F6] font-medium transition-colors">
                                     Register
                                 </Link>
                             </>
                         ) : (
                             <>
                                 Already have an account?{" "}
-                                <Link to="/login" className="text-primary hover:text-[#3B82F6] font-medium">
+                                <Link to="/login" className="text-primary hover:text-[#3B82F6] font-medium transition-colors">
                                     Login
                                 </Link>
                             </>

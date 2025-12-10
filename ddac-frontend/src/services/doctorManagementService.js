@@ -9,7 +9,7 @@ export const getDoctors = async () => {
 };
 
 export const registerDoctor = async (payload) => {
-  const res = await api.post(`${BASE_URL}`, payload);
+  const res = await api.post(`${BASE_URL}/register`, payload);
   return res.data;
 }
 
