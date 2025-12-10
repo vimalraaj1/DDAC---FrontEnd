@@ -30,7 +30,7 @@ export function FilterBar({ onFilter }: FilterBarProps) {
   };
 
   return (
-    <div className="px-6 py-4 -mt-6 relative z-10">
+    <div className="px-6 pt-10 pb-4 -mt-6 relative z-10">
       <div className="max-w-8xl mx-auto">
         <div
           className="p-6 rounded-xl shadow-sm border"
