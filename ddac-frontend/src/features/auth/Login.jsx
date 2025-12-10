@@ -1,55 +1,81 @@
+import { useEffect, useState } from "react";
+import { login } from "../../services/authManagementService";
 import AuthForm from "./AuthForm";
-import { login } from "./authService";
 import { useNavigate } from "react-router-dom";
 
+import LoadingOverlay from "../customer/components/LoadingOverlay";
+
 export default function Login() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleLogin = async (credentials) => {
-        try {
-            const result = await login(credentials.email, credentials.password);
-            if (result.success) {
-                localStorage.setItem("token", result.token);
-                localStorage.setItem("userRole", result.user.role);
-                localStorage.setItem("userName", result.user.name);
-                localStorage.setItem("id", result.user.id);
-                
-                document.documentElement.className = `theme-${result.user.role}`;
-                
-                // Redirect based on role
-                switch(result.user.role) {
-                    case 'doctor':
-                        navigate('/doctorDashboard');
-                        break;
-                    case 'staff':
-                        navigate('/staffDashboard');
-                        break;
-                    case 'customer':
-                        navigate('/custDashboard');
-                        break;
-                    case 'manager':
-                        navigate('/managerDashboard');
-                        break;
-                    default:
-                        navigate('/login');
-                }
-            } else {
-                alert("Invalid Login Credentials");
-            }
-        } catch (error) {
-            console.error("Login failed:", error);
-            alert("Login failed: " + error.message);
-        }
-    };
+  const [isLoading, setIsLoading] = useState(false);
 
-    return (
-        <AuthForm 
-            title="Login"
-            fields={[
-                { label: "Email", name: "email", type: "email"},
-                { label: "Password", name: "password", type: "password"},
-            ]}
-            onSubmit={handleLogin}
-        />
-    );
+  const handleLogin = async (credentials) => {
+    setIsLoading(true);
+
+    try {
+      const result = await login(credentials);
+
+      if (!result || !result.role) {
+        throw new Error("Invalid login response");
+      }
+
+      // Save values
+      localStorage.setItem("userRole", result.role);
+      localStorage.setItem("userName", result.fullName);
+      localStorage.setItem("id", result.id);
+
+      // Apply theme
+      document.documentElement.className = `theme-${result.role}`;
+      // Redirect by role
+      switch (result.role) {
+        case "doctor":
+          navigate("/doctorDashboard");
+          break;
+
+        case "staff":
+          navigate("/staffDashboard");
+          break;
+
+        case "customer":
+          navigate("/custDashboard");
+          break;
+
+        case "manager":
+          navigate("/managerDashboard");
+          break;
+        default:
+          navigate("/login");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      // Handle invalid credentials (backend returns 500)
+      let message = "Login Failed";
+      if (error.status === 500) {
+        message = "Invalid email or password.";
+      }
+
+      alert(message);
+    }finally{
+        setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <AuthForm
+        title="Login"
+        fields={[
+          { label: "Email", name: "email", type: "email" },
+          { label: "Password", name: "password", type: "password" },
+        ]}
+        onSubmit={handleLogin}
+      />
+
+      <LoadingOverlay
+        isLoading={isLoading}
+        message="Logging in, please wait..."
+      />
+    </>
+  );
 }

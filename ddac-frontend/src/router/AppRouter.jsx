@@ -159,7 +159,7 @@ export default function AppRouter() {
 
 
       <Route 
-        path="/customer/payments/receipt/view" 
+        path="/payments/receipt/view" 
         element={
           <ProtectedRoute allowedRoles={['customer']}>
             <CustomerProvider>

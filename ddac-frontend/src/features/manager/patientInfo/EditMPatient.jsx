@@ -32,6 +32,7 @@ export default function EditMPatient() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
+
     // Fetch patient data on component mount
     useEffect(() => {
         fetchPatientData();

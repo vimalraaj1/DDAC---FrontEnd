@@ -1,31 +1,59 @@
+import { registerPatient } from "../../services/patientManagementService";
 import AuthForm from "./AuthForm";
-import {register} from "./authService";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+import LoadingOverlay from "../customer/components/LoadingOverlay";
 
 export default function Register() {
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    const handleRegister = async (data) => {
-        const result = await register(data);
+  const [isLoading, setIsLoading] = useState(false);
 
-        if (result.success) {
-            alert("Registration Successful");
-            navigate("/login");
-        } else {
-            alert(result.message || "Registration Failed");
-        }
-    };
+  const handleRegister = async (data) => {
+    setIsLoading(true);
 
-    return (
-        <AuthForm 
-            title="Register"
-            fields={[
-                { label: "Full Name", name: "name", type: "text"},
-                { label: "Email", name: "email", type: "email"},
-                { label: "Phone Number", name: "phone", type: "text"},
-                { label: "Password", name: "password", type: "password"},
-            ]}
-            onSubmit={handleRegister}
-        />
-    )
+    try {
+      const result = await registerPatient(data);
+
+      setIsLoading(false);
+      alert("Registration Successful");
+      navigate("/login");
+    } catch (error) {
+      console.error("Register failed:", error);
+      alert(result.message || "Registration Failed");
+    }
+  };
+
+  return (
+    <>
+      <AuthForm
+        title="Register"
+        fields={[
+          { label: "First Name", name: "firstName", type: "text" },
+          { label: "Last Name", name: "lastName", type: "text" },
+          { label: "Email", name: "email", type: "email" },
+          { label: "Phone Number", name: "phone", type: "text" },
+          { label: "Date of Birth", name: "dateOfBirth", type: "date" },
+          {
+            label: "Gender",
+            name: "gender",
+            type: "select",
+            options: [
+              { value: "", label: "Select Gender" },
+              { value: "Male", label: "Male" },
+              { value: "Female", label: "Female" },
+              { value: "Other", label: "Other" },
+            ],
+          },
+          { label: "Address", name: "address", type: "textarea" },
+          { label: "Password", name: "password", type: "password" },
+        ]}
+        onSubmit={handleRegister}
+      />
+      <LoadingOverlay
+        isLoading={isLoading}
+        message="Registering your account..."
+      />
+    </>
+  );
 }
