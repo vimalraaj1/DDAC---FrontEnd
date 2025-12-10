@@ -9,6 +9,7 @@ import {
 } from 'react-icons/fa';
 import {deleteStaff, getStaffById} from "../../../services/staffManagementService.js";
 import {averageStaffRating} from "../../../services/commentManagementService.js";
+import {toast} from "sonner";
 
 export default function ViewStaff() {
     const navigate = useNavigate();
@@ -83,18 +84,25 @@ export default function ViewStaff() {
         navigate(`/managerEditStaff/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this staff?')) {
-            try {
-                await deleteStaff(id);
-                console.log('Delete staff successful:', id);
-                alert('Staff record deleted successfully');
-                navigate(`/managerStaffInfo`);
-            } catch (err) {
-                console.error('Error deleting staff:', err);
-                alert('Failed to delete staff');
-            }
-        }
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this staff?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        await deleteStaff(id);
+                        console.log('Delete staff successful:', id);
+                        toast.success('Staff record deleted successfully');
+                        navigate(`/managerStaffInfo`);
+                    } catch (err) {
+                        console.error('Error deleting staff:', err);
+                        toast.error('Failed to delete staff');
+                    }
+                }
+            },
+            duration: 15000
+        });
     };
 
     const handleBack = () => {

@@ -5,6 +5,7 @@ import { FaUser, FaEnvelope, FaPhone, FaIdCard, FaCalendar, FaMapMarkerAlt, FaAr
 import { useNavigate, useParams } from 'react-router-dom';
 import {getPatientById} from "../../../services/patientManagementService.js";
 import {updatePatient} from "../../../services/patientManagementService.js";
+import {toast} from "sonner";
 
 export default function EditMPatient() {
     const navigate = useNavigate();
@@ -45,7 +46,7 @@ export default function EditMPatient() {
             setFormData(patientData);
         } catch (error) {
             console.error('Error fetching patient data:', error);
-            alert('Failed to load patient data. Please try again.');
+            toast.error('Failed to load patient data. Please try again.');
             navigate('/managerPatientInfo');
         } finally {
             setIsLoading(false);
@@ -109,14 +110,14 @@ export default function EditMPatient() {
             console.log('Submitting patient data: ', payload);
             const response = await updatePatient(id, payload);
             console.log('Staff updated successfully:', response);
-            alert('Patient updated successfully!');
+            toast.success('Patient updated successfully!');
             navigate('/managerPatientInfo');
         } catch (error) {
             console.error('Error updating patient:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                alert(error.response?.data?.message || 'Failed to update patient. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to update patient. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

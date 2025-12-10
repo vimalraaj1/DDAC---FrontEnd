@@ -17,6 +17,7 @@ import {
   getStaffs,
 } from "../../../services/staffManagementService.js";
 import LoadingOverlay from "../../customer/components/LoadingOverlay.js";
+import {toast} from "sonner";
 
 export default function StaffInfo() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -78,24 +79,31 @@ export default function StaffInfo() {
     navigate(`/managerEditStaff/${id}`);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this staff?")) {
-      try {
-        setIsLoadingDelete(true);
+  const handleDelete = (id) => {
+    toast.warning("Are you sure you want to delete this staff?", {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+              try {
+                setIsLoadingDelete(true);
         await deleteStaff(id);
-        console.log("Delete staff successful:", id);
+                console.log("Delete staff successful:", id);
         setIsLoadingDelete(false);
-        alert("Staff record deleted successfully");
-        try {
-          await getStaffsInfo();
-        } catch (refreshErr) {
-          console.error("Error refreshing staff list:", refreshErr);
-        }
-      } catch (err) {
-        console.error("Error deleting staff:", err);
-        alert("Failed to delete staff");
-      }
-    }
+                toast.success("Staff record deleted successfully");
+                try {
+                  await getStaffsInfo();
+                } catch (refreshErr) {
+                  console.error("Error refreshing staff list:", refreshErr);
+                }
+              } catch (err) {
+                console.error("Error deleting staff:", err);
+                toast.error("Failed to delete staff");
+              }
+            }
+            },
+            duration: 15000
+        });
   };
 
   // Loading state

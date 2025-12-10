@@ -8,6 +8,7 @@ import {getStaffById} from "../../../services/staffManagementService.js";
 import {averageStaffRating} from "../../../services/commentManagementService.js";
 import {GetAppointmentWithDetailsById} from "../../../services/appointmentManagementService.js";
 import {exportTransactionsToCsvAsync, getTransactionById} from "../../../services/transactionManagementService.js";
+import {toast} from "sonner";
 
 export default function ViewTransaction() {
     const navigate = useNavigate();
@@ -107,7 +108,7 @@ export default function ViewTransaction() {
 
         } catch (error) {
             console.error("Export failed:", error);
-            alert(`Export failed: ${error.message}`);
+            toast.error(`Export failed: ${error.message}`);
         }
     };
 
@@ -270,7 +271,7 @@ export default function ViewTransaction() {
                             <button
                                 onClick={() => { 
                                     navigator.clipboard?.writeText(transaction.paymentIntentId); 
-                                    alert('PaymentIntent copied'); 
+                                    toast.message('PaymentIntent copied'); 
                                 }}
                                 className="inline-flex items-center gap-2 px-4 py-2 bg-primary bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors cursor-pointer"
                             >

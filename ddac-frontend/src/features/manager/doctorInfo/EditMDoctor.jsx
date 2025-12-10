@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { FaUser, FaEnvelope, FaPhone, FaStethoscope, FaIdCard, FaCalendar, FaMapMarkerAlt, FaUserMd, FaArrowLeft } from 'react-icons/fa';
 import { useNavigate, useParams } from 'react-router-dom';
 import {getDoctorById, registerDoctor, updateDoctor} from "../../../services/doctorManagementService.js";
+import {toast} from "sonner";
 
 export default function EditMDoctor() {
     const navigate = useNavigate();
@@ -74,7 +75,7 @@ export default function EditMDoctor() {
             setFormData(doctorData);
         } catch (error) {
             console.error('Error fetching doctor data:', error);
-            alert('Failed to load doctor data. Please try again.');
+            toast.success('Failed to load doctor data. Please try again.');
             navigate('/managerDoctorInfo');
         } finally {
             setIsLoading(false);
@@ -140,14 +141,14 @@ export default function EditMDoctor() {
             console.log('Submitting doctor data: ', payload);
             const response = await updateDoctor(id, payload);
             console.log('Doctor updated successfully:', response);
-            alert('Doctor updated successfully!');
+            toast.success('Doctor updated successfully!');
             navigate(`/managerViewDoctor/${id}`);
         } catch (error) {
             console.error('Error updating doctor:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                alert(error.response?.data?.message || 'Failed to update doctor. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to update doctor. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

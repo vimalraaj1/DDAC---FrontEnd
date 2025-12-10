@@ -7,6 +7,7 @@ import {FaMessage} from "react-icons/fa6";
 import {deleteDoctor, getDoctors} from "../../../services/doctorManagementService.js";
 import {CountNumberOfUniquePatientsByDoctorId} from "../../../services/appointmentManagementService.js";
 import {deleteComment, getComments} from "../../../services/commentManagementService.js";
+import {toast} from "sonner";
 
 export default function CommentsInfo() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -112,22 +113,29 @@ export default function CommentsInfo() {
         navigate(`/managerViewComments/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this comment?')) {
-            try {
-                await deleteComment(id);
-                console.log('Delete comment successful:', id);
-                alert('Comment record deleted successfully');
-                try {
-                    await getCommentsInfo();
-                } catch (refreshErr) {
-                    console.error('Error refreshing comment list:', refreshErr);
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this comment?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        await deleteComment(id);
+                        console.log('Delete comment successful:', id);
+                        toast.success('Comment record deleted successfully');
+                        try {
+                            await getCommentsInfo();
+                        } catch (refreshErr) {
+                            console.error('Error refreshing comment list:', refreshErr);
+                        }
+                    } catch (err) {
+                        console.error('Error deleting comment:', err);
+                        toast.error('Failed to delete comment');
+                    }
                 }
-            } catch (err) {
-                console.error('Error deleting comment:', err);
-                alert('Failed to delete comment');
-            }
-        }
+            },
+            duration: 15000
+        });
     };
 
     // Loading state

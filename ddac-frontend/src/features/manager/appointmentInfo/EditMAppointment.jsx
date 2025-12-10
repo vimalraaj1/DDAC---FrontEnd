@@ -12,6 +12,7 @@ import {
     getDateAndTimeAfterSelectDoctor,
     unbookAppointment
 } from "../../../services/availabilityManagementService.js";
+import {toast} from "sonner";
 
 export default function EditMAppointment() {
     const navigate = useNavigate();
@@ -74,7 +75,7 @@ export default function EditMAppointment() {
 
         } catch (error) {
             console.error('Error fetching initial data:', error);
-            alert('Failed to load required data (Patients, Doctors, Staff). Please check the console.');
+            toast.error('Failed to load required data (Patients, Doctors, Staff). Please check the console.');
         } finally {
             setIsLoading(false);
         }
@@ -92,7 +93,7 @@ export default function EditMAppointment() {
                 } catch (error) {
                     console.error('Error fetching doctor availability:', error);
                     setDoctorAvailability([]);
-                    alert('Failed to load doctor availability.');
+                    toast.error('Failed to load doctor availability.');
                 } finally {
                     setDateLoading(false);
                 }
@@ -112,7 +113,7 @@ export default function EditMAppointment() {
             setOriginalFormData(appointmentData);
         } catch (error) {
             console.error('Error fetching doctor data:', error);
-            alert('Failed to load doctor data. Please try again.');
+            toast.error('Failed to load doctor data. Please try again.');
             navigate('/managerAppointmentInfo');
         } finally {
             setIsLoading(false);
@@ -227,7 +228,7 @@ export default function EditMAppointment() {
 
         if (!validateForm() || !originalFormData) {
             if (!originalFormData) {
-                alert('Initial appointment data not loaded. Please try again.');
+                toast.warning('Initial appointment data not loaded. Please try again.');
             }
             return;
         }
@@ -254,7 +255,7 @@ export default function EditMAppointment() {
         if (shouldBookNewSlot) {
             newAvailabilityId = getSelectedAvailabilityId();
             if (!newAvailabilityId) {
-                alert('Unable to find a valid new availability slot for booking. Please ensure the selected time slot is available.');
+                toast.warning('Unable to find a valid new availability slot for booking. Please ensure the selected time slot is available.');
                 setIsSubmitting(false);
                 return;
             }
@@ -270,7 +271,7 @@ export default function EditMAppointment() {
                         console.warn('Warning: Old slot was already unbooked (404 Not Found). Proceeding with update.');
                     } else {
                         console.error('Critical unbook error:', unbookError);
-                        alert('Failed to unbook old slot due to a server error. Update aborted.');
+                        toast.error('Failed to unbook old slot due to a server error. Update aborted.');
                         setIsSubmitting(false);
                         return;
                     }
@@ -288,14 +289,14 @@ export default function EditMAppointment() {
                 console.log('New availability slot booked successfully:', newAvailabilityId);
             }
             setOriginalFormData(formData);
-            alert('Appointment updated successfully!');
+            toast.success('Appointment updated successfully!');
             navigate(`/managerViewAppointment/${id}`);
         } catch (error) {
             console.error('Error updating appointment:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                alert(error.response?.data?.message || 'Failed to update appointment. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to update appointment. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

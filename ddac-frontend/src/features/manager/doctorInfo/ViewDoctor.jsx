@@ -13,6 +13,7 @@ import {
     CountNumberOfAppointmentsByDoctorId,
     CountNumberOfUniquePatientsByDoctorId
 } from "../../../services/appointmentManagementService.js";
+import {toast} from "sonner";
 
 export default function ViewDoctor() {
     const navigate = useNavigate();
@@ -69,18 +70,25 @@ export default function ViewDoctor() {
         navigate(`/managerEditDoctor/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this doctor?')) {
-            try {
-                await deleteDoctor(id);
-                console.log('Delete doctor successful:', id);
-                alert('Doctor record deleted successfully');
-                navigate(`/managerDoctorInfo`);
-            } catch (err) {
-                console.error('Error deleting doctor:', err);
-                alert('Failed to delete doctor');
-            }
-        }
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this doctor?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        await deleteDoctor(id);
+                        console.log('Delete doctor successful:', id);
+                        toast.success('Doctor record deleted successfully');
+                        navigate(`/managerDoctorInfo`);
+                    } catch (err) {
+                        console.error('Error deleting doctor:', err);
+                        toast.error('Failed to delete doctor');
+                    }
+                }
+            },
+            duration: 15000
+        });
     };
 
     const handleBack = () => {

@@ -16,6 +16,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { registerStaff } from "../../../services/staffManagementService.js";
 import { registerPatient } from "../../../services/patientManagementService.js";
+import {toast} from "sonner";
 
 export default function AddNewPatient() {
   const navigate = useNavigate();
@@ -106,16 +107,16 @@ export default function AddNewPatient() {
       console.log("Submitting patient data: ", payload);
       const response = await registerPatient(payload);
       console.log("Patient created successfully:", response);
-      alert("Patient added successfully!");
+      toast.success("Patient added successfully!");
       navigate("/managerPatientInfo");
     } catch (error) {
       console.error("Error adding patient:", error);
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
         console.error("Backend Validation Errors:", error.response.data.errors);
-        alert("Failed to add patient. Please try again.");
+        toast.error("Failed to add patient. Please try again.");
       } else {
-        alert(
+        toast.error(
           error.response?.data?.message ||
             "Failed to add patient. Please try again."
         );

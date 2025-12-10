@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import {exportAllTransactionsToCsvAsync, getTransactions} from "../../../services/transactionManagementService.js";
 import {GetAppointmentsWithDetails} from "../../../services/appointmentManagementService.js";
 import {getPatients} from "../../../services/patientManagementService.js";
+import {toast} from "sonner";
 
 export default function TransactionInfo() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -195,10 +196,10 @@ export default function TransactionInfo() {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
             console.log(`Successfully exported ${filename}`);
-
+            toast.success('CSV file exported successfully!');
         } catch (error) {
             console.error("Export failed:", error);
-            alert(`Export failed: ${error.message}`);
+            toast.error(`Export failed: ${error.message}`);
         }
     };
 

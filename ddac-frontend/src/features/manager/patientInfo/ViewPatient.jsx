@@ -13,6 +13,7 @@ import {getStaffById} from "../../../services/staffManagementService.js";
 import {averageStaffRating} from "../../../services/commentManagementService.js";
 import {deletePatient, getPatientById} from "../../../services/patientManagementService.js";
 import {HasAppointment, TotalVisits, UpcomingAppointments} from "../../../services/appointmentManagementService.js";
+import {toast} from "sonner";
 
 export default function ViewPatient() {
     const navigate = useNavigate();
@@ -67,24 +68,31 @@ export default function ViewPatient() {
         navigate(`/managerEditPatient/${id}`);
     };
 
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this patient?')) {
-            try {
-                const hasAppointment = await HasAppointment(id);
-                if (hasAppointment === false) {
-                    await deletePatient(id);
-                    console.log('Delete patient successful:', id);
-                    alert('Patient record deleted successfully');
-                    navigate(`/managerPatientInfo`);
-                } else{
-                    console.log('Deletion blocked: Patient has associated appointments.', id);
-                    alert('Patient record cannot be deleted as it is associated with appointments!');
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this patient?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                        const hasAppointment = await HasAppointment(id);
+                        if (hasAppointment === false) {
+                            await deletePatient(id);
+                            console.log('Delete patient successful:', id);
+                            toast.success('Patient record deleted successfully');
+                            navigate(`/managerPatientInfo`);
+                        } else {
+                            console.log('Deletion blocked: Patient has associated appointments.', id);
+                            toast.warning('Patient record cannot be deleted as it is associated with appointments!');
+                        }
+                    } catch (err) {
+                        console.error('Error deleting patient:', err);
+                        toast.error('Failed to delete patient');
+                    }
                 }
-            } catch (err) {
-                console.error('Error deleting patient:', err);
-                alert('Failed to delete patient');
-            }
-        }
+            },
+            duration: 15000
+        });
     };
 
     const handleBack = () => {

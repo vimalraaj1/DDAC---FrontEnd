@@ -27,7 +27,7 @@ export default function ManagerNavBar({ role = "manager" }) {
         { icon: FaUserGroup, label: "Staffs", path: "/managerStaffInfo" },
         { icon: FaUserInjured, label: "Patients", path: "/managerPatientInfo" },
         { icon: FaCalendarCheck, label: "Appointments", path: "/managerAppointmentInfo" },
-        { icon: FaFileInvoiceDollar, label: "Payments", path: "/managerTransactionInfo" },
+        { icon: FaFileInvoiceDollar, label: "Transactions", path: "/managerTransactionInfo" },
         { icon: FaMessage, label: "Comments", path: "/managerCommentsInfo" },
         { icon: FaFileUpload, label: "Reports", path: "/managerReports" },
         { icon: FaUserCircle, label: "Profile", path: "/managerProfile" },

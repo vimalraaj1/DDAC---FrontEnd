@@ -18,6 +18,7 @@ import {
 } from "../../../services/patientManagementService.js";
 import { HasAppointment } from "../../../services/appointmentManagementService.js";
 import LoadingOverlay from "../../customer/components/LoadingOverlay.js";
+import {toast} from "sonner";
 
 export default function PatientInfo() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,37 +96,38 @@ export default function PatientInfo() {
     navigate(`/managerEditPatient/${id}`);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this patient?")) {
-      try {
-        setIsLoadingDelete(true);
-
-        const hasAppointment = await HasAppointment(id);
-        if (hasAppointment === false) {
-          await deletePatient(id);
-          console.log("Delete patient successful:", id);
-          setIsLoadingDelete(false);
-          alert("Patient record deleted successfully");
-          try {
-            await getPatientsInfo();
-          } catch (refreshErr) {
-            console.error("Error refreshing patient list:", refreshErr);
-          }
-        } else {
-          console.log(
-            "Deletion blocked: Patient has associated appointments.",
-            id
-          );
-          alert(
-            "Patient record cannot be deleted as it is associated with appointments!"
-          );
-        }
-      } catch (err) {
-        console.error("Error deleting patient:", err);
-        alert("Failed to delete patient");
-      }
-    }
-  };
+    const handleDelete = (id) => {
+        toast.warning('Are you sure you want to delete this patient?', {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+                    try {
+                      setIsLoadingDelete(true);
+                        const hasAppointment = await HasAppointment(id);
+                        if (hasAppointment === false) {
+                            await deletePatient(id);
+                            setIsLoadingDelete(false);
+                            console.log('Delete patient successful:', id);
+                            toast.success('Patient record deleted successfully');
+                            try {
+                                await getPatientsInfo();
+                            } catch (refreshErr) {
+                                console.error('Error refreshing patient list:', refreshErr);
+                            }
+                        } else {
+                            console.log('Deletion blocked: Patient has associated appointments.', id);
+                            toast.warning('Patient record cannot be deleted as it is associated with appointments!');
+                        }
+                    } catch (err) {
+                        console.error('Error deleting patient:', err);
+                        toast.error('Failed to delete patient');
+                    }
+                }
+            },
+            duration: 15000
+        });
+    };
 
   // Loading state
   if (loading) {

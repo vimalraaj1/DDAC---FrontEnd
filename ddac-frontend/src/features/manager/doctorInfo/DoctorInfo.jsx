@@ -19,6 +19,7 @@ import {
 } from "../../../services/doctorManagementService.js";
 import { CountNumberOfUniquePatientsByDoctorId } from "../../../services/appointmentManagementService.js";
 import LoadingOverlay from "../../customer/components/LoadingOverlay.js";
+import {toast} from "sonner";
 
 export default function DoctorInfo() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -104,25 +105,32 @@ export default function DoctorInfo() {
     navigate(`/managerEditDoctor/${id}`);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm("Are you sure you want to delete this doctor?")) {
-      try {
-        setIsLoadingDelete(true);
+  const handleDelete = (id) => {
+    toast.warning("Are you sure you want to delete this doctor?", {
+            closeButton: true,
+            action: {
+                label: 'Yes, delete',
+                onClick: async () => {
+              try {
+                setIsLoadingDelete(true);
         await deleteDoctor(id);
-        console.log("Delete doctor successful:", id);
+                console.log("Delete doctor successful:", id);
 
         setIsLoadingDelete(false);
-        alert("Doctor record deleted successfully");
-        try {
-          await getDoctorsInfo();
-        } catch (refreshErr) {
-          console.error("Error refreshing doctor list:", refreshErr);
-        }
-      } catch (err) {
-        console.error("Error deleting doctor:", err);
-        alert("Failed to delete doctor");
-      }
-    }
+                toast.success("Doctor record deleted successfully");
+                try {
+                  await getDoctorsInfo();
+                } catch (refreshErr) {
+                  console.error("Error refreshing doctor list:", refreshErr);
+                }
+              } catch (err) {
+                console.error("Error deleting doctor:", err);
+                toast.error("Failed to delete doctor");
+              }
+            }
+            },
+            duration: 15000
+        });
   };
 
   const normalizeStatus = (status) => {

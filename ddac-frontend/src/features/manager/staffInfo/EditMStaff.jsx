@@ -5,6 +5,7 @@ import { FaUser, FaEnvelope, FaPhone, FaUserTie, FaIdCard, FaCalendar, FaMapMark
 import { useNavigate, useParams } from 'react-router-dom';
 import {updateDoctor} from "../../../services/doctorManagementService.js";
 import {getStaffById, updateStaff} from "../../../services/staffManagementService.js";
+import {toast} from "sonner";
 
 export default function EditMStaff() {
     const navigate = useNavigate();
@@ -67,7 +68,7 @@ export default function EditMStaff() {
             setFormData(staffData);
         } catch (error) {
             console.error('Error fetching staff data:', error);
-            alert('Failed to load staff data. Please try again.');
+            toast.error('Failed to load staff data. Please try again.');
             navigate('/managerStaffInfo');
         } finally {
             setIsLoading(false);
@@ -132,14 +133,14 @@ export default function EditMStaff() {
             console.log('Submitting staff data: ', payload);
             const response = await updateStaff(id, payload);
             console.log('Staff updated successfully:', response);
-            alert('Staff updated successfully!');
+            toast.success('Staff updated successfully!');
             navigate(`/managerViewStaff/${id}`);
         } catch (error) {
             console.error('Error updating staff:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                alert(error.response?.data?.message || 'Failed to update staff. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to update staff. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

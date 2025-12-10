@@ -5,6 +5,7 @@ import {Navigate, useNavigate, useParams} from 'react-router-dom';
 import {getStaffById} from "../../../services/staffManagementService.js";
 import {getManagerById, updateManager} from "../../../services/managerManagementService.js";
 import {updatePatient} from "../../../services/patientManagementService.js";
+import {toast} from "sonner";
 
 export default function EditManagerProfile() {
     const {id} = useParams();
@@ -59,7 +60,7 @@ export default function EditManagerProfile() {
             setFormData(profileData);
         } catch (error) {
             console.error('Error fetching profile data:', error);
-            alert('Failed to load profile data. Please try again.');
+            toast.error('Failed to load profile data. Please try again.');
             navigate('/managerProfile');
         } finally {
             setIsLoading(false);
@@ -141,14 +142,14 @@ export default function EditManagerProfile() {
             console.log('Submitting profile data: ', payload);
             const response = await updateManager(id, payload);
             console.log('Manager profile updated successfully:', response);
-            alert('Manager profile updated successfully!');
+            toast.success('Manager profile updated successfully!');
             navigate('/managerProfile');
         } catch (error) {
             console.error('Error updating profile:', error);
             if (error.response?.data?.errors) {
                 setErrors(error.response.data.errors);
             } else {
-                alert(error.response?.data?.message || 'Failed to update manager profile. Please try again.');
+                toast.error(error.response?.data?.message || 'Failed to update manager profile. Please try again.');
             }
         } finally {
             setIsSubmitting(false);

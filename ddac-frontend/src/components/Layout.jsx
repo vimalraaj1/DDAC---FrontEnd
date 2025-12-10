@@ -8,6 +8,7 @@ import { useContext, useState } from "react";
 import { LogOutDialog } from "../features/customer/components/LogoutDialog.js";
 import { CustomerContext } from "../features/customer/CustomerContext.js";
 import wellspring_logo from "../assets/wellspring_logo.png";
+import {FaBars} from "react-icons/fa";
 export default function Layout({ children, role }) {
     const context = role === "customer" ? useContext(CustomerContext) : null;
     const patient = context?.patient;
@@ -26,7 +27,9 @@ export default function Layout({ children, role }) {
   };
   return (
     <div className="flex min-h-screen bg-main">
-      <div className="fixed left-0 top-0 h-min z-11">
+      <div className={`fixed left-0 top-0 h-full z-20 transition-all duration-300 ease-in-out w-64 bg-card shadow-lg hidden
+      lg:translate-x-0 lg:block
+    `}>
         {/* Sidebar */}
         {role === "manager" && <ManagerNavBar />}
         {role === "staff" && <StaffNavBar />}
@@ -35,10 +38,10 @@ export default function Layout({ children, role }) {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col ml-64">
+      <div className="flex-1 flex flex-col ml-0 lg:ml-64 transition-all duration-300 ease-in-out">
         {/* Top Bar */}
         <header className="sticky top-0 z-10 bg-card px-8 py-4 shadow-md">
-          <div className="flex justify-end items-center gap-3">
+          <div className="flex justify-between items-center gap-3 lg:justify-end">
             <div className="text-right">
               <p className="text-heading font-semibold text-sm">
                 {role === "customer"
