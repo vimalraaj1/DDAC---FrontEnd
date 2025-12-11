@@ -76,7 +76,6 @@ export default function AppRouter() {
         <Route path="/register" element={<Register />}/>
         <Route path="/role-based-redirect" element={<RoleBasedRedirect />}/>
 
-          {/* Staff Routes - New Nested Structure */}
           <Route path="/staff/dashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboardNew/></ProtectedRoute>}/>
           <Route path="/staff/patients" element={<ProtectedRoute allowedRoles={['staff']}><PatientList/></ProtectedRoute>}/>
           <Route path="/staff/patients/new" element={<ProtectedRoute allowedRoles={['staff']}><PatientForm/></ProtectedRoute>}/>
@@ -95,7 +94,6 @@ export default function AppRouter() {
           <Route path="/staff/payment/failed" element={<ProtectedRoute allowedRoles={['staff']}><PaymentFailed/></ProtectedRoute>}/>
           <Route path="/staff/payment/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
           <Route path="/staff/payment/receipt/view" element={<ProtectedRoute allowedRoles={['staff']}><ReceiptDisplay/></ProtectedRoute>}/>
-          {/* Legacy routes for backward compatibility */}
           <Route path="/staff/payments" element={<ProtectedRoute allowedRoles={['staff']}><PaymentList/></ProtectedRoute>}/>
           <Route path="/staff/payments/new" element={<ProtectedRoute allowedRoles={['staff']}><PaymentForm/></ProtectedRoute>}/>
           <Route path="/staff/payments/receipt/view" element={<ProtectedRoute allowedRoles={['staff']}><ReceiptDisplay/></ProtectedRoute>}/>
@@ -103,8 +101,6 @@ export default function AppRouter() {
           <Route path="/staff/ratings/:customerId" element={<ProtectedRoute allowedRoles={['staff']}><CustomerRatings/></ProtectedRoute>}/>
           <Route path="/staff/profile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfileNew/></ProtectedRoute>}/>
           <Route path="/staff/profile/edit" element={<ProtectedRoute allowedRoles={['staff']}><EditStaffProfile/></ProtectedRoute>}/>
-
-          {/* Staff Routes - Legacy (for backward compatibility) */}
           <Route path="/staffDashboard" element={<ProtectedRoute allowedRoles={['staff']}><StaffDashboardNew/></ProtectedRoute>}/>
           <Route path="/staffProfile" element={<ProtectedRoute allowedRoles={['staff']}><StaffProfileNew/></ProtectedRoute>}/>
           <Route path="/staffAppointments" element={<ProtectedRoute allowedRoles={['staff']}><AppointmentList/></ProtectedRoute>}/>

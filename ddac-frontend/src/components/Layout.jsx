@@ -53,7 +53,18 @@ export default function Layout({ children, role }) {
             <button
               className="w-10 h-10 rounded-full bg-primary text-ondark
                       flex items-center justify-center font-semibold cursor-pointer"
-              onClick={() => navigate("/profile")}
+              onClick={
+                () => {
+                  const profileRoutes = {
+                    manager: "/managerProfile",
+                    staff: "/staffProfile",
+                    doctor: "/doctorProfile",
+                    customer: "/profile",
+                  };
+
+                  navigate(profileRoutes[role]);
+                }
+              }
             >
               <span>
                 {role === "customer"

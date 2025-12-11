@@ -1,5 +1,4 @@
 export const patientDefaults = {
-  id: "",
   firstName: "",
   lastName: "",
   gender: "",
@@ -14,6 +13,7 @@ export const patientDefaults = {
   allergies: "",
   conditions: "",
   medications: "",
+  password: ""
 };
 
 export const genderOptions = ["Male", "Female"];

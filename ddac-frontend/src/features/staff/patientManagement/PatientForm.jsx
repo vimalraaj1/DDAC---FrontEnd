@@ -25,15 +25,12 @@ export default function PatientForm() {
     try {
       const data = await patientService.getPatientById(id);
       setFormData({
-        //id: data.id || "",
         firstName: data.firstName || "",
         lastName: data.lastName || "",
         gender: data.gender || "",
         email: data.email || "",
         phone: data.phone || "",
-        dateOfBirth: data.dateOfBirth
-          ? data.dateOfBirth.split("T")[0]
-          : "",
+        dateOfBirth: data.dateOfBirth ? data.dateOfBirth.split("T")[0] : "",
         address: data.address || "",
         bloodGroup: data.bloodGroup || "",
         emergencyContact: data.emergencyContact || "",
@@ -42,6 +39,7 @@ export default function PatientForm() {
         allergies: data.allergies || "",
         conditions: data.conditions || "",
         medications: data.medications || "",
+        password: "",
       });
     } catch (error) {
       console.error("Error loading patient:", error);
@@ -55,10 +53,6 @@ export default function PatientForm() {
   };
 
   const validateForm = () => {
-    // if (!formData.id?.trim()) {
-    //   toast.error("Patient ID is required.");
-    //   return false;
-    // }
     if (!formData.firstName?.trim()) {
       toast.error("First name is required.");
       return false;
@@ -86,7 +80,7 @@ export default function PatientForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -103,7 +97,9 @@ export default function PatientForm() {
       navigate("/staff/patients");
     } catch (error) {
       console.error("Error saving patient:", error);
-      const errorMessage = error.response?.data?.message || "Error saving patient. Please try again.";
+      const errorMessage =
+        error.response?.data?.message ||
+        "Error saving patient. Please try again.";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -372,25 +368,6 @@ export default function PatientForm() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* <div>
-                  <label
-                    htmlFor="id"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Patient ID *
-                  </label>
-                  <input
-                    type="text"
-                    id="id"
-                    name="id"
-                    value={formData.id}
-                    onChange={handleChange}
-                    required
-                    disabled={isEdit}
-                    placeholder="PT000001"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent disabled:bg-gray-100"
-                  />
-                </div> */}
                 <div>
                   <label
                     htmlFor="bloodGroup"
@@ -406,6 +383,27 @@ export default function PatientForm() {
                     onChange={handleChange}
                     required
                     placeholder="e.g., O+"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Password {!isEdit && "*"}
+                  </label>
+                  <input
+                    type="text"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required={!isEdit} 
+                    placeholder={
+                      isEdit ? "Leave blank to keep current password" : ""
+                    }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 </div>
