@@ -65,6 +65,7 @@ import AppointmentReport from "../features/manager/report/AppointmentReport.jsx"
 import DoctorStaffReport from "../features/manager/report/DoctorStaffReport.jsx";
 import CustomerReceiptDisplay from "../features/customer/payments/components/CustomerReceiptDisplay.jsx";
 import {ManagerProvider} from "../features/manager/ManagerProvider.jsx";
+import ViewReceipt from "../features/manager/transactionInfo/ViewReceipt.jsx";
 
 export default function AppRouter() {
   return (
@@ -218,6 +219,7 @@ export default function AppRouter() {
         <Route path="/managerEditAppointment/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><EditMAppointment/></ManagerProvider></ProtectedRoute>}/>
         <Route path="/managerTransactionInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><TransactionInfo/></ManagerProvider></ProtectedRoute>}/>
         <Route path="/managerViewTransaction/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewTransaction/></ManagerProvider></ProtectedRoute>}/>
+        <Route path="/managerViewReceipt/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewReceipt/></ManagerProvider></ProtectedRoute>}/>
         <Route path="/managerCommentsInfo" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><CommentsInfo/></ManagerProvider></ProtectedRoute>}/>
         <Route path="/managerViewComments/:id" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ViewComments/></ManagerProvider></ProtectedRoute>}/>
         <Route path="/managerReports" element={<ProtectedRoute allowedRoles={['manager']}><ManagerProvider><ManagerReports/></ManagerProvider></ProtectedRoute>}/>

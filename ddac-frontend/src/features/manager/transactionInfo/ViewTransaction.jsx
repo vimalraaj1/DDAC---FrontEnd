@@ -28,7 +28,7 @@ export default function ViewTransaction() {
             setError(null);
 
             const data = await getTransactionById(id);
-            console.log('Fetched doctor:', data);
+            console.log('Fetched transaction:', data);
             if (data && typeof data === 'object') {
                 setTransaction(data);
             } else {
@@ -112,6 +112,22 @@ export default function ViewTransaction() {
         }
     };
 
+    const handleViewReceipt = (txn) => {
+        const validStatuses = [
+            'paid', 'success', 'succeeded', 'succeede', 'succeed', 'completed'
+        ];
+        
+        if (!validStatuses.includes(txn.status.toLowerCase())) {
+            toast.warning("Receipt can only be generated for paid or completed transactions");
+            return;
+        }
+        if (!txn.receipt) {
+            toast.error("Receipt data is missing or empty for this transaction.");
+            return;
+        }
+        navigate(`/managerViewReceipt/${txn.id}`);
+    };
+
     // Loading state
     if (loading) {
         return (
@@ -163,14 +179,12 @@ export default function ViewTransaction() {
                     </button>
 
                     <div className="flex items-center gap-3">
-                        <a
-                            href={transaction.receipt || '#'}
-                            target="_blank"
-                            rel="noreferrer"
+                        <div
+                            onClick={() => handleViewReceipt(transaction)}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-accent-sky bg-opacity-10 text-ondark rounded-lg font-medium hover:bg-opacity-20 transition-colors"
                         >
                             <FaReceipt size={14} /> View Receipt
-                        </a>
+                        </div>
                     </div>
                 </div>
 
