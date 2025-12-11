@@ -49,47 +49,46 @@ import CustNavBar from "../components/CustNavBar";
 import FadeInSection from "../components/animations/FadeInSection";
 import Layout from "../../../components/Layout";
 import { CustomerContext } from "../CustomerContext";
-import { updatePatient } from "../../../services/patientManagementService";
+import {
+  getPatientById,
+  updatePatient,
+} from "../../../services/patientManagementService";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { toast } from "sonner";
-import { Toaster } from "../components/ui/sonner";
+import LoadingOverlay from "../components/LoadingOverlay";
 
 export default function App() {
   const { patient, loading } = useContext(CustomerContext);
 
-  // Ensure patient is not null
-  if (loading || !patient) return <LoadingSpinner />;
-
-  const [saving, setSaving] = useState(false);
+  const [savingPersonal, setSavingPersonal] = useState(false);
+  const [savingMedical, setSavingMedical] = useState(false);
+  const [patientDB, setPatientDB] = useState<any>();
 
   const [editMode, setEditMode] = useState({
     personal: false,
     medical: false,
   });
 
+  const [isLoadingPatient, setIsLoadingPatient] = useState(true);
+  const [isLoadingUpdate, setIsLoadingUpdate] = useState(false);
   const [personalInfo, setPersonalInfo] = useState({
-    fullName: patient.firstName + " " + patient.lastName,
-    dateOfBirth: patient.dateOfBirth,
-    gender: patient.gender,
-    phone: patient.phone,
-    email: patient.email,
-    address: patient.address,
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    gender: "",
+    phone: "",
+    email: "",
+    address: "",
   });
 
   const [medicalInfo, setMedicalInfo] = useState({
-    bloodType: "A+",
-    allergies: patient.allergies,
-    conditions: "Hypertension, Type 2 Diabetes",
-    medications: "Metformin 500mg, Lisinopril 10mg",
-    emergencyName: "Michael Johnson",
-    emergencyRelationship: "Spouse",
-    emergencyContact: patient.emergencyContact,
-  });
-
-  const [notifications, setNotifications] = useState({
-    emailNotifications: true,
-    smsNotifications: false,
-    appointmentReminders: true,
+    bloodType: "None",
+    allergies: "None",
+    conditions: "None",
+    medications: "None",
+    emergencyName: "None",
+    emergencyRelationship: "None",
+    emergencyContact: "None",
   });
 
   // Validation states
@@ -107,7 +106,6 @@ export default function App() {
     confirm: false,
   });
   const [passwords, setPasswords] = useState({
-    current: "",
     new: "",
     confirm: "",
   });
@@ -116,13 +114,61 @@ export default function App() {
 
   useEffect(() => {
     const hasErrors = Object.values(validationErrors).some((err) => err !== "");
-    const hasEmptyFields =
-      !personalInfo.email ||
-      !personalInfo.phone ||
-      !medicalInfo.emergencyContact;
+    const hasEmptyFields = !personalInfo.email || !personalInfo.phone;
 
     setDisableSave(hasErrors || hasEmptyFields);
   }, [validationErrors, personalInfo, medicalInfo]);
+
+  useEffect(() => {
+    if (!patient?.id) return; // safety check
+    fetchPatient(patient.id);
+  }, [patient?.id]);
+
+  if (loading || !patient) {
+    return <LoadingSpinner />;
+  }
+
+  const fetchPatient = async (patientId: string) => {
+    try {
+      setIsLoadingPatient(true);
+      const data = await getPatientById(patientId);
+
+      setPatientDB(data);
+
+      setPersonalInfo({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        dateOfBirth: data.dateOfBirth,
+        gender: data.gender,
+        phone: data.phone,
+        email: data.email,
+        address: data.address,
+      });
+
+      setMedicalInfo({
+        bloodType: data.bloodGroup || "None",
+        allergies: data.allergies || "None",
+        conditions: data.conditions || "None",
+        medications: data.medications || "None",
+        emergencyName: data.emergencyName || "None",
+        emergencyRelationship: data.emergencyRelationship || "None",
+        emergencyContact: data.emergencyContact || "None",
+      });
+    } catch (error: any) {
+      toast.error(
+        `Errror Retrieving Patient Details! Error: ${error.response.data.message}`,
+        {
+          style: {
+            background: "var(--accent-danger)",
+            color: "#ffffff",
+            borderRadius: "10px",
+          },
+        }
+      );
+    } finally {
+      setIsLoadingPatient(false);
+    }
+  };
 
   // Validation functions
   const validateEmail = (email: string) => {
@@ -183,13 +229,13 @@ export default function App() {
     setPasswordError("");
 
     // Validate passwords
-    if (!passwords.current || !passwords.new || !passwords.confirm) {
+    if (!passwords.new || !passwords.confirm) {
       setPasswordError("All fields are required");
       return;
     }
 
-    if (passwords.new.length < 8) {
-      setPasswordError("New password must be at least 8 characters");
+    if (passwords.new.length < 5) {
+      setPasswordError("New password must be at least 5 characters");
       return;
     }
 
@@ -198,11 +244,39 @@ export default function App() {
       return;
     }
 
-    // Success - in real app, this would call an API
-    alert("Password changed successfully!");
+    updatePasswordDB(passwords.new);
+
     setPasswordDialog(false);
-    setPasswords({ current: "", new: "", confirm: "" });
+    setPasswords({ new: "", confirm: "" });
     setPasswordError("");
+  };
+
+  const updatePasswordDB = async (newPassword: string) => {
+    setIsLoadingUpdate(true);
+    try {
+      await updatePatient(patient.id, { ...patientDB, password: newPassword });
+
+      toast.success("Details successfully updated!", {
+        style: {
+          background: "#2ECC71",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } catch (error: any) {
+      toast.error(
+        `Update Record Failed! Error: ${error.response.data.message}`,
+        {
+          style: {
+            background: "var(--accent-danger)",
+            color: "#ffffff",
+            borderRadius: "10px",
+          },
+        }
+      );
+    } finally {
+      setIsLoadingUpdate(false);
+    }
   };
 
   const handlePersonalBtnClick = async () => {
@@ -212,7 +286,7 @@ export default function App() {
       return;
     }
 
-    setSaving(true);
+    setSavingPersonal(true);
     toast.info("Saving...", {
       style: {
         background: "var(--text-body)",
@@ -222,20 +296,21 @@ export default function App() {
     });
 
     const patientJSON = {
-      ...patient,
-      firstName: personalInfo.fullName.split(" ")[0] || patient.firstName,
-      lastName: personalInfo.fullName.split(" ")[1] || patient.lastName,
-      email: personalInfo.email || patient.email,
-      phone: personalInfo.phone || patient.phone,
-      address: personalInfo.address || patient.address,
-      gender: personalInfo.gender || patient.gender,
-      dateOfBirth: personalInfo.dateOfBirth || patient.dateOfBirth,
+      ...patientDB,
+      firstName: personalInfo.firstName || patientDB.firstName,
+      lastName: personalInfo.lastName || patientDB.lastName,
+      email: personalInfo.email || patientDB.email,
+      phone: personalInfo.phone || patientDB.phone,
+      address: personalInfo.address || patientDB.address,
+      gender: personalInfo.gender || patientDB.gender,
+      dateOfBirth: personalInfo.dateOfBirth || patientDB.dateOfBirth,
     };
 
     if (editMode.personal) {
       try {
-        await updatePatient(patient.patientId, patientJSON);
-        setSaving(false);
+        await updatePatient(patient.id, patientJSON);
+        setPatientDB(patientJSON);
+        setSavingPersonal(false);
         toast.success("Details have been successfully saved!", {
           style: {
             background: "var(--accent-success)",
@@ -270,9 +345,85 @@ export default function App() {
     setEditMode({ ...editMode, personal: !editMode.personal });
   };
 
-  const handleDeactivateAccount = () => {
-    // In real app, this would call an API
-    alert("Account deactivated");
+  const isValidPhoneNumber = (phone: string) => {
+    // Accepts: 0123456789, +60123456789, 012-3456789, etc.
+    const phoneRegex = /^(\+?\d{7,15}|\d{3,15}(?:[-\s]?\d+)*)$/;
+    return phoneRegex.test(phone);
+  };
+
+  const handleMedicalBtnClick = async () => {
+    if (!editMode.medical) {
+      // Switch to edit mode
+      setEditMode({ ...editMode, medical: true });
+      return;
+    }
+
+    // --- VALIDATION ---
+    if (!isValidPhoneNumber(medicalInfo.emergencyContact)) {
+      toast.error("Please enter a valid emergency phone number!", {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+      return;
+    }
+
+    setSavingMedical(true);
+    toast.info("Saving...", {
+      style: {
+        background: "var(--text-body)",
+        color: "#ffffff",
+        borderRadius: "10px",
+      },
+    });
+
+    const patientJSON = {
+      ...patientDB,
+      emergencyName: medicalInfo.emergencyName || patientDB.emergencyName,
+      emergencyRelationship:
+        medicalInfo.emergencyRelationship || patientDB.emergencyRelationship,
+      emergencyContact:
+        medicalInfo.emergencyContact || patientDB.emergencyContact,
+      allergies: medicalInfo.allergies ?? patientDB.allergies,
+      conditions: medicalInfo.conditions ?? patientDB.conditions,
+      medications: medicalInfo.medications ?? patientDB.medications,
+    };
+
+    try {
+      await updatePatient(patient.id, patientJSON);
+      setPatientDB(patientJSON);
+      setSavingMedical(false);
+      toast.success("Medical details have been successfully saved!", {
+        style: {
+          background: "var(--accent-success)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    } catch (error: any) {
+      if (error.response?.status === 400) {
+        toast.error("Validation error!", {
+          style: {
+            background: "var(--accent-danger)",
+            color: "#ffffff",
+            borderRadius: "10px",
+          },
+        });
+      } else {
+        toast.error("Failed to save medical info!", {
+          style: {
+            background: "var(--accent-danger)",
+            color: "#ffffff",
+            borderRadius: "10px",
+          },
+        });
+      }
+      return;
+    }
+
+    setEditMode({ ...editMode, medical: !editMode.medical });
   };
 
   return (
@@ -305,10 +456,10 @@ export default function App() {
                   {/* Patient Info */}
                   <div className="flex-1 text-center md:text-left">
                     <h2 style={{ color: "var(--text-heading)" }}>
-                      {personalInfo.fullName}
+                      {personalInfo.firstName + " " + personalInfo.lastName}
                     </h2>
                     <p className="mt-1" style={{ color: "var(--text-muted)" }}>
-                      Patient ID: <span>{patient.patientId}</span>
+                      Patient ID: <span>{patient.id}</span>
                     </p>
 
                     {/* Brief Info */}
@@ -360,10 +511,14 @@ export default function App() {
                     variant="outline"
                     size="sm"
                     className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-                    disabled={disableSave || saving}
+                    disabled={disableSave || savingPersonal}
                     onClick={handlePersonalBtnClick}
                   >
-                    {saving ? "Saving..." : editMode.personal ? "Save" : "Edit"}
+                    {savingPersonal
+                      ? "Saving..."
+                      : editMode.personal
+                      ? "Save"
+                      : "Edit"}
                   </Button>
                 </div>
 
@@ -374,14 +529,35 @@ export default function App() {
                         className="w-4 h-4 inline mr-2"
                         style={{ color: "var(--text-muted)" }}
                       />
-                      Full Name
+                      First Name
                     </Label>
                     <Input
-                      value={personalInfo.fullName}
+                      value={personalInfo.firstName}
                       onChange={(e) =>
                         setPersonalInfo({
                           ...personalInfo,
-                          fullName: e.target.value,
+                          firstName: e.target.value,
+                        })
+                      }
+                      disabled={!editMode.personal}
+                      className="mt-2 rounded-lg"
+                      style={{ borderColor: "var(--input-border)" }}
+                    />
+                  </div>
+                  <div>
+                    <Label style={{ color: "var(--text-body)" }}>
+                      <User
+                        className="w-4 h-4 inline mr-2"
+                        style={{ color: "var(--text-muted)" }}
+                      />
+                      Last Name
+                    </Label>
+                    <Input
+                      value={personalInfo.lastName}
+                      onChange={(e) =>
+                        setPersonalInfo({
+                          ...personalInfo,
+                          lastName: e.target.value,
                         })
                       }
                       disabled={!editMode.personal}
@@ -515,15 +691,19 @@ export default function App() {
                   <h3 style={{ color: "var(--text-heading)" }}>
                     Medical Information
                   </h3>
+
                   <Button
                     variant="outline"
                     size="sm"
                     className="border-[#4EA5D9] text-[#4EA5D9] hover:bg-[#dcf0fc] rounded-xl cursor-pointer"
-                    onClick={() =>
-                      setEditMode({ ...editMode, medical: !editMode.medical })
-                    }
+                    disabled={disableSave || savingMedical}
+                    onClick={handleMedicalBtnClick}
                   >
-                    {editMode.medical ? "Save" : "Edit"}
+                    {savingMedical
+                      ? "Saving..."
+                      : editMode.medical
+                      ? "Save"
+                      : "Edit"}
                   </Button>
                 </div>
 
@@ -715,79 +895,6 @@ export default function App() {
                       Update Password
                     </Button>
                   </div>
-
-                  {/* Notification Preferences */}
-                  <div
-                    className="pt-4 border-t"
-                    style={{ borderColor: "var(--input-border)" }}
-                  >
-                    <h4 style={{ color: "var(--text-body)" }} className="mb-4">
-                      <Bell
-                        className="w-4 h-4 inline mr-2"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                      Notification Preferences
-                    </h4>
-                    <div className="space-y-8">
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-2">
-                          <Label style={{ color: "var(--text-body)" }}>
-                            Email Notifications
-                          </Label>
-                          <p style={{ color: "var(--text-muted)" }}>
-                            Receive updates via email
-                          </p>
-                        </div>
-                        <Switch
-                          checked={notifications.emailNotifications}
-                          onCheckedChange={(checked) =>
-                            setNotifications({
-                              ...notifications,
-                              emailNotifications: checked,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-2">
-                          <Label style={{ color: "var(--text-body)" }}>
-                            SMS Notifications
-                          </Label>
-                          <p style={{ color: "var(--text-muted)" }}>
-                            Receive text messages
-                          </p>
-                        </div>
-                        <Switch
-                          checked={notifications.smsNotifications}
-                          onCheckedChange={(checked) =>
-                            setNotifications({
-                              ...notifications,
-                              smsNotifications: checked,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex flex-col gap-2">
-                          <Label style={{ color: "var(--text-body)" }}>
-                            Appointment Reminders
-                          </Label>
-                          <p style={{ color: "var(--text-muted)" }}>
-                            Get reminded about appointments
-                          </p>
-                        </div>
-                        <Switch
-                          checked={notifications.appointmentReminders}
-                          onCheckedChange={(checked) =>
-                            setNotifications({
-                              ...notifications,
-                              appointmentReminders: checked,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </Card>
             </FadeInSection>
@@ -805,47 +912,6 @@ export default function App() {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                  Current Password
-                </Label>
-                <div className="relative">
-                  <Input
-                    type={showPasswords.current ? "text" : "password"}
-                    className="w-full px-3 py-2 border rounded-lg pr-10"
-                    style={{
-                      borderColor: "var(--input-border)",
-                      color: "var(--text-body)",
-                    }}
-                    value={passwords.current}
-                    onChange={(e) =>
-                      setPasswords({ ...passwords, current: e.target.value })
-                    }
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-100 rounded"
-                    onClick={() =>
-                      setShowPasswords({
-                        ...showPasswords,
-                        current: !showPasswords.current,
-                      })
-                    }
-                  >
-                    {showPasswords.current ? (
-                      <EyeOff
-                        className="w-4 h-4"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                    ) : (
-                      <Eye
-                        className="w-4 h-4"
-                        style={{ color: "var(--text-muted)" }}
-                      />
-                    )}
-                  </button>
-                </div>
-              </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   New Password
@@ -951,7 +1017,14 @@ export default function App() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-
+        <LoadingOverlay
+          isLoading={isLoadingPatient}
+          message="Retrieving patient details..."
+        />
+        <LoadingOverlay
+          isLoading={isLoadingUpdate}
+          message="Updating your account..."
+        />
       </div>
     </Layout>
   );

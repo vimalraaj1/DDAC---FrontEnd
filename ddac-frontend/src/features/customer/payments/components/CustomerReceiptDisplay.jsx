@@ -153,7 +153,7 @@ export default function CustomerReceiptDisplay() {
 
   if (loading) {
     return (
-      <Layout role="staff">
+      <Layout role="customer">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-lg">Loading receipt...</div>
         </div>
@@ -163,7 +163,7 @@ export default function CustomerReceiptDisplay() {
 
   if (!transaction || !receipt) {
     return (
-      <Layout role="staff">
+      <Layout role="customer">
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-lg text-red-600">Receipt not found</div>
         </div>
@@ -172,7 +172,7 @@ export default function CustomerReceiptDisplay() {
   }
 
   return (
-    <Layout role="staff">
+    <Layout role="customer">
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="container mx-auto px-4 max-w-4xl">
           {/* Action Buttons - Hidden in print */}

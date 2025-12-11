@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { login } from "../../services/authManagementService";
 import AuthForm from "./AuthForm";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 import LoadingOverlay from "../customer/components/LoadingOverlay";
 
@@ -9,6 +10,10 @@ export default function Login() {
   const navigate = useNavigate();
 
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    document.documentElement.className = `theme-customer`;
+  }, []);
 
   const handleLogin = async (credentials) => {
     setIsLoading(true);
@@ -26,7 +31,12 @@ export default function Login() {
       localStorage.setItem("id", result.id);
 
       // Apply theme
-      document.documentElement.className = `theme-${result.role}`;
+      if (!result) {
+        document.documentElement.className = `theme-customer`;
+        console.log("No role found, defaulting to customer theme");
+      } else {
+        document.documentElement.className = `theme-${result.role}`;
+      }
       // Redirect by role
       switch (result.role) {
         case "doctor":
@@ -49,15 +59,20 @@ export default function Login() {
       }
     } catch (error) {
       console.error("Login failed:", error);
-      // Handle invalid credentials (backend returns 500)
-      let message = "Login Failed";
-      if (error.status === 500) {
-        message = "Invalid email or password.";
-      }
 
-      alert(message);
-    }finally{
-        setIsLoading(false);
+      toast.error(
+        `Registration Failed! Error: ${error.response.data.message}`,
+        {
+          style: {
+            background: "var(--accent-danger)",
+            color: "#ffffff",
+            borderRadius: "10px",
+          },
+        }
+      );
+
+    } finally {
+      setIsLoading(false);
     }
   };
 
