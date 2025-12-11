@@ -1,14 +1,23 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { LogOutDialog } from "../../customer/components/LogoutDialog";
 import doctorService from "../services/doctorService";
 
 export default function DoctorProfile() {
     const navigate = useNavigate();
-    const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
+    const userName = localStorage.getItem("userName");
     const [isEditing, setIsEditing] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    const [showPasswordSection, setShowPasswordSection] = useState(false);
+    const [passwordData, setPasswordData] = useState({
+        newPassword: '',
+        confirmPassword: ''
+    });
+    const [passwordError, setPasswordError] = useState('');
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
@@ -53,24 +62,68 @@ export default function DoctorProfile() {
         }));
     };
 
+    const handlePasswordInputChange = (e) => {
+        const { name, value } = e.target;
+        setPasswordData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        setPasswordError('');
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        // Prevent multiple submissions
+        if (isSaving) {
+            return;
+        }
+
         try {
-            await doctorService.updateCurrentDoctorProfile(formData);
+            setIsSaving(true);
+            
+            // Validate password if changing
+            if (showPasswordSection && (passwordData.newPassword || passwordData.confirmPassword)) {
+                if (passwordData.newPassword !== passwordData.confirmPassword) {
+                    setPasswordError('Passwords do not match');
+                    setIsSaving(false);
+                    return;
+                }
+                if (passwordData.newPassword.length < 6) {
+                    setPasswordError('Password must be at least 6 characters');
+                    setIsSaving(false);
+                    return;
+                }
+            }
+
+            // Prepare update data
+            const updateData = { ...formData };
+            if (showPasswordSection && passwordData.newPassword) {
+                updateData.password = passwordData.newPassword;
+            }
+
+            await doctorService.updateCurrentDoctorProfile(updateData);
             setIsEditing(false);
+            setShowPasswordSection(false);
+            setPasswordData({ newPassword: '', confirmPassword: '' });
+            setPasswordError('');
             alert("Profile updated successfully!");
             // Refresh profile data
             fetchProfile();
         } catch (error) {
             console.error('Error updating profile:', error);
-            alert('Failed to update profile. Please try again.');
+            const errorMessage = error.response?.data?.message || error.response?.data || 'Failed to update profile. Please try again.';
+            alert(errorMessage);
+        } finally {
+            setIsSaving(false);
         }
     };
 
-    const handleLogout = () => {
+    const confirmedLogout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("userRole");
+        localStorage.removeItem("id");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
         navigate("/login");
     };
 
@@ -163,20 +216,22 @@ export default function DoctorProfile() {
                                             </svg>
                                             <span>Settings</span>
                                         </button>
+                                        <div className="border-t border-gray-200 my-1"></div>
+                                        <button
+                                            onClick={() => {
+                                                setShowDropdown(false);
+                                                setLogoutDialogOpen(true);
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <span>Logout</span>
+                                        </button>
                                     </div>
                                 )}
                             </div>
-                            
-                            {/* Logout Button */}
-                            <button 
-                                onClick={handleLogout}
-                                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                <span className="text-sm font-medium">Logout</span>
-                            </button>
                         </div>
                     </div>
                 </header>
@@ -405,20 +460,104 @@ export default function DoctorProfile() {
                                     />
                                 </div>
 
+                                {/* Password Change Section */}
+                                {isEditing && (
+                                    <div className="mt-8 pt-6 border-t border-gray-200">
+                                        <div className="flex items-center justify-between mb-4">
+                                            <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setShowPasswordSection(!showPasswordSection);
+                                                    setPasswordData({ newPassword: '', confirmPassword: '' });
+                                                    setPasswordError('');
+                                                }}
+                                                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                                            >
+                                                {showPasswordSection ? 'Cancel Password Change' : 'Change Password'}
+                                            </button>
+                                        </div>
+
+                                        {showPasswordSection && (
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        New Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        name="newPassword"
+                                                        value={passwordData.newPassword}
+                                                        onChange={handlePasswordInputChange}
+                                                        placeholder="Enter new password (min 6 characters)"
+                                                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                                        Confirm New Password
+                                                    </label>
+                                                    <input
+                                                        type="password"
+                                                        name="confirmPassword"
+                                                        value={passwordData.confirmPassword}
+                                                        onChange={handlePasswordInputChange}
+                                                        placeholder="Confirm new password"
+                                                        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                    />
+                                                </div>
+
+                                                {passwordError && (
+                                                    <div className="flex items-center space-x-2 text-red-600 text-sm">
+                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <span>{passwordError}</span>
+                                                    </div>
+                                                )}
+
+                                                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                                                    <div className="flex items-start space-x-2">
+                                                        <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                                        </svg>
+                                                        <div className="text-sm text-blue-800">
+                                                            <p className="font-medium">Password Requirements:</p>
+                                                            <ul className="mt-1 ml-4 list-disc space-y-1">
+                                                                <li>Minimum 6 characters</li>
+                                                                <li>Both passwords must match</li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
                                 {isEditing && (
                                     <div className="mt-8 flex justify-end space-x-4">
                                         <button
                                             type="button"
                                             onClick={() => setIsEditing(false)}
-                                            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors"
+                                            disabled={isSaving}
+                                            className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             Cancel
                                         </button>
                                         <button
                                             type="submit"
-                                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium transition-colors"
+                                            disabled={isSaving}
+                                            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                                         >
-                                            Save Changes
+                                            {isSaving && (
+                                                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            )}
+                                            <span>{isSaving ? 'Saving...' : 'Save Changes'}</span>
                                         </button>
                                     </div>
                                 )}
@@ -429,6 +568,12 @@ export default function DoctorProfile() {
                 </>
                 )}
             </div>
+            
+            <LogOutDialog
+                open={logoutDialogOpen}
+                onOpenChange={setLogoutDialogOpen}
+                onConfirmLogout={confirmedLogout}
+            />
         </div>
     );
 }

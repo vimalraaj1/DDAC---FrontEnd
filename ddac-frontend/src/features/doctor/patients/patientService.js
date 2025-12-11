@@ -1,12 +1,9 @@
-import api from '../../../services/api';
+import api from '../../../api/axios';
 
 /**
  * Patient API Service
  * Handles all patient-related API calls for doctors
  */
-
-// Mock doctor ID for testing
-const MOCK_DOCTOR_ID = 'DR000001';
 
 const patientService = {
     /**
@@ -44,9 +41,9 @@ const patientService = {
      */
     getDoctorPatients: async () => {
         try {
-            const userId = localStorage.getItem('userId');
+            const userId = localStorage.getItem('id');
             if (!userId) {
-                throw new Error('User ID not found in localStorage');
+                throw new Error('User ID not found. Please log in again.');
             }
 
             // Get all appointments for the doctor

@@ -32,6 +32,7 @@ import DoctorProfile from "../features/doctor/profile/DoctorProfile";
 import DoctorPatients from "../features/doctor/patients/DoctorPatients";
 import DoctorAnalytics from "../features/doctor/analytics/DoctorAnalytics";
 import DoctorSettings from "../features/doctor/settings/DoctorSettings";
+import DoctorAvailability from "../features/doctor/settings/DoctorAvailability";
 import Payments from "../../src/features/customer/payments/Payments.js";
 import MedicalRecords from "../features/customer/medicalRecords/MedicalRecords.js";
 import Feedbacks from "../features/customer/feedbacks/Feedbacks.js";
@@ -193,6 +194,7 @@ export default function AppRouter() {
         <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
         <Route path="/doctorPatients" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorPatients/></ProtectedRoute>}/>
         <Route path="/doctorAnalytics" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAnalytics/></ProtectedRoute>}/>
+        <Route path="/doctorAvailability" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAvailability/></ProtectedRoute>}/>
         <Route path="/doctorProfile" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorProfile/></ProtectedRoute>}/>
 
         {/* Manager Routes */}

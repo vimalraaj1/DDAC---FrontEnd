@@ -1,26 +1,41 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { LogOutDialog } from "../../customer/components/LogoutDialog";
 import appointmentService from "./appointmentService";
 import consultationService from "../consultations/consultationService";
 import commentService from "../services/commentService";
 
 export default function DoctorAppointments() {
     const navigate = useNavigate();
-    const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
+    const userName = localStorage.getItem("userName");
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
     const [showConsultationModal, setShowConsultationModal] = useState(false);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [filterStatus, setFilterStatus] = useState('all');
+    const [filterDate, setFilterDate] = useState('');
+    const [searchTerm, setSearchTerm] = useState('');
     const [consultationForm, setConsultationForm] = useState({
         feedbackNotes: '',
         prescriptions: [{ medication: '', dosage: '', frequency: '', duration: '' }]
     });
+    const [isSavingConsultation, setIsSavingConsultation] = useState(false);
 
     useEffect(() => {
         fetchAppointments();
     }, []);
+
+    const filteredAppointments = appointments.filter(appointment => {
+        const matchesSearch = searchTerm === '' || 
+            appointment.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            appointment.patientId?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = filterStatus === 'all' || appointment.status === filterStatus;
+        const matchesDate = filterDate === '' || appointment.date === filterDate;
+        return matchesSearch && matchesStatus && matchesDate;
+    });
 
     const fetchAppointments = async () => {
         try {
@@ -63,7 +78,22 @@ export default function DoctorAppointments() {
         }
     };
 
-    const handleViewAppointment = (appointment) => {
+    const handleViewAppointment = async (appointment) => {
+        try {
+            // Check if consultation already exists for this appointment
+            const existingConsultation = await consultationService.getConsultationByAppointmentId(appointment.id);
+            
+            if (existingConsultation) {
+                alert('A consultation already exists for this appointment. You can view it in the consultations section.');
+                return;
+            }
+        } catch (error) {
+            // If 404, consultation doesn't exist - that's fine
+            if (error.response?.status !== 404) {
+                console.error('Error checking consultation:', error);
+            }
+        }
+        
         setSelectedAppointment(appointment);
         setShowConsultationModal(true);
     };
@@ -87,7 +117,14 @@ export default function DoctorAppointments() {
     };
 
     const handleSubmitConsultation = async () => {
+        // Prevent multiple submissions
+        if (isSavingConsultation) {
+            return;
+        }
+
         try {
+            setIsSavingConsultation(true);
+            
             // Format prescriptions: "MedicationName Dosage, frequency, duration | ..."
             const prescriptionNotes = consultationForm.prescriptions
                 .filter(p => p.medication && p.dosage)
@@ -104,11 +141,14 @@ export default function DoctorAppointments() {
             await consultationService.createConsultation(consultationData);
 
             // Create empty comment entry for patient feedback
-            const userId = localStorage.getItem('userId') || 'DR000001';
+            const userId = localStorage.getItem('id');
+            if (!userId) {
+                throw new Error('User ID not found. Please log in again.');
+            }
             const commentData = {
                 patientId: selectedAppointment.patientId,
                 doctorId: userId,
-                staffId: selectedAppointment.staffId || 'ST000001',
+                staffId: selectedAppointment.staffId,
                 appointmentId: selectedAppointment.id,
                 commentText: null,
                 doctorRating: null,
@@ -129,7 +169,17 @@ export default function DoctorAppointments() {
             fetchAppointments();
         } catch (error) {
             console.error('Error saving consultation:', error);
-            alert('Failed to save consultation notes. Please try again.');
+            
+            // Check if it's a duplicate consultation error
+            if (error.response?.status === 500 && error.response?.data?.includes('Duplicate entry') && error.response?.data?.includes('AppointmentId')) {
+                alert('This appointment already has a consultation. Each appointment can only have one consultation record.');
+            } else if (error.response?.data) {
+                alert(`Failed to save consultation: ${error.response.data.message || 'Please try again.'}`);
+            } else {
+                alert('Failed to save consultation notes. Please try again.');
+            }
+        } finally {
+            setIsSavingConsultation(false);
         }
     };
 
@@ -152,10 +202,11 @@ export default function DoctorAppointments() {
         return `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`;
     };
 
-    const handleLogout = () => {
+    const confirmedLogout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("userRole");
+        localStorage.removeItem("id");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
         navigate("/login");
     };
 
@@ -263,20 +314,22 @@ export default function DoctorAppointments() {
                                             </svg>
                                             <span>Settings</span>
                                         </button>
+                                        <div className="border-t border-gray-200 my-1"></div>
+                                        <button
+                                            onClick={() => {
+                                                setShowDropdown(false);
+                                                setLogoutDialogOpen(true);
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <span>Logout</span>
+                                        </button>
                                     </div>
                                 )}
                             </div>
-                            
-                            {/* Logout Button */}
-                            <button 
-                                onClick={handleLogout}
-                                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                <span className="text-sm font-medium">Logout</span>
-                            </button>
                         </div>
                     </div>
                 </header>
@@ -303,7 +356,7 @@ export default function DoctorAppointments() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-sm mb-1">Completed</p>
-                                    <h3 className="text-2xl font-bold text-gray-900">{appointments.filter(a => a.status === 'completed').length}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900">{appointments.filter(a => a.status === 'Completed').length}</h3>
                                 </div>
                                 <div className="p-3 bg-green-50 rounded-lg">
                                     <svg className="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -317,7 +370,7 @@ export default function DoctorAppointments() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-sm mb-1">Scheduled</p>
-                                    <h3 className="text-2xl font-bold text-gray-900">{appointments.filter(a => a.status === 'scheduled').length}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900">{appointments.filter(a => a.status === 'Approved' || a.status === 'Confirmed').length}</h3>
                                 </div>
                                 <div className="p-3 bg-yellow-50 rounded-lg">
                                     <svg className="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -331,7 +384,7 @@ export default function DoctorAppointments() {
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-gray-500 text-sm mb-1">Cancelled</p>
-                                    <h3 className="text-2xl font-bold text-gray-900">{appointments.filter(a => a.status === 'cancelled').length}</h3>
+                                    <h3 className="text-2xl font-bold text-gray-900">{appointments.filter(a => a.status === 'Cancelled').length}</h3>
                                 </div>
                                 <div className="p-3 bg-red-50 rounded-lg">
                                     <svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,16 +398,47 @@ export default function DoctorAppointments() {
                     {/* Appointments Table */}
                     <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                         <div className="px-6 py-4 border-b border-gray-100">
-                            <div className="flex items-center justify-between">
-                                <h2 className="text-lg font-semibold text-gray-900">Today's Appointments</h2>
-                                {/* <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium text-sm">
-                                    <span className="flex items-center space-x-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                                        </svg>
-                                        <span>Add Appointment</span>
-                                    </span>
-                                </button> */}
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-lg font-semibold text-gray-900">Appointments</h2>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="relative flex-1">
+                                    <input
+                                        type="text"
+                                        placeholder="Search by patient name or ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                    <svg className="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                </div>
+                                <input
+                                    type="date"
+                                    value={filterDate}
+                                    onChange={(e) => setFilterDate(e.target.value)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                />
+                                <select
+                                    value={filterStatus}
+                                    onChange={(e) => setFilterStatus(e.target.value)}
+                                    className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    <option value="all">All Status</option>
+                                    <option value="Completed">Completed</option>
+                                    <option value="Approved">Approved</option>
+                                    <option value="Confirmed">Confirmed</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                                {(searchTerm || filterDate || filterStatus !== 'all') && (
+                                    <button
+                                        onClick={() => { setSearchTerm(''); setFilterDate(''); setFilterStatus('all'); }}
+                                        className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
                             </div>
                         </div>
 
@@ -369,12 +453,6 @@ export default function DoctorAppointments() {
                                             Date & Time
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Type
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Department
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -383,7 +461,7 @@ export default function DoctorAppointments() {
                                     </tr>
                                 </thead>
                                 <tbody className="bg-white divide-y divide-gray-200">
-                                    {appointments.map((appointment) => (
+                                    {filteredAppointments.map((appointment) => (
                                         <tr key={appointment.id} className="hover:bg-gray-50 transition-colors">
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -407,12 +485,6 @@ export default function DoctorAppointments() {
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="text-sm text-gray-900">{appointment.date}</div>
                                                 <div className="text-sm text-gray-500">{appointment.time}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{appointment.type}</div>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{appointment.department}</div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={getStatusBadge(appointment.status)}>
@@ -617,20 +689,38 @@ export default function DoctorAppointments() {
                         <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-end space-x-3">
                             <button
                                 onClick={closeModal}
-                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+                                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                                disabled={isSavingConsultation}
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleSubmitConsultation}
-                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium"
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-blue-400"
+                                disabled={isSavingConsultation}
                             >
-                                Save Consultation
+                                {isSavingConsultation ? (
+                                    <span className="flex items-center gap-2">
+                                        <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        Saving...
+                                    </span>
+                                ) : (
+                                    'Save Consultation'
+                                )}
                             </button>
                         </div>
                     </div>
                 </div>
             )}
+            
+            <LogOutDialog
+                open={logoutDialogOpen}
+                onOpenChange={setLogoutDialogOpen}
+                onConfirmLogout={confirmedLogout}
+            />
         </div>
     );
 }

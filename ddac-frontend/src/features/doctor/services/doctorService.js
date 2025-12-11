@@ -1,4 +1,4 @@
-import api from '../../../services/api';
+import api from '../../../api/axios';
 
 /**
  * Doctor API Service
@@ -36,13 +36,13 @@ const doctorService = {
 
     /**
      * Get current doctor profile
-     * Uses userId from localStorage
+     * Uses id from localStorage
      */
     getCurrentDoctorProfile: async () => {
         try {
-            const userId = localStorage.getItem('userId');
+            const userId = localStorage.getItem('id');
             if (!userId) {
-                throw new Error('User ID not found in localStorage');
+                throw new Error('User ID not found. Please log in again.');
             }
             const response = await api.get(`/doctors/${userId}`);
             return response.data;
@@ -82,13 +82,13 @@ const doctorService = {
 
     /**
      * Update current doctor profile
-     * Uses userId from localStorage
+     * Uses id from localStorage
      */
     updateCurrentDoctorProfile: async (doctorData) => {
         try {
-            const userId = localStorage.getItem('userId');
+            const userId = localStorage.getItem('id');
             if (!userId) {
-                throw new Error('User ID not found in localStorage');
+                throw new Error('User ID not found. Please log in again.');
             }
             const response = await api.put(`/doctors/${userId}`, doctorData);
             return response.data;
