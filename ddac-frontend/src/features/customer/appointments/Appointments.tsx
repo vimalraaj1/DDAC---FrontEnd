@@ -189,8 +189,11 @@ export default function Appointments() {
     };
 
     try {
-      await bookAppointment(payload.availabilityId);
-      await registerAppointment(payload);
+      console.log("Booking appointment with payload:", payload);
+
+      const appointmentResponse = await registerAppointment(payload);
+
+      await bookAppointment(payload.availabilityId, appointmentResponse.id);
       await sendEmail(emailPayload);
 
       toast.success("Appointment booked successfully!", {
@@ -254,7 +257,7 @@ export default function Appointments() {
       });
     } catch (err) {
       console.log("Error: ", err);
-      toast.error("Booking failed!", {
+      toast.error("Booking cancellation failed!", {
         style: {
           background: "var(--accent-danger)",
           color: "#ffffff",

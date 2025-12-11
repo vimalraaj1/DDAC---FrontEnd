@@ -310,7 +310,6 @@ export default function App() {
       try {
         await updatePatient(patient.id, patientJSON);
         setPatientDB(patientJSON);
-        setSavingPersonal(false);
         toast.success("Details have been successfully saved!", {
           style: {
             background: "var(--accent-success)",
@@ -339,6 +338,8 @@ export default function App() {
           });
           return;
         }
+      }finally{
+        setSavingPersonal(false);
       }
     }
 
@@ -394,7 +395,7 @@ export default function App() {
     try {
       await updatePatient(patient.id, patientJSON);
       setPatientDB(patientJSON);
-      setSavingMedical(false);
+
       toast.success("Medical details have been successfully saved!", {
         style: {
           background: "var(--accent-success)",
@@ -421,6 +422,8 @@ export default function App() {
         });
       }
       return;
+    } finally {
+      setSavingMedical(false);
     }
 
     setEditMode({ ...editMode, medical: !editMode.medical });
