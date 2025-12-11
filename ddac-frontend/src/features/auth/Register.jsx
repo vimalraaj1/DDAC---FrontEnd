@@ -3,6 +3,7 @@ import AuthForm from "./AuthForm";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import LoadingOverlay from "../customer/components/LoadingOverlay";
+import { toast } from "sonner";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -16,11 +17,25 @@ export default function Register() {
       const result = await registerPatient(data);
 
       setIsLoading(false);
-      alert("Registration Successful");
+      toast.success("Account Created successfully!", {
+        style: {
+          background: "#2ECC71",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
       navigate("/login");
     } catch (error) {
       console.error("Register failed:", error);
-      alert(result.message || "Registration Failed");
+      toast.error(`Registration Failed! Error: ${error.response.data.message}`, {
+        style: {
+          background: "var(--accent-danger)",
+          color: "#ffffff",
+          borderRadius: "10px",
+        },
+      });
+    }finally{
+      setIsLoading(false);
     }
   };
 

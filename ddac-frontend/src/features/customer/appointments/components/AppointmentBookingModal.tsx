@@ -260,7 +260,6 @@ export function AppointmentBookingModal({
               <Calendar className="h-4 w-4 text-[#4EA5D9]" />
               Appointment Date
               <span className="text-red-500">*</span>
-              <span className="text-red-500">*</span>
             </Label>
             <Select
               disabled={isLoadingAvailability || availableDates.length === 0}

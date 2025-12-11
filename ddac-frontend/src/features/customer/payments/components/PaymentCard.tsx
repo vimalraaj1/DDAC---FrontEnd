@@ -32,7 +32,7 @@ export function PaymentCard({ payment }: PaymentCardProps) {
     } else if (!viewReceiptValidation(transaction)) {
       return;
     }
-    navigate(`/customer/payments/receipt/view?transactionId=${transactionId}`);
+    navigate(`/payments/receipt/view?transactionId=${transactionId}`);
   };
 
   return (
