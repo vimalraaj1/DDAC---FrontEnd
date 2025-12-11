@@ -13,16 +13,18 @@ import {
     FaMoneyBillWave,
     FaClock,
     FaCheckCircle,
-    FaUserCircle
+    FaUserCircle, FaLock
 } from 'react-icons/fa';
 import {useNavigate, useParams} from 'react-router-dom';
 import {getManagerById} from "../../../services/managerManagementService.js";
 import { useManager } from '../ManagerProvider.jsx';
+import ChangePasswordModal from './ChangePasswordModal.jsx';
 
 export default function ManagerProfile() {
     const [profile, setProfile] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
     const navigate = useNavigate();
     const { manager, loading: contextLoading } = useManager();
 
@@ -120,6 +122,9 @@ export default function ManagerProfile() {
     const handleEditProfile = (id) => {
         navigate(`/managerEditProfile/${id}`);
     };
+    const handlePasswordChangeSuccess = () => {
+        setIsPasswordModalOpen(false); 
+    }
 
     // Loading state
     if (contextLoading || loading) {
@@ -181,6 +186,16 @@ export default function ManagerProfile() {
                         <h1 className="text-3xl font-bold text-heading">My Profile</h1>
                         <p className="text-muted mt-1">View and manage your personal information</p>
                     </div>
+                    <div className="flex items-center justify end gap-3">
+                        {manager && (
+                    <button
+                        onClick={() => setIsPasswordModalOpen(true)}
+                        className="flex items-center gap-2 px-6 py-3 bg-primary text-ondark rounded-lg font-medium hover:bg-primary-hover transition-colors"
+                    >
+                        <FaLock size={18} />
+                        <span>Change Password</span>
+                    </button>
+                        )}
                     <button
                         onClick={() => handleEditProfile(profile.id)}
                         className="flex items-center gap-2 px-6 py-3 bg-primary text-ondark rounded-lg font-medium hover:bg-primary-hover transition-colors"
@@ -188,6 +203,7 @@ export default function ManagerProfile() {
                         <FaEdit size={18} />
                         <span>Edit Profile</span>
                     </button>
+                    </div>
                 </div>
 
                 {/* Profile Header Card */}
@@ -356,7 +372,10 @@ export default function ManagerProfile() {
                                 <FaMoneyBillWave size={12} />
                                 Monthly Salary
                             </p>
-                            <p className="text-body font-medium">RM {profile.salary.toLocaleString()}</p>
+                            <p className="text-body font-medium">RM {profile.salary.toLocaleString('en-MY', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            })}</p>
                         </div>
 
                         {/* Status */}
@@ -370,6 +389,13 @@ export default function ManagerProfile() {
                     </div>
                 </div>
             </div>
+            {isPasswordModalOpen && manager && (
+                <ChangePasswordModal
+                    id={manager.id}
+                    onClose={() => setIsPasswordModalOpen(false)}
+                    onSuccess={handlePasswordChangeSuccess}
+                />
+            )}
         </Layout>
     );
 }

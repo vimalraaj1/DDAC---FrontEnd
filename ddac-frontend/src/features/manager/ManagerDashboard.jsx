@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import ManagerNavBar from "./components/ManagerNavBar.jsx";
 import '../../themes/mng.css';
 import '../../index.css';
@@ -12,21 +12,54 @@ import {getDoctors} from "../../services/doctorManagementService.js";
 import {getPatients} from "../../services/patientManagementService.js";
 import {getStaffs} from "../../services/staffManagementService.js";
 import {getAppointments, GetAppointmentsWithDetails} from "../../services/appointmentManagementService.js";
+import {useManager} from "./ManagerProvider.jsx";
+import {getManagerById} from "../../services/managerManagementService.js";
 
 export default function ManagerDashboard() {
     const [doctors, setDoctors] = useState([]);
     const [patients, setPatients] = useState([]);
     const [staffs, setStaffs] = useState([]);
     const [appointments, setAppointments] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [isProfileLoading, setIsProfileLoading] = useState(true);
+    const [isDashboardLoading, setIsDashboardLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { manager, loading: contextLoading } = useManager();
+    const [managerData, setManagerData] = useState(null);
+    const navigate = useNavigate();
     
     useEffect(() => {
         getDashboardData();
-    }, [])
+        if (!manager) {
+            setIsProfileLoading(false);
+            return;
+        }
+        getProfileInfo(manager.id);
+    }, [manager])
+    
+    const getProfileInfo = async (id) => {
+        try {
+            setIsProfileLoading(true);
+            setError(null);
+
+            const data = await getManagerById(id);
+            console.log('Fetched manager info:', data);
+            if (data && typeof data === 'object') {
+                setManagerData(data);
+            } else {
+                throw new Error('Manager information not found or invalid data format.');
+            }
+        }
+        catch (err) {
+            console.error('Error fetching manager:', err);
+            setError(err.message || 'Failed to fetch manager');
+            setManagerData(null);
+        } finally {
+            setIsProfileLoading(false);
+        }
+    }
     
     const getDashboardData = async () => {
-        setLoading(true);
+        setIsDashboardLoading(true);
         setError(null);
         try{
             // Promise.all() is used to run all APIs simultaneously
@@ -45,14 +78,14 @@ export default function ManagerDashboard() {
             setStaffs(staffsData);
             setAppointments(appointmentsData);
         } catch (error) {
-            console.error('Error fetching dashboard data:', err);
+            console.error('Error fetching dashboard data:', error);
             setError(error.message || 'Failed to load dashboard data.');
             setDoctors([]);
             setPatients([]);
             setStaffs([]);
             setAppointments([]);
         } finally {
-            setLoading(false);
+            setIsDashboardLoading(false);
         }
     }
     
@@ -83,7 +116,7 @@ export default function ManagerDashboard() {
     }, [doctors]);
 
     // Loading state
-    if (loading) {
+    if (isDashboardLoading || isProfileLoading) {
         return (
             <Layout role="manager">
                 <div className="flex items-center justify-center h-screen">
@@ -120,6 +153,25 @@ export default function ManagerDashboard() {
     return (
         <Layout role="manager">
             <div>
+                {/* Welcome Banner */}
+                {managerData && (
+                    <div className="bg-primary-dark text-white p-6 rounded-xl shadow-lg mb-8"
+                         style={{
+                             backgroundImage: 'linear-gradient(to right, #062B44, #0A4A7A)',
+                             backgroundSize: 'cover',
+                             backgroundPosition: 'center',
+                         }}>
+                        <p className="text-xl font-medium mb-1">
+                            Welcome Back,
+                        </p>
+                        <h2 className="text-4xl font-extrabold tracking-tight">
+                            Mr. {managerData.firstName} {managerData.lastName}!
+                        </h2>
+                        <p className="text-sm mt-2 opacity-90">
+                            You are managing the WellSpring Healthcare System.
+                        </p>
+                    </div>
+                )}
                 {/* Page Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-heading">Manager Dashboard</h1>
@@ -129,7 +181,8 @@ export default function ManagerDashboard() {
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     {/* Card 1 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6 hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6 hover:shadow-md transition-shadow"
+                        onClick={() => navigate('/managerAppointmentInfo')}>
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-primary bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaCalendarCheck size={24} className="text-ondark"/>
@@ -141,7 +194,8 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Card 2 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow"
+                         onClick={() => navigate('/managerDoctorInfo')}>
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-accent-success bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaUserDoctor size={24} className="text-ondark"/>
@@ -153,7 +207,8 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Card 3 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow"
+                         onClick={() => navigate('/managerStaffInfo')}>
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-accent-warning bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaUserGroup size={24} className="text-ondark"/>
@@ -165,7 +220,8 @@ export default function ManagerDashboard() {
                     </div>
 
                     {/* Card 4 */}
-                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow">
+                    <div className="bg-card rounded-xl shadow-soft p-6  hover:shadow-md transition-shadow"
+                         onClick={() => navigate('/managerPatientInfo')}>
                         <div className="flex flex-col items-center text-center mb-4">
                             <div className="bg-accent-danger bg-opacity-10 p-3 rounded-lg mb-4">
                                 <FaCalendarCheck size={24} className="text-ondark"/>

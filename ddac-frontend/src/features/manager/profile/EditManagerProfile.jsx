@@ -48,6 +48,18 @@ export default function EditManagerProfile() {
         'On Leave',
         'Inactive'
     ];
+    
+    const formatDateForInput = (date) => {
+        if (!date) return '';
+        if (typeof date === 'string' && date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            return date;
+        }
+        try {
+            return new Date(date).toISOString().split('T')[0];
+        } catch (e) {
+            return '';
+        }
+    };
 
     useEffect(() => {
         fetchProfileData();
@@ -57,7 +69,27 @@ export default function EditManagerProfile() {
         try {
             setIsLoading(true);
             const profileData = await getManagerById(id)
-            setFormData(profileData);
+            if (profileData && typeof profileData === 'object') {
+                setFormData({
+                    id: profileData.id || '',
+                    firstName: profileData.firstName || '',
+                    lastName: profileData.lastName || '',
+                    email: profileData.email || '',
+                    phone: profileData.phone || '',
+                    dateOfBirth: formatDateForInput(profileData.dateOfBirth),
+                    gender: profileData.gender || 'Male',
+                    address: profileData.address || '',
+                    bloodGroup: profileData.bloodGroup || '',
+                    emergencyContact: profileData.emergencyContact || '',
+                    position: profileData.position || '',
+                    joiningDate: formatDateForInput(profileData.joiningDate),
+                    yearsOfExperience: profileData.yearsOfExperience || '',
+                    salary: profileData.salary || '',
+                    status: profileData.status || 'Active'
+                });
+            } else {
+                throw new Error('Manager profile not found or invalid data format.');
+            }
         } catch (error) {
             console.error('Error fetching profile data:', error);
             toast.error('Failed to load profile data. Please try again.');
@@ -138,6 +170,8 @@ export default function EditManagerProfile() {
         try {
             const payload = {
                 ...formData,
+                yearsOfExperience: formData.yearsOfExperience ? parseInt(formData.yearsOfExperience, 10) : null,
+                salary: formData.salary ? parseFloat(formData.salary) : null,
             }
             console.log('Submitting profile data: ', payload);
             const response = await updateManager(id, payload);

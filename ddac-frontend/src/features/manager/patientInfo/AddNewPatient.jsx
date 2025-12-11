@@ -2,16 +2,16 @@ import "../../../index.css";
 import Layout from "../../../components/Layout.jsx";
 import { useState, useEffect } from "react";
 import {
-  FaUser,
-  FaEnvelope,
-  FaPhone,
-  FaIdCard,
-  FaLock,
-  FaCalendar,
-  FaMapMarkerAlt,
-  FaArrowLeft,
-  FaHeartbeat,
-  FaUserInjured,
+    FaUser,
+    FaEnvelope,
+    FaPhone,
+    FaIdCard,
+    FaLock,
+    FaCalendar,
+    FaMapMarkerAlt,
+    FaArrowLeft,
+    FaHeartbeat,
+    FaUserInjured, FaEyeSlash, FaEye,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { registerStaff } from "../../../services/staffManagementService.js";
@@ -65,8 +65,9 @@ export default function AddNewPatient() {
     const newErrors = {};
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const phoneRegex = /^\+?[\d\s-]{10,15}$/;
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|:;"'<>,.?/-])(?=.{8,}).*$/;
 
-    if (!formData.firstName.trim())
+      if (!formData.firstName.trim())
       newErrors.firstName = "First name is required";
     if (!formData.lastName.trim()) newErrors.lastName = "Last name is required";
     if (!formData.email.trim()) {
@@ -84,9 +85,19 @@ export default function AddNewPatient() {
     if (!formData.gender) newErrors.gender = "Gender is required";
     // if (!formData.bloodType) newErrors.bloodType = 'Blood type is required';
     if (!formData.address) newErrors.address = "Address is required";
-    if (formData.password !== confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
+      if (!formData.password) {
+          newErrors.password = "Password is required";
+      } else if (!passwordRegex.test(formData.password)) {
+          newErrors.password = "Password should be minimum of 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character";
+      }
+      if (!confirmPassword) {
+          newErrors.confirmPassword = "Confirm Password is required";
+      } else if (!passwordRegex.test(confirmPassword)) {
+          newErrors.confirmPassword = "Confirm Password should be minimum of 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character";
+      }
+      if (!newErrors.confirmPassword && formData.password !== confirmPassword) {
+          newErrors.confirmPassword = "Passwords do not match";
+      }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -136,6 +147,15 @@ export default function AddNewPatient() {
     }
   };
 
+    const [showPassword, setShowPassword] = useState(false);
+    const togglePasswordVisibility = () => {
+        setShowPassword(prev => !prev);
+    };
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const toggleConfirmPasswordVisibility = () => {
+        setShowConfirmPassword(prev => !prev);
+    };
+    
   return (
     <Layout role="manager">
       <div className="w-full max-w-full overflow-hidden">
@@ -286,63 +306,77 @@ export default function AddNewPatient() {
                 )}
               </div>
 
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium text-heading mb-2">
-                  Password <span className="text-accent-danger">*</span>
-                </label>
-                <div className="relative">
-                  <FaLock
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
-                    size={16}
-                  />
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
-                      errors.password ? "border-accent-danger" : "border-input"
-                    }`}
-                    placeholder="Enter password"
-                  />
+                {/* Password */}
+                <div>
+                    <label className="block text-sm font-medium text-heading mb-2">
+                        Password <span className="text-accent-danger">*</span>
+                    </label>
+                    <div className="relative">
+                        <FaLock
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
+                            size={16}
+                        />
+                        <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            className={`w-full pl-10 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
+                                errors.password ? "border-accent-danger" : "border-input"
+                            }`}
+                            placeholder="Enter password"
+                        />
+                        <div
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted cursor-pointer hover:text-heading transition-colors"
+                            onClick={togglePasswordVisibility}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                        >
+                            {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                        </div>
+                    </div>
+                    {errors.password && (
+                        <p className="text-accent-danger text-xs mt-1">
+                            {errors.password}
+                        </p>
+                    )}
                 </div>
-                {errors.password && (
-                  <p className="text-accent-danger text-xs mt-1">
-                    {errors.password}
-                  </p>
-                )}
-              </div>
 
-              {/* Confirm Password */}
-              <div>
-                <label className="block text-sm font-medium text-heading mb-2">
-                  Confirm Password <span className="text-accent-danger">*</span>
-                </label>
-                <div className="relative">
-                  <FaLock
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
-                    size={16}
-                  />
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={confirmPassword}
-                    onChange={handleChange}
-                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
-                      errors.confirmPassword
-                        ? "border-accent-danger"
-                        : "border-input"
-                    }`}
-                    placeholder="Confirm password"
-                  />
+                {/* Confirm Password */}
+                <div>
+                    <label className="block text-sm font-medium text-heading mb-2">
+                        Confirm Password <span className="text-accent-danger">*</span>
+                    </label>
+                    <div className="relative">
+                        <FaLock
+                            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
+                            size={16}
+                        />
+                        <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            name="confirmPassword"
+                            value={confirmPassword}
+                            onChange={handleChange}
+                            className={`w-full pl-10 pr-12 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
+                                errors.confirmPassword
+                                    ? "border-accent-danger"
+                                    : "border-input"
+                            }`}
+                            placeholder="Confirm password"
+                        />
+                        <div
+                            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted cursor-pointer hover:text-heading transition-colors"
+                            onClick={toggleConfirmPasswordVisibility}
+                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                        >
+                            {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
+                        </div>
+                    </div>
+                    {errors.confirmPassword && (
+                        <p className="text-accent-danger text-xs mt-1">
+                            {errors.confirmPassword}
+                        </p>
+                    )}
                 </div>
-                {errors.confirmPassword && (
-                  <p className="text-accent-danger text-xs mt-1">
-                    {errors.confirmPassword}
-                  </p>
-                )}
-              </div>
 
               {/* Date of Birth */}
               <div>
