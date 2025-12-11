@@ -3,7 +3,6 @@ import staffApi from "./staffApi";
 const PATIENT_ENDPOINT = "/patients";
 
 const mapPatientPayload = (payload = {}) => ({
-  id: payload.id?.trim() ?? "",
   firstName: payload.firstName?.trim() ?? "",
   lastName: payload.lastName?.trim() ?? "",
   email: payload.email?.trim() ?? "",
@@ -18,6 +17,7 @@ const mapPatientPayload = (payload = {}) => ({
   allergies: payload.allergies || null,
   conditions: payload.conditions || null,
   medications: payload.medications || null,
+  password: payload.password || "123456"
 });
 
 export const getAllPatients = async () => {
@@ -31,8 +31,9 @@ export const getPatientById = async (id) => {
 };
 
 export const createPatient = async (patientData) => {
+  console.log(patientData);
   const response = await staffApi.post(
-    PATIENT_ENDPOINT,
+    `${PATIENT_ENDPOINT}/register`,
     mapPatientPayload(patientData)
   );
   return response.data;

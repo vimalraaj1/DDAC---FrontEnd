@@ -5,7 +5,7 @@ import SearchableSelect from "../components/SearchableSelect";
 import * as appointmentService from "../services/appointmentService";
 import * as doctorService from "../services/doctorService";
 import * as patientService from "../services/patientService";
-import { FaArrowLeft, FaSave, FaCalendar, FaClock, FaUser, FaUserMd, FaMapMarkerAlt, FaStethoscope, FaFileAlt } from "react-icons/fa";
+import { FaArrowLeft, FaSave, FaCalendar, FaClock, FaUser, FaUserMd, FaStethoscope } from "react-icons/fa";
 import { getStoredStaffId } from "../utils/staffStorage";
 
 export default function CreateAppointment() {
@@ -22,7 +22,7 @@ export default function CreateAppointment() {
     date: "",
     time: "",
     purpose: "",
-    status: "Scheduled",
+    status: "Approved",
     cancellationReason: null,
   });
 
@@ -96,8 +96,8 @@ export default function CreateAppointment() {
         date: formData.date,
         time: formData.time,
         purpose: formData.purpose,
-        status: formData.status,
-        cancellationReason: formData.cancellationReason || null,
+        status: "Approved",
+        cancellationReason: null,
       };
 
       await appointmentService.createAppointment(appointmentData);
@@ -237,60 +237,6 @@ export default function CreateAppointment() {
                 />
               </div>
 
-
-              {/* Staff (auto-filled when possible) */}
-              <div>
-                <label htmlFor="staffId" className="block text-sm font-medium text-gray-700 mb-2">
-                  Staff
-                </label>
-                <input
-                  type="text"
-                  id="staffId"
-                  name="staffId"
-                  value={formData.staffId || ""}
-                  onChange={handleChange}
-                  placeholder="Staff ID"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                />
-              </div>
-
-              {/* Status */}
-              <div>
-                <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
-                  Status
-                </label>
-                <select
-                  id="status"
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  <option value="Scheduled">Scheduled</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Completed">Completed</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-
-              {/* Cancellation Reason (optional) */}
-              {formData.status === "Cancelled" && (
-                <div>
-                  <label htmlFor="cancellationReason" className="block text-sm font-medium text-gray-700 mb-2">
-                    Cancellation Reason
-                  </label>
-                  <input
-                    type="text"
-                    id="cancellationReason"
-                    name="cancellationReason"
-                    value={formData.cancellationReason || ""}
-                    onChange={handleChange}
-                    placeholder="Reason for cancellation"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-              )}
-
               {/* Submit Buttons */}
               <div className="flex gap-4 pt-4 border-t border-gray-200">
                 <button
@@ -316,4 +262,3 @@ export default function CreateAppointment() {
     </Layout>
   );
 }
-

@@ -36,6 +36,7 @@ export const updateProfile = async (id, updatedData) => {
     return response.data;
   } catch (error) {
     console.error("Error updating profile:", error);
+    console.error("Request Body: ", updatedData);
     throw error;
   }
 };

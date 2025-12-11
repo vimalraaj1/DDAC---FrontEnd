@@ -12,6 +12,7 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { MdFeedback } from "react-icons/md";
+import wellspring_logo from "../../../assets/wellspring_logo.png";
 import {
   FaUserDoctor,
   FaRightFromBracket,
@@ -45,14 +46,15 @@ export default function CustNavBar({ role = "customer" }) {
   return (
     <aside className="bg-primary w-64 min-h-screen flex flex-col">
       {/* Logo/Brand */}
-      <div className="p-6">
+      <div className="p-1 border-primary-hover flex justify-center items-center">
         <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
-          <div className="bg-white rounded-lg p-2">
-            <FaHospital className="text-primary" size={24} />
-          </div>
-          <h1 className="text-ondark text-xl font-bold">
-            WellSpring Healthcare
-          </h1>
+          {
+            <img
+              src={wellspring_logo}
+              alt="WellSpring Healthcare Logo"
+              className="w-35 h-auto content-center"
+            />
+          }
         </Link>
       </div>
 

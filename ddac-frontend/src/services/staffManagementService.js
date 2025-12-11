@@ -8,7 +8,7 @@ export const getStaffs = async () => {
 }
 
 export const registerStaff = async (staff) => {
-    const res = await api.post(`${BASE_URL}`, staff);
+    const res = await api.post(`${BASE_URL}/register`, staff);
     return res.data;
 }
 

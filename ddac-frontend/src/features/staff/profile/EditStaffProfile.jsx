@@ -8,6 +8,7 @@ import {
   FaSave,
   FaTimes,
   FaArrowLeft,
+  FaLock,
 } from "react-icons/fa";
 import { toast } from "sonner";
 import { getStoredStaffId } from "../utils/staffStorage";
@@ -30,6 +31,8 @@ export default function EditStaffProfile() {
     yearsOfExperience: "",
     salary: "",
     status: "",
+    password: "",
+    confirmPassword: "",
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +66,8 @@ export default function EditStaffProfile() {
         yearsOfExperience: data.yearsOfExperience || "",
         salary: data.salary || "",
         status: data.status || "",
+        password: "",
+        confirmPassword: "",
       });
     } catch (error) {
       console.error("Error fetching profile data:", error);
@@ -109,6 +114,17 @@ export default function EditStaffProfile() {
       newErrors.emergencyContact = "Invalid phone number";
     }
 
+    // Password validation
+    if (formData.password || formData.confirmPassword) {
+      if (formData.password.length < 6) {
+        newErrors.password = "Password must be at least 6 characters long";
+      }
+      
+      if (formData.password !== formData.confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -144,6 +160,11 @@ export default function EditStaffProfile() {
         salary: formData.salary,
         status: formData.status,
       };
+
+      // Only include password if it was provided
+      if (formData.password) {
+        dataToSave.password = formData.password;
+      }
 
       const staffId = getStoredStaffId();
       if (!staffId) {
@@ -359,6 +380,53 @@ export default function EditStaffProfile() {
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Password Section */}
+          <div className="mb-8 pt-6 border-t border-color">
+            <h2 className="text-xl font-semibold text-heading mb-4 flex items-center gap-2">
+              <FaLock size={20} />
+              Change Password
+            </h2>
+            <p className="text-sm text-muted mb-4">Leave blank if you don't want to change your password</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-medium text-heading mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Enter new password"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.password ? "border-accent-danger" : "border-input"
+                  }`}
+                />
+                {errors.password && <p className="text-accent-danger text-xs mt-1">{errors.password}</p>}
+              </div>
+
+              {/* Confirm New Password */}
+              <div>
+                <label className="block text-sm font-medium text-heading mb-2">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm new password"
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${
+                    errors.confirmPassword ? "border-accent-danger" : "border-input"
+                  }`}
+                />
+                {errors.confirmPassword && <p className="text-accent-danger text-xs mt-1">{errors.confirmPassword}</p>}
               </div>
             </div>
           </div>
