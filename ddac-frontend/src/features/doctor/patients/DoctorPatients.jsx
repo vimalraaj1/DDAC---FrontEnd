@@ -1,16 +1,24 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { LogOutDialog } from "../../customer/components/LogoutDialog";
 import patientService from "./patientService";
+import appointmentService from "../appointments/appointmentService";
 
 export default function DoctorPatients() {
     const navigate = useNavigate();
-    const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
+    const userName = localStorage.getItem("userName");
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
+    const [filterGender, setFilterGender] = useState("all");
+    const [filterBloodType, setFilterBloodType] = useState("all");
     const [showDropdown, setShowDropdown] = useState(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [selectedPatient, setSelectedPatient] = useState(null);
+    const [showPatientModal, setShowPatientModal] = useState(false);
+    const [modalView, setModalView] = useState('details'); // 'details' or 'records'
 
     useEffect(() => {
         fetchPatients();
@@ -19,14 +27,36 @@ export default function DoctorPatients() {
     const fetchPatients = async () => {
         try {
             setLoading(true);
-            const data = await patientService.getDoctorPatients();
-            // Calculate age from dateOfBirth and add full name
-            const patientsWithDetails = data.map(patient => ({
-                ...patient,
-                name: `${patient.firstName} ${patient.lastName}`,
-                age: calculateAge(patient.dateOfBirth),
-                status: 'active' // Default status
-            }));
+            const [patientData, appointmentData] = await Promise.all([
+                patientService.getDoctorPatients(),
+                appointmentService.getDoctorAppointments()
+            ]);
+            
+            // Calculate age from dateOfBirth, add full name, and determine last visit from appointments
+            const patientsWithDetails = patientData.map(patient => {
+                // Find the most recent completed appointment for this patient
+                const patientAppointments = appointmentData.filter(
+                    apt => apt.patientId === patient.id && apt.status === 'Completed'
+                );
+                
+                // Sort by date descending and get the most recent
+                const sortedAppointments = patientAppointments.sort((a, b) => 
+                    new Date(b.appointmentDate) - new Date(a.appointmentDate)
+                );
+                
+                const lastVisitDate = sortedAppointments.length > 0 
+                    ? sortedAppointments[0].appointmentDate 
+                    : null;
+                
+                return {
+                    ...patient,
+                    name: `${patient.firstName} ${patient.lastName}`,
+                    age: calculateAge(patient.dateOfBirth),
+                    status: 'active', // Default status
+                    lastVisitDate: lastVisitDate
+                };
+            });
+            
             setPatients(patientsWithDetails);
         } catch (error) {
             console.error('Error fetching patients:', error);
@@ -54,13 +84,34 @@ export default function DoctorPatients() {
             fetchPatients();
         } else {
             try {
-                const results = await patientService.searchPatients(term);
-                const patientsWithDetails = results.map(patient => ({
-                    ...patient,
-                    name: `${patient.firstName} ${patient.lastName}`,
-                    age: calculateAge(patient.dateOfBirth),
-                    status: 'active'
-                }));
+                const [results, appointmentData] = await Promise.all([
+                    patientService.searchPatients(term),
+                    appointmentService.getDoctorAppointments()
+                ]);
+                
+                const patientsWithDetails = results.map(patient => {
+                    // Find the most recent completed appointment for this patient
+                    const patientAppointments = appointmentData.filter(
+                        apt => apt.patientId === patient.id && apt.status === 'Completed'
+                    );
+                    
+                    const sortedAppointments = patientAppointments.sort((a, b) => 
+                        new Date(b.appointmentDate) - new Date(a.appointmentDate)
+                    );
+                    
+                    const lastVisitDate = sortedAppointments.length > 0 
+                        ? sortedAppointments[0].appointmentDate 
+                        : null;
+                    
+                    return {
+                        ...patient,
+                        name: `${patient.firstName} ${patient.lastName}`,
+                        age: calculateAge(patient.dateOfBirth),
+                        status: 'active',
+                        lastVisitDate: lastVisitDate
+                    };
+                });
+                
                 setPatients(patientsWithDetails);
             } catch (error) {
                 console.error('Error searching patients:', error);
@@ -78,17 +129,31 @@ export default function DoctorPatients() {
         return `px-3 py-1 rounded-full text-xs font-semibold ${statusClasses[status] || 'bg-gray-100 text-gray-800'}`;
     };
 
+    const handleViewPatient = (patient, view = 'details') => {
+        setSelectedPatient(patient);
+        setModalView(view);
+        setShowPatientModal(true);
+    };
+
+    const closeModal = () => {
+        setShowPatientModal(false);
+        setSelectedPatient(null);
+    };
+
     const filteredPatients = patients.filter(patient => {
-        const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            patient.patientId.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filterStatus === "all" || patient.status === filterStatus;
-        return matchesSearch && matchesFilter;
+        const matchesSearch = patient.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            patient.patientId?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = filterStatus === "all" || patient.status === filterStatus;
+        const matchesGender = filterGender === "all" || patient.gender?.toLowerCase() === filterGender.toLowerCase();
+        const matchesBloodType = filterBloodType === "all" || patient.bloodGroup === filterBloodType;
+        return matchesSearch && matchesStatus && matchesGender && matchesBloodType;
     });
 
-    const handleLogout = () => {
+    const confirmedLogout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("userRole");
+        localStorage.removeItem("id");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
         navigate("/login");
     };
 
@@ -198,20 +263,22 @@ export default function DoctorPatients() {
                                             </svg>
                                             <span>Settings</span>
                                         </button>
+                                        <div className="border-t border-gray-200 my-1"></div>
+                                        <button
+                                            onClick={() => {
+                                                setShowDropdown(false);
+                                                setLogoutDialogOpen(true);
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <span>Logout</span>
+                                        </button>
                                     </div>
                                 )}
                             </div>
-                            
-                            {/* Logout Button */}
-                            <button 
-                                onClick={handleLogout}
-                                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                <span className="text-sm font-medium">Logout</span>
-                            </button>
                         </div>
                     </div>
                 </header>
@@ -296,6 +363,30 @@ export default function DoctorPatients() {
                                         </svg>
                                     </div>
                                     <select 
+                                        value={filterGender}
+                                        onChange={(e) => setFilterGender(e.target.value)}
+                                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="all">All Genders</option>
+                                        <option value="male">Male</option>
+                                        <option value="female">Female</option>
+                                    </select>
+                                    <select 
+                                        value={filterBloodType}
+                                        onChange={(e) => setFilterBloodType(e.target.value)}
+                                        className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                        <option value="all">All Blood Types</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                    </select>
+                                    <select 
                                         value={filterStatus}
                                         onChange={(e) => setFilterStatus(e.target.value)}
                                         className="text-sm border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -324,12 +415,6 @@ export default function DoctorPatients() {
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Blood Type
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Last Visit
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                            Condition
                                         </th>
                                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                             Status
@@ -371,14 +456,8 @@ export default function DoctorPatients() {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-medium">
-                                                    {patient.bloodType}
+                                                    {patient.bloodGroup || 'N/A'}
                                                 </span>
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {patient.lastVisit}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                {patient.condition}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <span className={getStatusBadge(patient.status)}>
@@ -386,10 +465,16 @@ export default function DoctorPatients() {
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                                <button className="text-blue-600 hover:text-blue-800 font-medium mr-3">
+                                                <button 
+                                                    onClick={() => handleViewPatient(patient, 'details')}
+                                                    className="text-blue-600 hover:text-blue-800 font-medium mr-3 transition-colors"
+                                                >
                                                     View
                                                 </button>
-                                                <button className="text-green-600 hover:text-green-800 font-medium">
+                                                <button 
+                                                    onClick={() => handleViewPatient(patient, 'records')}
+                                                    className="text-green-600 hover:text-green-800 font-medium transition-colors"
+                                                >
                                                     Records
                                                 </button>
                                             </td>
@@ -410,6 +495,205 @@ export default function DoctorPatients() {
                     </div>
                 </main>
             </div>
+
+            {/* Patient Details Modal */}
+            {showPatientModal && selectedPatient && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-lg shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden">
+                        {/* Modal Header */}
+                        <div className="bg-blue-600 text-white px-6 py-4 flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+                                    <span className="text-white font-semibold text-lg">
+                                        {selectedPatient.name.split(' ').map(n => n[0]).join('')}
+                                    </span>
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-bold">{selectedPatient.name}</h2>
+                                    <p className="text-blue-100 text-sm">{selectedPatient.patientId}</p>
+                                </div>
+                            </div>
+                            <button onClick={closeModal} className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Modal Tabs */}
+                        <div className="flex border-b">
+                            <button
+                                onClick={() => setModalView('details')}
+                                className={`px-6 py-3 font-medium transition-colors ${
+                                    modalView === 'details' 
+                                        ? 'text-blue-600 border-b-2 border-blue-600' 
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                Patient Details
+                            </button>
+                            <button
+                                onClick={() => setModalView('records')}
+                                className={`px-6 py-3 font-medium transition-colors ${
+                                    modalView === 'records' 
+                                        ? 'text-blue-600 border-b-2 border-blue-600' 
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                Medical Records
+                            </button>
+                        </div>
+
+                        {/* Modal Content */}
+                        <div className="p-6 overflow-y-auto max-h-[60vh]">
+                            {modalView === 'details' ? (
+                                <div className="space-y-6">
+                                    {/* Personal Information */}
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm text-gray-500">Full Name</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.name}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Patient ID</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.patientId}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Age</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.age} years</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Gender</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.gender}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Blood Type</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.bloodGroup || 'N/A'}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Date of Birth</label>
+                                                <p className="text-gray-900 font-medium">
+                                                    {new Date(selectedPatient.dateOfBirth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Contact Information */}
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm text-gray-500">Phone Number</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.phone}</p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Email Address</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.email}</p>
+                                            </div>
+                                            <div className="col-span-2">
+                                                <label className="text-sm text-gray-500">Address</label>
+                                                <p className="text-gray-900 font-medium">{selectedPatient.address || 'Not provided'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Visit Information */}
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Visit Information</h3>
+                                        <div className="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="text-sm text-gray-500">Last Visit</label>
+                                                <p className="text-gray-900 font-medium">
+                                                    {selectedPatient.lastVisitDate 
+                                                        ? new Date(selectedPatient.lastVisitDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) 
+                                                        : 'No visits yet'}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <label className="text-sm text-gray-500">Status</label>
+                                                <p>
+                                                    <span className={getStatusBadge(selectedPatient.status)}>
+                                                        {selectedPatient.status.charAt(0).toUpperCase() + selectedPatient.status.slice(1)}
+                                                    </span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">Medical Records</h3>
+                                    
+                                    {/* Medical History */}
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <h4 className="font-semibold text-gray-700 mb-2">Medical History</h4>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedPatient.medicalHistory || 'No medical history recorded yet.'}
+                                        </p>
+                                    </div>
+
+                                    {/* Allergies */}
+                                    <div className="bg-red-50 rounded-lg p-4">
+                                        <h4 className="font-semibold text-red-700 mb-2">Allergies</h4>
+                                        <p className="text-sm text-red-600">
+                                            {selectedPatient.allergies || 'No known allergies'}
+                                        </p>
+                                    </div>
+
+                                    {/* Current Medications */}
+                                    <div className="bg-blue-50 rounded-lg p-4">
+                                        <h4 className="font-semibold text-blue-700 mb-2">Current Medications</h4>
+                                        <p className="text-sm text-blue-600">
+                                            {selectedPatient.medications || 'No current medications'}
+                                        </p>
+                                    </div>
+
+                                    {/* Previous Diagnoses */}
+                                    <div className="bg-yellow-50 rounded-lg p-4">
+                                        <h4 className="font-semibold text-yellow-700 mb-2">Previous Diagnoses</h4>
+                                        <p className="text-sm text-yellow-600">
+                                            {selectedPatient.diagnoses || 'No previous diagnoses on record'}
+                                        </p>
+                                    </div>
+
+                                    {/* Notes */}
+                                    <div className="bg-gray-50 rounded-lg p-4">
+                                        <h4 className="font-semibold text-gray-700 mb-2">Additional Notes</h4>
+                                        <p className="text-sm text-gray-600">
+                                            {selectedPatient.notes || 'No additional notes available'}
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Modal Footer */}
+                        <div className="bg-gray-50 px-6 py-4 flex justify-end gap-3">
+                            <button
+                                onClick={closeModal}
+                                className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                            >
+                                Close
+                            </button>
+                            <button
+                                onClick={() => navigate(`/doctorAppointments?patientId=${selectedPatient.id}`)}
+                                className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                                View Appointments
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            <LogOutDialog
+                open={logoutDialogOpen}
+                onOpenChange={setLogoutDialogOpen}
+                onConfirmLogout={confirmedLogout}
+            />
         </div>
     );
 }

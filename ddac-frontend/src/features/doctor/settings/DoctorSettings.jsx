@@ -5,7 +5,7 @@ import doctorService from "../services/doctorService";
 
 export default function DoctorSettings() {
     const navigate = useNavigate();
-    const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
+    const userName = localStorage.getItem("userName");
     const [showDropdown, setShowDropdown] = useState(false);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -74,7 +74,7 @@ export default function DoctorSettings() {
         localStorage.removeItem("token");
         localStorage.removeItem("userRole");
         localStorage.removeItem("userName");
-        localStorage.removeItem("userId");
+        localStorage.removeItem("id");
         navigate("/login");
     };
 

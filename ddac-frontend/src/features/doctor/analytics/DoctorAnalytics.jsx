@@ -1,26 +1,155 @@
 import DoctorSidebar from "../components/DoctorSidebar";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { LogOutDialog } from "../../customer/components/LogoutDialog";
+import appointmentService from "../appointments/appointmentService";
+import patientService from "../patients/patientService";
 
 export default function DoctorAnalytics() {
     const navigate = useNavigate();
-    const userName = localStorage.getItem("userName") || "Dr. Sarah Wilson";
+    const userName = localStorage.getItem("userName");
     const [loading, setLoading] = useState(true);
     const [timeRange, setTimeRange] = useState("7days");
     const [showDropdown, setShowDropdown] = useState(false);
+    const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+    const [analytics, setAnalytics] = useState({
+        totalAppointments: 0,
+        completedAppointments: 0,
+        cancelledAppointments: 0,
+        totalPatients: 0,
+        appointmentsByDay: [],
+        appointmentsByStatus: {},
+        recentAppointments: [],
+        patientGrowth: []
+    });
 
     useEffect(() => {
-        // Simulate loading analytics data
-        setTimeout(() => {
+        fetchAnalytics();
+    }, [timeRange]);
+
+    const fetchAnalytics = async () => {
+        try {
+            setLoading(true);
+            const [appointments, patients] = await Promise.all([
+                appointmentService.getDoctorAppointments(),
+                patientService.getDoctorPatients()
+            ]);
+
+            // Calculate date range
+            const now = new Date();
+            const daysBack = timeRange === "7days" ? 7 : timeRange === "30days" ? 30 : 90;
+            const startDate = new Date(now);
+            startDate.setDate(startDate.getDate() - daysBack);
+
+            // Filter appointments by date range (only for trend chart)
+            const filteredAppointments = appointments.filter(apt => {
+                // Use 'date' field instead of 'appointmentDate'
+                const aptDate = new Date(apt.date);
+                return !isNaN(aptDate.getTime()) && aptDate >= startDate;
+            });
+
+            // Count appointments by status (use ALL appointments, not filtered)
+            const statusCounts = appointments.reduce((acc, apt) => {
+                acc[apt.status] = (acc[apt.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            // Group appointments by day for trend chart
+            const appointmentsByDay = {};
+            filteredAppointments.forEach(apt => {
+                // Use 'date' field instead of 'appointmentDate'
+                const aptDate = new Date(apt.date);
+                if (!isNaN(aptDate.getTime())) {
+                    const dateStr = aptDate.toLocaleDateString();
+                    appointmentsByDay[dateStr] = (appointmentsByDay[dateStr] || 0) + 1;
+                }
+            });
+
+            // Get last 7 days for chart
+            const last7Days = [];
+            for (let i = 6; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateStr = date.toLocaleDateString();
+                last7Days.push({
+                    label: date.toLocaleDateString('en-US', { weekday: 'short' }),
+                    value: appointmentsByDay[dateStr] || 0
+                });
+            }
+
+            // Calculate top procedures/reasons
+            const procedureCounts = {};
+            appointments.forEach(apt => {
+                const reason = apt.reason || 'General Checkup';
+                procedureCounts[reason] = (procedureCounts[reason] || 0) + 1;
+            });
+            const topProcedures = Object.entries(procedureCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 4);
+
+            // Calculate peak hours
+            const hourCounts = {};
+            appointments.forEach(apt => {
+                if (apt.time) {
+                    const hour = parseInt(apt.time.split(':')[0]);
+                    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                }
+            });
+
+            // Calculate age distribution
+            const calculateAge = (dateOfBirth) => {
+                if (!dateOfBirth) return 0;
+                const today = new Date();
+                const birthDate = new Date(dateOfBirth);
+                let age = today.getFullYear() - birthDate.getFullYear();
+                const monthDiff = today.getMonth() - birthDate.getMonth();
+                if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                    age--;
+                }
+                return age;
+            };
+
+            const ageGroups = { '0-18': 0, '19-35': 0, '36-55': 0, '56+': 0 };
+            patients.forEach(patient => {
+                const age = calculateAge(patient.dateOfBirth);
+                if (age <= 18) ageGroups['0-18']++;
+                else if (age <= 35) ageGroups['19-35']++;
+                else if (age <= 55) ageGroups['36-55']++;
+                else ageGroups['56+']++;
+            });
+            const totalPatients = patients.length || 1; // Avoid division by zero
+            const ageDistribution = Object.entries(ageGroups).map(([range, count]) => ({
+                range,
+                count,
+                percentage: Math.round((count / totalPatients) * 100)
+            }));
+
+            setAnalytics({
+                totalAppointments: appointments.length,
+                completedAppointments: statusCounts['Completed'] || 0,
+                cancelledAppointments: statusCounts['Cancelled'] || 0,
+                approvedAppointments: statusCounts['Approved'] || 0,
+                totalPatients: patients.length,
+                appointmentsByDay: last7Days,
+                appointmentsByStatus: statusCounts,
+                recentAppointments: appointments.slice(0, 5),
+                topProcedures,
+                hourCounts,
+                ageDistribution
+            });
+        } catch (error) {
+            console.error('Error fetching analytics:', error);
+        } finally {
             setLoading(false);
-        }, 1000);
-    }, []);
+        }
+    };
     
 
-    const handleLogout = () => {
+    const confirmedLogout = () => {
         localStorage.removeItem("token");
-        localStorage.removeItem("userRole");
+        localStorage.removeItem("id");
         localStorage.removeItem("userName");
+        localStorage.removeItem("role");
         navigate("/login");
     };
 
@@ -39,30 +168,56 @@ export default function DoctorAnalytics() {
             </div>
         );
     }
-    const appointmentTrend = {
-        labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-        values: [30, 45, 38, 52, 42, 35, 28]
-    };
+    // Calculate metrics from analytics data
+    const completionRate = analytics.totalAppointments > 0 
+        ? Math.round((analytics.completedAppointments / analytics.totalAppointments) * 100) 
+        : 0;
 
-    const patientGrowth = {
-        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-        values: [150, 180, 220, 260, 310, 342]
-    };
-
-    const departmentStats = [
-        { name: 'Cardiology', patients: 89, percentage: 30, color: '#60a5fa' },
-        { name: 'Neurology', patients: 74, percentage: 25, color: '#5ebbbb' },
-        { name: 'Pediatrics', patients: 59, percentage: 20, color: '#4ade80' },
-        { name: 'Orthopedics', patients: 44, percentage: 15, color: '#fb923c' },
-        { name: 'General', percentage: 10, patients: 30, color: '#1e3a5f' }
-    ];
+    const cancellationRate = analytics.totalAppointments > 0
+        ? Math.round((analytics.cancelledAppointments / analytics.totalAppointments) * 100)
+        : 0;
 
     const recentMetrics = [
-        { label: "Average Wait Time", value: "12 min", change: "-3 min", positive: true },
-        { label: "Patient Satisfaction", value: "94%", change: "+2%", positive: true },
-        { label: "Appointment Completion", value: "87%", change: "-1%", positive: false },
-        { label: "Revenue This Month", value: "$45,200", change: "+$5,300", positive: true }
+        { 
+            label: "Total Appointments", 
+            value: analytics.totalAppointments, 
+            change: `${analytics.completedAppointments} Completed`, 
+            positive: true 
+        },
+        { 
+            label: "Total Patients", 
+            value: analytics.totalPatients, 
+            change: "Active patients", 
+            positive: true 
+        },
+        { 
+            label: "Completion Rate", 
+            value: `${completionRate}%`, 
+            change: `${analytics.completedAppointments} of ${analytics.totalAppointments}`, 
+            positive: completionRate >= 80 
+        },
+        { 
+            label: "Approved Appointments", 
+            value: analytics.approvedAppointments || 0, 
+            change: "Ready for consultation", 
+            positive: true 
+        }
     ];
+
+    const appointmentStatusStats = Object.entries(analytics.appointmentsByStatus).map(([status, count]) => {
+        const colors = {
+            'Completed': '#4ade80',
+            'Pending': '#fb923c',
+            'Cancelled': '#ef4444',
+            'Confirmed': '#60a5fa'
+        };
+        return {
+            name: status,
+            patients: count,
+            percentage: analytics.totalAppointments > 0 ? Math.round((count / analytics.totalAppointments) * 100) : 0,
+            color: colors[status] || '#6b7280'
+        };
+    });
 
     return (
         <div className="flex min-h-screen bg-gray-50">
@@ -151,22 +306,22 @@ export default function DoctorAnalytics() {
                                             </svg>
                                             <span>Settings</span>
                                         </button>
+                                        <div className="border-t border-gray-200 my-1"></div>
+                                        <button
+                                            onClick={() => {
+                                                setShowDropdown(false);
+                                                setLogoutDialogOpen(true);
+                                            }}
+                                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center space-x-2"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            </svg>
+                                            <span>Logout</span>
+                                        </button>
                                     </div>
                                 )}
                             </div>
-                            
-                            
-                            {/* Logout Button */}
-                            <button 
-                                onClick={handleLogout}
-                                className="flex items-center space-x-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                                </svg>
-                                <span className="text-sm font-medium">Logout</span>
-                            </button>
-
                         </div>
                     </div>
                 </header>
@@ -244,36 +399,40 @@ export default function DoctorAnalytics() {
                                         </text>
                                     ))}
                                     {/* X-axis labels */}
-                                    {appointmentTrend.labels.map((label, i) => (
+                                    {analytics.appointmentsByDay.map((day, i) => (
                                         <text
-                                            key={label}
+                                            key={i}
                                             x={55 + i * 77}
                                             y="235"
                                             fontSize="12"
                                             fill="#999"
                                             textAnchor="middle"
                                         >
-                                            {label}
+                                            {day.label}
                                         </text>
                                     ))}
                                     {/* Line chart */}
-                                    <polyline
-                                        points={appointmentTrend.values
-                                            .map((v, i) => `${55 + i * 77},${220 - v * 4}`)
-                                            .join(' ')}
-                                        fill="none"
-                                        stroke="#60a5fa"
-                                        strokeWidth="3"
-                                    />
+                                    {analytics.appointmentsByDay.length > 0 && (
+                                        <polyline
+                                            points={analytics.appointmentsByDay
+                                                .map((day, i) => `${55 + i * 77},${220 - Math.min(day.value * 4, 200)}`)
+                                                .join(' ')}
+                                            fill="none"
+                                            stroke="#60a5fa"
+                                            strokeWidth="3"
+                                        />
+                                    )}
                                     {/* Area fill */}
-                                    <polygon
-                                        points={`${55},220 ` +
-                                            appointmentTrend.values
-                                                .map((v, i) => `${55 + i * 77},${220 - v * 4}`)
-                                                .join(' ') +
-                                            ` ${55 + (appointmentTrend.values.length - 1) * 77},220`}
-                                        fill="url(#gradient)"
-                                    />
+                                    {analytics.appointmentsByDay.length > 0 && (
+                                        <polygon
+                                            points={`${55},220 ` +
+                                                analytics.appointmentsByDay
+                                                    .map((day, i) => `${55 + i * 77},${220 - Math.min(day.value * 4, 200)}`)
+                                                    .join(' ') +
+                                                ` ${55 + (analytics.appointmentsByDay.length - 1) * 77},220`}
+                                            fill="url(#gradient)"
+                                        />
+                                    )}
                                     {/* Gradient definition */}
                                     <defs>
                                         <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
@@ -282,11 +441,11 @@ export default function DoctorAnalytics() {
                                         </linearGradient>
                                     </defs>
                                     {/* Data points */}
-                                    {appointmentTrend.values.map((v, i) => (
+                                    {analytics.appointmentsByDay.map((day, i) => (
                                         <circle
                                             key={i}
                                             cx={55 + i * 77}
-                                            cy={220 - v * 4}
+                                            cy={220 - Math.min(day.value * 4, 200)}
                                             r="4"
                                             fill="#60a5fa"
                                         />
@@ -295,178 +454,166 @@ export default function DoctorAnalytics() {
                             </div>
                         </div>
 
-                        {/* Department Distribution */}
+                        {/* Appointment Status Distribution */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-lg font-semibold text-gray-900">By Department</h2>
+                                <h2 className="text-lg font-semibold text-gray-900">Appointment Status</h2>
                             </div>
                             <div className="space-y-4">
-                                {departmentStats.map((dept, index) => (
-                                    <div key={index}>
-                                        <div className="flex items-center justify-between mb-2">
-                                            <span className="text-sm text-gray-700">{dept.name}</span>
-                                            <span className="text-sm font-semibold text-gray-900">{dept.patients}</span>
+                                {appointmentStatusStats.length > 0 ? (
+                                    appointmentStatusStats.map((stat, index) => (
+                                        <div key={index}>
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="text-sm text-gray-700">{stat.name}</span>
+                                                <span className="text-sm font-semibold text-gray-900">{stat.patients}</span>
+                                            </div>
+                                            <div className="w-full bg-gray-200 rounded-full h-2">
+                                                <div 
+                                                    className="h-2 rounded-full transition-all duration-300"
+                                                    style={{ 
+                                                        width: `${stat.percentage}%`,
+                                                        backgroundColor: stat.color 
+                                                    }}
+                                                ></div>
+                                            </div>
                                         </div>
-                                        <div className="w-full bg-gray-200 rounded-full h-2">
-                                            <div 
-                                                className="h-2 rounded-full transition-all duration-300"
-                                                style={{ 
-                                                    width: `${dept.percentage}%`,
-                                                    backgroundColor: dept.color 
-                                                }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 text-center py-4">No appointment data available</p>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* Patient Growth Chart */}
+                    {/* Recent Appointments */}
                     <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 mb-8">
                         <div className="flex items-center justify-between mb-6">
-                            <h2 className="text-lg font-semibold text-gray-900">Patient Growth</h2>
-                            <div className="flex items-center space-x-2">
-                                <span className="text-sm text-gray-500">Total Growth:</span>
-                                <span className="text-sm font-semibold text-green-600">+128%</span>
-                            </div>
+                            <h2 className="text-lg font-semibold text-gray-900">Recent Appointments</h2>
+                            <button 
+                                onClick={() => navigate('/doctorAppointments')}
+                                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                            >
+                                View All →
+                            </button>
                         </div>
-                        <div className="h-64">
-                            <svg className="w-full h-full" viewBox="0 0 700 240">
-                                {/* Grid lines */}
-                                {[0, 100, 200, 300, 400].map((y) => (
-                                    <line
-                                        key={y}
-                                        x1="50"
-                                        y1={220 - (y / 2)}
-                                        x2="680"
-                                        y2={220 - (y / 2)}
-                                        stroke="#f0f0f0"
-                                        strokeWidth="1"
-                                    />
-                                ))}
-                                {/* Y-axis labels */}
-                                {[0, 100, 200, 300, 400].map((y) => (
-                                    <text
-                                        key={y}
-                                        x="40"
-                                        y={225 - (y / 2)}
-                                        fontSize="12"
-                                        fill="#999"
-                                        textAnchor="end"
-                                    >
-                                        {y}
-                                    </text>
-                                ))}
-                                {/* X-axis labels */}
-                                {patientGrowth.labels.map((label, i) => (
-                                    <text
-                                        key={label}
-                                        x={75 + i * 105}
-                                        y="235"
-                                        fontSize="12"
-                                        fill="#999"
-                                        textAnchor="middle"
-                                    >
-                                        {label}
-                                    </text>
-                                ))}
-                                {/* Bar chart */}
-                                {patientGrowth.values.map((v, i) => (
-                                    <rect
-                                        key={i}
-                                        x={60 + i * 105}
-                                        y={220 - (v / 2)}
-                                        width="50"
-                                        height={v / 2}
-                                        fill="#60a5fa"
-                                        rx="4"
-                                    />
-                                ))}
-                                {/* Value labels on bars */}
-                                {patientGrowth.values.map((v, i) => (
-                                    <text
-                                        key={i}
-                                        x={85 + i * 105}
-                                        y={210 - (v / 2)}
-                                        fontSize="12"
-                                        fill="#374151"
-                                        fontWeight="600"
-                                        textAnchor="middle"
-                                    >
-                                        {v}
-                                    </text>
-                                ))}
-                            </svg>
+                        <div className="overflow-x-auto">
+                            {analytics.recentAppointments && analytics.recentAppointments.length > 0 ? (
+                                <table className="min-w-full">
+                                    <thead className="bg-gray-50">
+                                        <tr>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Patient ID</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                            <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reason</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-200">
+                                        {analytics.recentAppointments.map((appointment, index) => (
+                                            <tr key={index} className="hover:bg-gray-50">
+                                                <td className="px-4 py-3 text-sm text-gray-900">{appointment.patientId}</td>
+                                                <td className="px-4 py-3 text-sm text-gray-600">
+                                                    {appointment.date || 'N/A'}
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600">{appointment.time || 'N/A'}</td>
+                                                <td className="px-4 py-3">
+                                                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                                                        appointment.status === 'Completed' ? 'bg-green-100 text-green-800' :
+                                                        appointment.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' :
+                                                        appointment.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                                                        'bg-blue-100 text-blue-800'
+                                                    }`}>
+                                                        {appointment.status}
+                                                    </span>
+                                                </td>
+                                                <td className="px-4 py-3 text-sm text-gray-600">{appointment.reason || 'General Checkup'}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    <svg className="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p>No recent appointments</p>
+                                </div>
+                            )}
                         </div>
                     </div>
 
                     {/* Quick Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Top Procedures */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top Procedures</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">General Checkup</span>
-                                    <span className="text-sm font-semibold text-gray-900">142</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">Blood Test</span>
-                                    <span className="text-sm font-semibold text-gray-900">98</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">X-Ray</span>
-                                    <span className="text-sm font-semibold text-gray-900">76</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">ECG</span>
-                                    <span className="text-sm font-semibold text-gray-900">54</span>
-                                </div>
+                                {analytics.topProcedures && analytics.topProcedures.length > 0 ? (
+                                    analytics.topProcedures.map(([procedure, count], index) => (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">{procedure}</span>
+                                            <span className="text-sm font-semibold text-gray-900">{count}</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 text-center py-2">No procedure data available</p>
+                                )}
                             </div>
                         </div>
 
+                        {/* Peak Hours */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Peak Hours</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">9:00 AM - 11:00 AM</span>
-                                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-medium">High</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">2:00 PM - 4:00 PM</span>
-                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-medium">Medium</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">4:00 PM - 6:00 PM</span>
-                                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-medium">Low</span>
-                                </div>
+                                {analytics.hourCounts && Object.keys(analytics.hourCounts).length > 0 ? (
+                                    Object.entries(analytics.hourCounts)
+                                        .sort((a, b) => b[1] - a[1])
+                                        .slice(0, 3)
+                                        .map(([hour, count], index) => {
+                                            const hourNum = parseInt(hour);
+                                            const timeRange = `${hourNum}:00 ${hourNum >= 12 ? 'PM' : 'AM'} - ${hourNum + 1}:00 ${hourNum + 1 >= 12 ? 'PM' : 'AM'}`;
+                                            const level = index === 0 ? 'High' : index === 1 ? 'Medium' : 'Low';
+                                            const colorClass = index === 0 ? 'bg-green-100 text-green-800' : 
+                                                              index === 1 ? 'bg-yellow-100 text-yellow-800' : 
+                                                              'bg-blue-100 text-blue-800';
+                                            return (
+                                                <div key={hour} className="flex items-center justify-between">
+                                                    <span className="text-sm text-gray-600">{timeRange} ({count})</span>
+                                                    <span className={`px-2 py-1 ${colorClass} rounded text-xs font-medium`}>{level}</span>
+                                                </div>
+                                            );
+                                        })
+                                ) : (
+                                    <p className="text-sm text-gray-500 text-center py-2">No appointment time data available</p>
+                                )}
                             </div>
                         </div>
 
+                        {/* Age Distribution */}
                         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Age Distribution</h3>
                             <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">0-18 years</span>
-                                    <span className="text-sm font-semibold text-gray-900">18%</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">19-35 years</span>
-                                    <span className="text-sm font-semibold text-gray-900">32%</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">36-55 years</span>
-                                    <span className="text-sm font-semibold text-gray-900">35%</span>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-sm text-gray-600">56+ years</span>
-                                    <span className="text-sm font-semibold text-gray-900">15%</span>
-                                </div>
+                                {analytics.ageDistribution && analytics.ageDistribution.length > 0 ? (
+                                    analytics.ageDistribution.map((group, index) => (
+                                        <div key={index} className="flex items-center justify-between">
+                                            <span className="text-sm text-gray-600">{group.range} years ({group.count})</span>
+                                            <span className="text-sm font-semibold text-gray-900">{group.percentage}%</span>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500 text-center py-2">No patient age data available</p>
+                                )}
                             </div>
                         </div>
                     </div>
                 </main>
             </div>
+            
+            <LogOutDialog
+                open={logoutDialogOpen}
+                onOpenChange={setLogoutDialogOpen}
+                onConfirmLogout={confirmedLogout}
+            />
         </div>
     );
 }

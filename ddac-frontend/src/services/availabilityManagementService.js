@@ -24,7 +24,7 @@ export const getAvailabilityById = async (id) => {
 }
 
 export const updateAvailability = async (id, availability) => {
-    const res = await api.post(`${BASE_URL}/${id}`, availability);
+    const res = await api.put(`${BASE_URL}/${id}`, availability);
     return res.data;
 }
 

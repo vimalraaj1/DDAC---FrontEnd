@@ -1,12 +1,9 @@
-import api from '../../../services/api';
+import api from '../../../api/axios';
 
 /**
  * Comment API Service
  * Handles all comment and rating-related API calls
  */
-
-// Mock doctor ID for testing
-const MOCK_DOCTOR_ID = 'DR000001';
 
 const commentService = {
     /**
@@ -40,13 +37,14 @@ const commentService = {
     /**
      * Get comments for current doctor
      * Filters comments by doctor ID from localStorage
-     * Falls back to mock doctor ID (DR000001) for testing without auth
      * Excludes comments with null ratings (pending patient feedback)
      */
     getDoctorComments: async () => {
         try {
-            // Try to get userId from localStorage, fallback to mock ID for testing
-            const userId = localStorage.getItem('userId') || MOCK_DOCTOR_ID;
+            const userId = localStorage.getItem('id');
+            if (!userId) {
+                throw new Error('User ID not found. Please log in again.');
+            }
             
             console.log('Fetching comments for doctor:', userId);
             

@@ -1,13 +1,9 @@
-import api from '../../../services/api';
+import api from '../../../api/axios';
 
 /**
  * Appointment API Service for Doctors
  * Handles all appointment-related API calls
  */
-
-// Mock IDs for testing (actual DB records)
-const MOCK_APPOINTMENT_ID = 'APT000001';
-const MOCK_DOCTOR_ID = 'DR000001';
 
 const appointmentService = {
     /**
@@ -27,12 +23,13 @@ const appointmentService = {
     /**
      * Get appointments for current doctor
      * Filters appointments by doctor ID from localStorage
-     * Falls back to mock doctor ID (DR000001) for testing without auth
      */
     getDoctorAppointments: async () => {
         try {
-            // Try to get userId from localStorage, fallback to mock ID for testing
-            const userId = localStorage.getItem('userId') || MOCK_DOCTOR_ID;
+            const userId = localStorage.getItem('id');
+            if (!userId) {
+                throw new Error('User ID not found. Please log in again.');
+            }
             
             console.log('Fetching appointments for doctor:', userId);
             
@@ -51,9 +48,8 @@ const appointmentService = {
     /**
      * Get appointment by ID
      * GET /api/appointments/{id}
-     * For testing without auth, defaults to mock appointment ID: APT000001
      */
-    getAppointmentById: async (id = MOCK_APPOINTMENT_ID) => {
+    getAppointmentById: async (id) => {
         try {
             const response = await api.get(`/appointments/${id}`);
             return response.data;
@@ -131,9 +127,8 @@ const appointmentService = {
     /**
      * Approve appointment
      * PATCH /api/appointments/{id}/approve
-     * For testing without auth, uses mock appointment ID: APT000001
      */
-    approveAppointment: async (id = MOCK_APPOINTMENT_ID) => {
+    approveAppointment: async (id) => {
         try {
             const response = await api.patch(`/appointments/${id}/approve`);
             return response.data;
@@ -146,10 +141,10 @@ const appointmentService = {
     /**
      * Reject appointment
      * PATCH /api/appointments/{id}/reject
-     * @param {string} id - Appointment ID (defaults to mock ID for testing)
+     * @param {string} id - Appointment ID
      * @param {string} reason - Rejection reason
      */
-    rejectAppointment: async (id = MOCK_APPOINTMENT_ID, reason) => {
+    rejectAppointment: async (id, reason) => {
         try {
             const response = await api.patch(`/appointments/${id}/reject`, JSON.stringify(reason), {
                 headers: {
@@ -174,7 +169,7 @@ const appointmentService = {
             
             return {
                 total: appointments.length,
-                scheduled: appointments.filter(a => a.status === 'Scheduled').length,
+                scheduled: appointments.filter(a => a.status === 'Approved' || a.status === 'Confirmed').length,
                 completed: appointments.filter(a => a.status === 'Completed').length,
                 cancelled: appointments.filter(a => a.status === 'Cancelled').length,
                 today: appointments.filter(a => a.date === today).length,

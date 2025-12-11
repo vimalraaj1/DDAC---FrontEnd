@@ -1,7 +1,20 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { LogOutDialog } from "../../customer/components/LogoutDialog";
+import { useState } from "react";
+import wellspring_logo from "../../../assets/wellspring_logo.png";
 
 export default function DoctorSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+
+  const confirmedLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("id");
+    localStorage.removeItem("userName");
+    localStorage.removeItem("role");
+    navigate("/login");
+  };
 
   const menuItems = [
     {
@@ -41,6 +54,15 @@ export default function DoctorSidebar() {
       )
     },
     {
+      name: "Availability",
+      path: "/doctorAvailability",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      )
+    },
+    {
       name: "Settings",
       path: "/doctorSettings",
       icon: (
@@ -57,13 +79,14 @@ export default function DoctorSidebar() {
   return (
     <div className="w-52 bg-[#06923E] min-h-screen text-white flex flex-col">
       {/* Logo */}
-      <div className="p-6 border-b border-white/10">
-        <div className="flex items-center space-x-2">
-          <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-          </svg>
-          <span className="text-xl font-semibold">Wellspring</span>
-        </div>
+      <div className="p-1 border-b border-white/10 flex justify-center items-center">
+        <Link to="/doctorDashboard" className="flex items-center gap-3">
+          <img
+            src={wellspring_logo}
+            alt="WellSpring Healthcare Logo"
+            className="w-35 h-auto content-center"
+          />
+        </Link>
       </div>
 
       {/* Menu Items */}
@@ -86,6 +109,25 @@ export default function DoctorSidebar() {
           ))}
         </ul>
       </nav>
+
+      {/* Logout Button */}
+      <div className="p-4 border-t border-white/10">
+        <button
+          onClick={() => setLogoutDialogOpen(true)}
+          className="flex items-center space-x-3 px-6 py-3 w-full text-gray-300 hover:bg-white/5 hover:text-white transition-all duration-200"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span className="font-medium">Logout</span>
+        </button>
+      </div>
+
+      <LogOutDialog
+        open={logoutDialogOpen}
+        onOpenChange={setLogoutDialogOpen}
+        onConfirmLogout={confirmedLogout}
+      />
     </div>
   );
 }
