@@ -31,7 +31,7 @@ export default function CustNavBar({ role = "customer" }) {
   };
 
   const menuItems = [
-    { icon: FaHome, label: "Dashboard", path: "/CustDashboard" },
+    { icon: FaHome, label: "Dashboard", path: "/custDashboard" },
     {
       icon: FaFileMedical,
       label: "Medical Record",
@@ -47,7 +47,7 @@ export default function CustNavBar({ role = "customer" }) {
     <aside className="bg-primary w-64 min-h-screen flex flex-col">
       {/* Logo/Brand */}
       <div className="p-1 border-primary-hover flex justify-center items-center">
-        <Link to={`/${role}Dashboard`} className="flex items-center gap-3">
+        <Link to={`/custDashboard`} className="flex items-center gap-3">
           {
             <img
               src={wellspring_logo}
