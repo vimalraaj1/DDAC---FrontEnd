@@ -13,7 +13,7 @@ import Layout from "../../../components/Layout";
 import { getTransactionsByPatientId } from "../../../services/transactionManagementService";
 import { toast } from "sonner";
 import { CustomerContext } from "../CustomerContext";
-import { formatDate } from "../../../../../utils/DateConversion";
+import { formatDate } from "../../../utils/DateConversion";
 
 export default function Payments() {
   const [isLoadingPayment, setIsLoadingPayment] = useState(false);

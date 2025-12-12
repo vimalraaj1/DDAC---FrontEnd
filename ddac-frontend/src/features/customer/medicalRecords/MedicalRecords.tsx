@@ -7,7 +7,7 @@ import {
 } from "./components/MedicalRecordCard";
 import Layout from "../../../components/Layout";
 import { getConsultationsByPatientId } from "../../../services/consultationManagementService";
-import { formatDate } from "../../../../../utils/DateConversion";
+import { formatDate } from "../../../utils/DateConversion";
 import { toast, Toaster } from "sonner";
 import { CustomerContext } from "../CustomerContext";
 

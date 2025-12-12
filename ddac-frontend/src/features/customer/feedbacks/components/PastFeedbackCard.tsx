@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback } from "../../components/ui/avatar";
 import { StarRating } from "./StarRating";
 import { Button } from "../../components/ui/button";
 import { Calendar, Stethoscope } from "lucide-react";
-import { convertDateTime } from "../../../../../../utils/TimeConversion";
+import { convertDateTime } from "../../../../utils/TimeConversion";
 
 interface PastFeedbackCardProps {
   id: string;

@@ -42,7 +42,7 @@ import {
   getCommentsByPatientId,
 } from "../../../services/commentManagementService";
 import LoadingOverlay from "../components/LoadingOverlay";
-import { convertDateTime } from "../../../../../utils/TimeConversion";
+import { convertDateTime } from "../../../utils/TimeConversion";
 
 interface PastFeedback {
   id: string;

@@ -10,9 +10,9 @@ import { Appointment } from "./appointments/components/AppointmentCard";
 
 import LoadingSpinner from "./components/LoadingSpinner";
 import { getUpcomingAppointmentByPatientId } from "../../services/appointmentManagementService";
-import { formatDate } from "../../../../utils/DateConversion";
-import { convertTime } from "../../../../utils/TimeConversion";
-import { getInitials } from "../../../../utils/GetInitials";
+import { formatDate } from "../../utils/DateConversion";
+import { convertTime } from "../../utils/TimeConversion";
+import { getInitials } from "../../utils/GetInitials";
 
 export default function CustDashboard() {
   const { patient, loading } = useContext(CustomerContext);

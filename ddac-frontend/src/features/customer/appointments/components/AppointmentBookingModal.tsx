@@ -24,7 +24,7 @@ import { getAvailabilitiesByDoctorId } from "../../../../services/availabilityMa
 import {
   formatDate,
   reverseFormatDate,
-} from "../../../../../../utils/DateConversion";
+} from "../../../../utils/DateConversion";
 
 interface AppointmentBookingModalProps {
   open: boolean;

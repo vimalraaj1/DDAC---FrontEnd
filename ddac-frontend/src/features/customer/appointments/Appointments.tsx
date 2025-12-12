@@ -29,10 +29,10 @@ import {
 import {
   formatDate,
   reverseFormatDate,
-} from "../../../../../utils/DateConversion";
+} from "../../../utils/DateConversion";
 import LoadingOverlay from "../components/LoadingOverlay";
-import { getInitials } from "../../../../../utils/GetInitials";
-import { convertTime } from "../../../../../utils/TimeConversion";
+import { getInitials } from "../../../utils/GetInitials";
+import { convertTime } from "../../../utils/TimeConversion";
 import { sendEmail } from "../../../services/emailManagementService";
 import { bookAppointment } from "../../../services/availabilityManagementService";
 
