@@ -180,7 +180,7 @@ export default function Appointments() {
     };
 
     const emailPayload = {
-      patientEmail: "cincainame04@gmail.com", // hard code for now
+      patientEmail: patient.email, // hard code for now
       patientName: patient.firstName + " " + patient.lastName,
       doctorName: appointmentData.doctorName,
       date: appointmentData.date,
