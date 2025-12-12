@@ -14,6 +14,7 @@ const WellspringLogo = () => (
     </span>
     </div>
 );
+//test2
 export default function AuthForm({ title, fields, onSubmit }) {
     const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState(() => {
