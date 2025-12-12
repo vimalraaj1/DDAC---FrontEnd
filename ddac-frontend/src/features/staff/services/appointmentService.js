@@ -56,14 +56,29 @@ export const getCompletedAppointmentsWithPendingTransactions = async () => {
 };
 
 // Get completed appointments with paid transactions
-// Uses the new backend endpoint that returns appointment + transaction data
-// Conditions: appointmentStatus = "Completed" AND transactionStatus = "Paid"
+// Conditions: transactionStatus = "Paid" OR "succeeded"
 export const getCompletedAppointmentsWithPaidTransactions = async () => {
   try {
-    const data = await getAppointmentsByPaymentStatus("Paid");
-    return Array.isArray(data) ? data : [];
+    const paid = await getAppointmentsByPaymentStatus("Paid");
+    const succeeded = await getAppointmentsByPaymentStatus("succeede");
+
+    // Normalize to arrays
+    const listPaid = Array.isArray(paid) ? paid : [];
+    const listSucceeded = Array.isArray(succeeded) ? succeeded : [];
+
+    // Combine and remove duplicates by appointmentId
+    const combined = [...listPaid, ...listSucceeded].reduce((acc, item) => {
+      acc[item.appointmentId] = item;
+      return acc;
+    }, {});
+
+    return Object.values(combined);
+
   } catch (error) {
-    console.error("Error fetching appointments with paid transactions:", error);
+    console.error(
+      "Error fetching appointments with paid/succeeded transactions:",
+      error
+    );
     return [];
   }
 };
