@@ -61,7 +61,7 @@ export default function Login() {
       console.error("Login failed:", error);
 
       toast.error(
-        `Registration Failed! Error: ${error.response.data.message}`,
+        `Authentication Failed! Error: ${error.response.data.message}`,
         {
           style: {
             background: "var(--accent-danger)",
