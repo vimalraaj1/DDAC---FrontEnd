@@ -204,32 +204,6 @@ export default function AuthForm({ title, fields, onSubmit }) {
             {title}
           </button>
         </form>
-
-        <div className="mt-6 text-center">
-          <p className="text-sm text-gray-neutral">
-            {isLogin ? (
-              <>
-                Don't have an account?{" "}
-                <Link
-                  to="/register"
-                  className="text-primary hover:text-[#3B82F6] font-medium transition-colors"
-                >
-                  Register
-                </Link>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <Link
-                  to="/login"
-                  className="text-primary hover:text-[#3B82F6] font-medium transition-colors"
-                >
-                  Login
-                </Link>
-              </>
-            )}
-          </p>
-        </div>
       </div>
     </div>
   );

@@ -310,7 +310,7 @@ export default function App() {
       try {
         await updatePatient(patient.id, patientJSON);
         setPatientDB(patientJSON);
-        toast.success("Details have been successfully saved!", {
+        toast.success("Details have been successfully saved! Please relogin to ensure all changes are up-to-date!", {
           style: {
             background: "var(--accent-success)",
             color: "#ffffff",

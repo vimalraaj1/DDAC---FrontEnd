@@ -129,9 +129,10 @@ export function AppointmentBookingModal({
         const slotDate = new Date(slot.date);
         slotDate.setHours(0, 0, 0, 0);
 
-        return !slot.isBooked && slotDate > today;
+        return !slot.isBooked && slotDate >= today;
       });
 
+      console.log({filteredAvailability})
       setDoctorAvailability(filteredAvailability);
 
       const dates = filteredAvailability.map((slot) => slot.date);

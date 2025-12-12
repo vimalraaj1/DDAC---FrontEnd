@@ -2,20 +2,22 @@ import "../../../index.css";
 import Layout from "../../../components/Layout.jsx";
 import { useEffect, useState } from "react";
 import {
-    FaUser,
-    FaEnvelope,
-    FaPhone,
-    FaStethoscope,
-    FaIdCard,
-    FaCalendar,
-    FaMapMarkerAlt,
-    FaUserMd,
-    FaArrowLeft,
-    FaLock, FaEyeSlash, FaEye,
+  FaUser,
+  FaEnvelope,
+  FaPhone,
+  FaStethoscope,
+  FaIdCard,
+  FaCalendar,
+  FaMapMarkerAlt,
+  FaUserMd,
+  FaArrowLeft,
+  FaLock,
+  FaEyeSlash,
+  FaEye,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { registerDoctor } from "../../../services/doctorManagementService.js";
-import {toast, Toaster} from "sonner";
+import { toast, Toaster } from "sonner";
 
 export default function AddNewDoctor() {
   const navigate = useNavigate();
@@ -91,7 +93,8 @@ export default function AddNewDoctor() {
     const newErrors = {};
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     const phoneRegex = /^\+?[\d\s-]{10,15}$/;
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|:;"'<>,.?/-])(?=.{8,}).*$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+={}\[\]|:;"'<>,.?/-])(?=.{8,}).*$/;
 
     if (!formData.firstName.trim())
       newErrors.firstName = "First name is required";
@@ -117,16 +120,18 @@ export default function AddNewDoctor() {
     if (!formData.password) {
       newErrors.password = "Password is required";
     } else if (!passwordRegex.test(formData.password)) {
-        newErrors.password = "Password should be minimum of 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character";
+      newErrors.password =
+        "Password should be minimum of 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character";
     }
-      if (!confirmPassword) {
-          newErrors.confirmPassword = "Confirm Password is required";
-      } else if (!passwordRegex.test(confirmPassword)) {
-          newErrors.confirmPassword = "Confirm Password should be minimum of 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character";
-      }
-      if (!newErrors.confirmPassword && formData.password !== confirmPassword) {
-          newErrors.confirmPassword = "Passwords do not match";
-      }
+    if (!confirmPassword) {
+      newErrors.confirmPassword = "Confirm Password is required";
+    } else if (!passwordRegex.test(confirmPassword)) {
+      newErrors.confirmPassword =
+        "Confirm Password should be minimum of 8 characters with 1 uppercase, 1 lowercase, 1 number, and 1 special character";
+    }
+    if (!newErrors.confirmPassword && formData.password !== confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -158,11 +163,26 @@ export default function AddNewDoctor() {
       if (error.response?.data?.errors) {
         setErrors(error.response.data.errors);
         console.error("Backend Validation Errors:", error.response.data.errors);
-        toast.error("Failed to add doctor. Please try again.");
+        toast.error(
+          `Registration Failed! Error: ${error.response.data.message}`,
+          {
+            style: {
+              background: "var(--accent-danger)",
+              color: "#ffffff",
+              borderRadius: "10px",
+            },
+          }
+        );
       } else {
         toast.error(
-          error.response?.data?.message ||
-            "Failed to add doctor. Please try again."
+          `Registration Failed! Error: ${error.response.data.message}`,
+          {
+            style: {
+              background: "var(--accent-danger)",
+              color: "#ffffff",
+              borderRadius: "10px",
+            },
+          }
         );
       }
     } finally {
@@ -180,14 +200,14 @@ export default function AddNewDoctor() {
     }
   };
 
-    const [showPassword, setShowPassword] = useState(false);
-    const togglePasswordVisibility = () => {
-        setShowPassword(prev => !prev);
-    };
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-    const toggleConfirmPasswordVisibility = () => {
-        setShowConfirmPassword(prev => !prev);
-    };
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword((prev) => !prev);
+  };
 
   return (
     <Layout role="manager">
@@ -359,7 +379,7 @@ export default function AddNewDoctor() {
                     className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted"
                     size={16}
                   />
-                  <input 
+                  <input
                     type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
@@ -369,13 +389,19 @@ export default function AddNewDoctor() {
                     }`}
                     placeholder="Enter password"
                   />
-                    <div
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted cursor-pointer hover:text-heading transition-colors"
-                        onClick={togglePasswordVisibility}
-                        aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                        {showPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-                    </div>
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted cursor-pointer hover:text-heading transition-colors"
+                    onClick={togglePasswordVisibility}
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? (
+                      <FaEyeSlash size={16} />
+                    ) : (
+                      <FaEye size={16} />
+                    )}
+                  </div>
                 </div>
                 {errors.password && (
                   <p className="text-accent-danger text-xs mt-1">
@@ -406,13 +432,19 @@ export default function AddNewDoctor() {
                     }`}
                     placeholder="Confirm password"
                   />
-                    <div
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted cursor-pointer hover:text-heading transition-colors"
-                        onClick={toggleConfirmPasswordVisibility}
-                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                    >
-                        {showConfirmPassword ? <FaEyeSlash size={16} /> : <FaEye size={16} />}
-                    </div>
+                  <div
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted cursor-pointer hover:text-heading transition-colors"
+                    onClick={toggleConfirmPasswordVisibility}
+                    aria-label={
+                      showConfirmPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <FaEyeSlash size={16} />
+                    ) : (
+                      <FaEye size={16} />
+                    )}
+                  </div>
                 </div>
                 {errors.confirmPassword && (
                   <p className="text-accent-danger text-xs mt-1">
