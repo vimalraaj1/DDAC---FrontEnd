@@ -300,41 +300,41 @@ export default function AuthForm({ title, fields, onSubmit }) {
                     </form>
 
                     {/* Divider */}
-                    <div className="relative my-8">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-200"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-4 bg-white text-gray-500">or</span>
-                        </div>
-                    </div>
+                    {/*<div className="relative my-8">*/}
+                    {/*    <div className="absolute inset-0 flex items-center">*/}
+                    {/*        <div className="w-full border-t border-gray-200"></div>*/}
+                    {/*    </div>*/}
+                    {/*    <div className="relative flex justify-center text-sm">*/}
+                    {/*        <span className="px-4 bg-white text-gray-500">or</span>*/}
+                    {/*    </div>*/}
+                    {/*</div>*/}
 
                     {/* Toggle Login/Register */}
-                    <div className="text-center">
-                        <p className="text-sm text-gray-600">
-                            {isLogin ? (
-                                <>
-                                    Don't have an account?{" "}
-                                    <Link
-                                        to="/register"
-                                        className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-                                    >
-                                        Register now
-                                    </Link>
-                                </>
-                            ) : (
-                                <>
-                                    Already have an account?{" "}
-                                    <Link
-                                        to="/login"
-                                        className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"
-                                    >
-                                        Login here
-                                    </Link>
-                                </>
-                            )}
-                        </p>
-                    </div>
+                    {/*<div className="text-center">*/}
+                    {/*    <p className="text-sm text-gray-600">*/}
+                    {/*        {isLogin ? (*/}
+                    {/*            <>*/}
+                    {/*                Don't have an account?{" "}*/}
+                    {/*                <Link*/}
+                    {/*                    to="/register"*/}
+                    {/*                    className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"*/}
+                    {/*                >*/}
+                    {/*                    Register now*/}
+                    {/*                </Link>*/}
+                    {/*            </>*/}
+                    {/*        ) : (*/}
+                    {/*            <>*/}
+                    {/*                Already have an account?{" "}*/}
+                    {/*                <Link*/}
+                    {/*                    to="/login"*/}
+                    {/*                    className="text-blue-600 hover:text-blue-700 font-semibold transition-colors"*/}
+                    {/*                >*/}
+                    {/*                    Login here*/}
+                    {/*                </Link>*/}
+                    {/*            </>*/}
+                    {/*        )}*/}
+                    {/*    </p>*/}
+                    {/*</div>*/}
                 </div>
 
                 {/* Trust Indicators */}
