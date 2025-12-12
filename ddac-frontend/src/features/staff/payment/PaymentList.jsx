@@ -367,7 +367,7 @@ export default function PaymentList() {
                           </td>
                           <td className="py-4 px-6">
                             <span className="px-3 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
-                              {item.transactionStatus || "Paid"}
+                              {"Paid"}
                             </span>
                           </td>
                           <td className="py-4 px-4">
