@@ -13,7 +13,7 @@ import {
     FaMoneyBillWave,
     FaClock,
     FaCheckCircle,
-    FaUserCircle, FaLock
+    FaUserCircle, FaLock, FaQuestionCircle
 } from 'react-icons/fa';
 import {useNavigate, useParams} from 'react-router-dom';
 import {getManagerById} from "../../../services/managerManagementService.js";
@@ -33,6 +33,7 @@ export default function ManagerProfile() {
             return;
         }
         if (!manager) {
+            setError('Authentication failed. Please log in again.');
             setLoading(false);
             return;
         }
@@ -97,6 +98,13 @@ export default function ManagerProfile() {
 
     // Get status color and text
     const getStatusDisplay = (status) => {
+        if (!status || String(status).trim() === '') {
+            return {
+                color: 'bg-btn-secondary bg-opacity-50 text-text-body',
+                text: 'N/A',
+                icon: <FaQuestionCircle />
+            };
+        }
         switch(status.toLowerCase()) {
             case 'active':
                 return {
