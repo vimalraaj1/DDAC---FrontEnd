@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import {Link, useNavigate} from "react-router-dom";
 import { toast } from "sonner";
 import {FaEye, FaEyeSlash, FaShieldAlt, FaUserCircle, FaUserMd} from "react-icons/fa";
 import wellspring_logo from "../../assets/wellspring_logo.png";
+import {sendForgotPasswordTokenEmail} from "../../services/emailManagementService.js";
 
 const WellspringLogo = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
@@ -17,6 +18,7 @@ const WellspringLogo = () => (
 //test2
 export default function AuthForm({ title, fields, onSubmit }) {
     const [showPassword, setShowPassword] = useState(false);
+    const navigate = useNavigate();
   const [formData, setFormData] = useState(() => {
     const initial = {};
     fields.forEach((f) => (initial[f.name] = ""));
@@ -194,6 +196,10 @@ export default function AuthForm({ title, fields, onSubmit }) {
             );
     }
   };
+  
+  const handleForgotPassword = async (event) => {
+      navigate("/forgot-password");
+  }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50 px-4 py-8 relative overflow-hidden">
@@ -280,16 +286,17 @@ export default function AuthForm({ title, fields, onSubmit }) {
                         )}
 
                         {/* Forgot Password Link (only for login) */}
-                        {/*{isLogin && (*/}
-                        {/*    <div className="flex items-center justify-end">*/}
-                        {/*        <Link*/}
-                        {/*            to="/forgot-password"*/}
-                        {/*            className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"*/}
-                        {/*        >*/}
-                        {/*            Forgot password?*/}
-                        {/*        </Link>*/}
-                        {/*    </div>*/}
-                        {/*)}*/}
+                        {isLogin && (
+                            <div className="flex items-center justify-end">
+                                <a
+                                    onClick={handleForgotPassword}
+                                    href="#"
+                                    className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors"
+                                >
+                                    Forgot password?
+                                </a>
+                            </div>
+                        )}
 
                         {/* Submit Button */}
                         <button

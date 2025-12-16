@@ -67,6 +67,8 @@ import DoctorStaffReport from "../features/manager/report/DoctorStaffReport.jsx"
 import CustomerReceiptDisplay from "../features/customer/payments/components/CustomerReceiptDisplay.jsx";
 import {ManagerProvider} from "../features/manager/ManagerProvider.jsx";
 import ViewReceipt from "../features/manager/transactionInfo/ViewReceipt.jsx";
+import ForgotPassword from "../features/auth/ForgotPassword.jsx";
+import ResetPassword from "../features/auth/ResetPassword.jsx";
 
 export default function AppRouter() {
   return (
@@ -75,6 +77,8 @@ export default function AppRouter() {
         {/* Auth Routes */}
         <Route path="/" element={<Login />}/>
         <Route path="/login" element={<Login />}/>
+        <Route path="/forgot-password" element={<ForgotPassword />}/>
+        <Route path="/validate-token" element={<ResetPassword />}/>
         <Route path="/register" element={<Register />}/>
         <Route path="/role-based-redirect" element={<RoleBasedRedirect />}/>
 
