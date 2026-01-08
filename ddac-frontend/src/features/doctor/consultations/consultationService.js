@@ -43,7 +43,10 @@ const consultationService = {
             const response = await api.get(`/consultations/appointment/${appointmentId}`);
             return response.data;
         } catch (error) {
-            console.error(`Error fetching consultation for appointment ${appointmentId}:`, error);
+            // Don't log 404 errors - it's expected when consultation doesn't exist yet
+            if (error.response?.status !== 404) {
+                console.error(`Error fetching consultation for appointment ${appointmentId}:`, error);
+            }
             throw error;
         }
     },
@@ -62,6 +65,12 @@ const consultationService = {
             return response.data;
         } catch (error) {
             console.error('Error creating consultation:', error);
+            if (error.response?.data) {
+                console.error('Backend error details:', error.response.data);
+                if (error.response.data.errors) {
+                    console.error('Validation errors:', JSON.stringify(error.response.data.errors, null, 2));
+                }
+            }
             throw error;
         }
     },

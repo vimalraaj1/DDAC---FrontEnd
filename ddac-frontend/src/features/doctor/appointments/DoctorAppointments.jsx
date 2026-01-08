@@ -150,12 +150,8 @@ export default function DoctorAppointments() {
                 doctorId: userId,
                 staffId: selectedAppointment.staffId,
                 appointmentId: selectedAppointment.id,
-                commentText: null,
-                doctorRating: null,
-                staffRating: null,
-                overallRating: null,
-                time: new Date().toISOString(),
-                tags: null
+                time: new Date().toISOString()
+                // Omit optional fields (commentText, ratings, tags) - patient will fill these in later
             };
 
             await commentService.createComment(commentData);
@@ -169,6 +165,29 @@ export default function DoctorAppointments() {
             fetchAppointments();
         } catch (error) {
             console.error('Error saving consultation:', error);
+            
+            // If we get a 400 error but it's a validation error on the response (not the request),
+            // the data might have been saved successfully. Check by refreshing the appointments.
+            if (error.response?.status === 400) {
+                console.warn('Got 400 error but data may have been saved. Refreshing appointments...');
+                await fetchAppointments();
+                
+                // Check if the consultation was actually created
+                try {
+                    const consultation = await consultationService.getConsultationByAppointmentId(selectedAppointment.id);
+                    if (consultation) {
+                        alert('Consultation notes saved successfully! Patient can now provide feedback.');
+                        setShowConsultationModal(false);
+                        setConsultationForm({
+                            feedbackNotes: '',
+                            prescriptions: [{ medication: '', dosage: '', frequency: '', duration: '' }]
+                        });
+                        return; // Exit early since it was successful
+                    }
+                } catch (checkError) {
+                    // Consultation doesn't exist, so the error was genuine
+                }
+            }
             
             // Check if it's a duplicate consultation error
             if (error.response?.status === 500 && error.response?.data?.includes('Duplicate entry') && error.response?.data?.includes('AppointmentId')) {

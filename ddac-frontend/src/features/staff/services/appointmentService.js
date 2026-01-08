@@ -146,6 +146,14 @@ export const markAppointmentAsPaid = async (id, payload = {}) => {
 };
 
 export const getConsultationByAppointmentId = async (appointmentId) => {
-  const response = await staffApi.get(`/consultations/appointment/${appointmentId}`);
-  return response.data;
+  try {
+    const response = await staffApi.get(`/consultations/appointment/${appointmentId}`);
+    return response.data;
+  } catch (error) {
+    // Don't log 404 errors - it's expected when consultation doesn't exist yet
+    if (error.response?.status !== 404) {
+      console.error(`Error fetching consultation for appointment ${appointmentId}:`, error);
+    }
+    throw error;
+  }
 };

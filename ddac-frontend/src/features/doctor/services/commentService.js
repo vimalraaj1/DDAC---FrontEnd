@@ -100,6 +100,12 @@ const commentService = {
             return response.data;
         } catch (error) {
             console.error('Error creating comment:', error);
+            if (error.response?.data) {
+                console.error('Backend error details:', error.response.data);
+                if (error.response.data.errors) {
+                    console.error('Validation errors:', JSON.stringify(error.response.data.errors, null, 2));
+                }
+            }
             throw error;
         }
     },
