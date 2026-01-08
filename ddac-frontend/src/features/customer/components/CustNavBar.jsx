@@ -40,6 +40,7 @@ export default function CustNavBar({ role = "customer" }) {
     { icon: FaCalendarCheck, label: "Appointments", path: "/appointments" },
     { icon: FaFileInvoiceDollar, label: "Payments", path: "/payments" },
     { icon: MdFeedback, label: "Feedback", path: "/feedbacks" },
+    { icon: FaFileMedical, label: "Medical Documents", path: "/profile" },
     { icon: FaUser, label: "Profile", path: "/profile" },
   ];
 
