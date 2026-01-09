@@ -77,14 +77,14 @@ export function EditDocumentModal({ open, onOpenChange, document, onSuccess }: E
                             className="resize-none h-24 rounded-xl border-[#E2E8F0] focus:ring-[#4EA5D9]"
                         />
                     </div>
-                    <div className="flex justify-end gap-3 pt-4">
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
+                    <div className="flex justify-end gap-3 pt-4 ">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl hover:bg-[#F8FAFC]  hover:cursor-pointer">
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl"
+                            className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl hover:cursor-pointer"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Changes"}
                         </Button>

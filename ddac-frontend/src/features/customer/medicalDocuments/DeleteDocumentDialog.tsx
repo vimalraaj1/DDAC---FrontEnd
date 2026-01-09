@@ -26,10 +26,10 @@ export function DeleteDocumentDialog({ open, onOpenChange, onConfirm }: DeleteDi
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter className="mt-4">
-                    <AlertDialogCancel className="rounded-xl border-gray-200">Cancel</AlertDialogCancel>
+                    <AlertDialogCancel className="rounded-xl border-gray-200  hover:bg-[#F8FAFC]  hover:cursor-pointer">Cancel</AlertDialogCancel>
                     <AlertDialogAction
                         onClick={onConfirm}
-                        className="bg-[#EF4444] hover:bg-[#DC2626] text-white rounded-xl border-none"
+                        className="bg-[#EF4444] hover:bg-[#DC2626] hover:cursor-pointer text-white rounded-xl border-none"
                     >
                         Delete
                     </AlertDialogAction>
