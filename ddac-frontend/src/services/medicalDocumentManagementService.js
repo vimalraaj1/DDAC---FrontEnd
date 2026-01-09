@@ -1,6 +1,6 @@
 import api from "../api/axios";
 
-const BASE_URL = "/medicalDocuments";
+const BASE_URL = "/medical-documents";
 
 export const getMedicalDocument = async () => {
     const res = await api.post(BASE_URL);
@@ -24,4 +24,9 @@ export const updateMedicalDocument = async (id, doc) => {
 
 export const deleteMedicalDocument = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);
+}
+
+export const getMedicalDocumentByPatientId = async (patientId) => {
+    const res = await api.get(`${BASE_URL}/patient/${patientId}`);
+    return res.data;
 }

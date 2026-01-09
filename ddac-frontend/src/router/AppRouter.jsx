@@ -69,6 +69,7 @@ import {ManagerProvider} from "../features/manager/ManagerProvider.jsx";
 import ViewReceipt from "../features/manager/transactionInfo/ViewReceipt.jsx";
 import ForgotPassword from "../features/auth/ForgotPassword.jsx";
 import ResetPassword from "../features/auth/ResetPassword.jsx";
+import MedicalDocuments from "../features/customer/medicalDocuments/MedicalDocuments.tsx";
 
 export default function AppRouter() {
   return (
@@ -193,6 +194,18 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+            path="/medicalDocuments"
+            element={
+              <ProtectedRoute allowedRoles={['customer']}>
+                <CustomerProvider>
+                  <MedicalDocuments />
+                </CustomerProvider>
+              </ProtectedRoute>
+            }
+        />
+        
         {/* Doctor Routes */}
         <Route path="/doctorDashboard" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard/></ProtectedRoute>}/>
         <Route path="/doctorAppointments" element={<ProtectedRoute allowedRoles={['doctor']}><DoctorAppointments/></ProtectedRoute>}/>
