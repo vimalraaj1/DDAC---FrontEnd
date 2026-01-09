@@ -1,7 +1,8 @@
 import axios from "axios";
 import api from "../../../api/axios";
 
-const BASE_URL = "http://localhost:5203/api";
+// Access the API URL from environment variables
+const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5203") + "/api";
 
 // Create axios instance with default config
 const staffApi = axios.create({
