@@ -102,13 +102,13 @@ export function UploadDocumentModal({ open, onOpenChange, onSuccess, patientId }
                     </div>
 
                     <div className="flex gap-3 justify-end pt-2">
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl  hover:bg-[#F8FAFC]  hover:cursor-pointer">
                             Cancel
                         </Button>
                         <Button
                             type="submit"
                             disabled={loading || !file}
-                            className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl min-w-[100px]"
+                            className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl min-w-[100px] hover:cursor-pointer"
                         >
                             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Upload"}
                         </Button>

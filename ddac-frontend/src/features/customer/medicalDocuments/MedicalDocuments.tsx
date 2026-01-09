@@ -105,7 +105,7 @@ export default function MedicalDocuments() {
                             </div>
                             <Button
                                 onClick={() => setUploadModalOpen(true)}
-                                className="bg-[#4EA5D9] hover:bg-[#3f93c4] text-white rounded-xl flex items-center gap-2 shadow-md"
+                                className="bg-[#4EA5D9] hover:bg-[#3f93c4] hover:cursor-pointer text-white rounded-xl flex items-center gap-2 shadow-md"
                             >
                                 <Plus className="h-4 w-4" />
                                 Upload Document

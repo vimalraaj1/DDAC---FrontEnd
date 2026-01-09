@@ -36,7 +36,7 @@ export function DocumentCard({ document, onEdit, onDelete }: DocumentCardProps) 
                 {/* View/Download Button */}
                 <Button
                     variant="outline"
-                    className="flex-1 h-9 text-xs border-[#E2E8F0] text-[#1A1A1A] hover:bg-[#F8FAFC]"
+                    className="flex-1 h-9 text-xs border-[#E2E8F0] text-[#1A1A1A] hover:bg-[#F8FAFC] hover:border-[#BBD7EE] hover:cursor-pointer"
                     onClick={() => {
                         if(document.filePathUrl) window.open(document.filePathUrl, '_blank');
                         else alert("File URL not available yet");
@@ -49,7 +49,7 @@ export function DocumentCard({ document, onEdit, onDelete }: DocumentCardProps) 
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-[#64748B] hover:text-[#4EA5D9] hover:bg-[#F0F9FF]"
+                    className="h-9 w-9 text-[#64748B] hover:text-[#4EA5D9] hover:bg-[#F0F9FF] hover:cursor-pointer"
                     onClick={onEdit}
                 >
                     <Edit2 className="h-4 w-4" />
@@ -58,7 +58,7 @@ export function DocumentCard({ document, onEdit, onDelete }: DocumentCardProps) 
                 <Button
                     variant="ghost"
                     size="icon"
-                    className="h-9 w-9 text-[#64748B] hover:text-[#EF4444] hover:bg-[#FEF2F2]"
+                    className="h-9 w-9 text-[#64748B] hover:text-[#EF4444] hover:bg-[#FEF2F2] hover:cursor-pointer"
                     onClick={onDelete}
                 >
                     <Trash2 className="h-4 w-4" />
