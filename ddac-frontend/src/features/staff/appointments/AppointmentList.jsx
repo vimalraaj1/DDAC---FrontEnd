@@ -28,7 +28,11 @@ export default function AppointmentList() {
 
   useEffect(() => {
     loadAppointments();
-    if (filter === "completed-pending" || filter === "completed-paid" || filter === "all") {
+    if (
+      filter === "completed-pending" ||
+      filter === "completed-paid" ||
+      filter === "all"
+    ) {
       loadCompletedAppointments();
     }
   }, [filter]);
@@ -39,9 +43,18 @@ export default function AppointmentList() {
       const data = await appointmentService.getAllAppointments();
       setAppointments(data || []);
       try {
-        const [pList, dList] = await Promise.all([patientService.getAllPatients(), doctorService.getAllDoctors()]);
-        const pMap = (pList || []).reduce((acc, p) => ({ ...acc, [p.id || p.patientId]: p }), {});
-        const dMap = (dList || []).reduce((acc, d) => ({ ...acc, [d.id || d.doctorId]: d }), {});
+        const [pList, dList] = await Promise.all([
+          patientService.getAllPatients(),
+          doctorService.getAllDoctors(),
+        ]);
+        const pMap = (pList || []).reduce(
+          (acc, p) => ({ ...acc, [p.id || p.patientId]: p }),
+          {}
+        );
+        const dMap = (dList || []).reduce(
+          (acc, d) => ({ ...acc, [d.id || d.doctorId]: d }),
+          {}
+        );
         setPatientsMap(pMap);
         setDoctorsMap(dMap);
       } catch (err) {
@@ -49,7 +62,7 @@ export default function AppointmentList() {
       }
     } catch (error) {
       console.error("Error loading appointments:", error);
-      setAppointments([]); 
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -63,11 +76,16 @@ export default function AppointmentList() {
         appointmentService.getCompletedAppointmentsWithPendingTransactions(),
         appointmentService.getCompletedAppointmentsWithPaidTransactions(),
       ]);
-      setCompletedPendingPayments(Array.isArray(pendingPayments) ? pendingPayments : []);
+      setCompletedPendingPayments(
+        Array.isArray(pendingPayments) ? pendingPayments : []
+      );
       setCompletedPaid(Array.isArray(paid) ? paid : []);
     } catch (error) {
       console.error("Error loading completed appointments:", error);
-      const errorMessage = error.response?.data?.message || error.message || "Failed to load completed appointments";
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        "Failed to load completed appointments";
       setErrorCompleted(errorMessage);
       toast.error(errorMessage);
       setCompletedPendingPayments([]);
@@ -94,7 +112,9 @@ export default function AppointmentList() {
           key: "patientName",
           label: "Patient",
           render: (value, row) => {
-            return <div className="font-medium">{row.patientName || "N/A"}</div>;
+            return (
+              <div className="font-medium">{row.patientName || "N/A"}</div>
+            );
           },
         },
         {
@@ -131,12 +151,16 @@ export default function AppointmentList() {
           key: "transactionStatus",
           label: "Payment Status",
           render: (value, row) => {
-            return <StatusBadge status={row.transactionStatus || "N/A"} />;
+            const status =
+              row.transactionStatus === "succeeded" || row.transactionStatus === "succeede"
+                ? "Paid"
+                : row.transactionStatus || "N/A";
+            return <StatusBadge status={status} />;
           },
         },
       ];
     }
-    
+
     // For completed-paid filter, add more transaction details
     if (filter === "completed-paid") {
       return [
@@ -152,7 +176,9 @@ export default function AppointmentList() {
           key: "patientName",
           label: "Patient",
           render: (value, row) => {
-            return <div className="font-medium">{row.patientName || "N/A"}</div>;
+            return (
+              <div className="font-medium">{row.patientName || "N/A"}</div>
+            );
           },
         },
         {
@@ -208,14 +234,18 @@ export default function AppointmentList() {
         },
         {
           key: "transactionStatus",
-          label: "Status",
+          label: "Payment Status",
           render: (value, row) => {
-            return <StatusBadge status={row.transactionStatus || "Paid"} />;
+            const status =
+              row.transactionStatus === "succeeded" || row.transactionStatus === "succeede"
+                ? "Paid"
+                : row.transactionStatus || "N/A";
+            return <StatusBadge status={status} />;
           },
         },
       ];
     }
-    
+
     // Default columns for other filters
     return [
       {
@@ -224,7 +254,9 @@ export default function AppointmentList() {
         render: (value, row) => {
           const pid = value || row.patientId || row.patient?.id;
           const p = patientsMap[pid];
-          const label = p ? `${p.firstName || ""} ${p.lastName || ""}`.trim() : pid || "N/A";
+          const label = p
+            ? `${p.firstName || ""} ${p.lastName || ""}`.trim()
+            : pid || "N/A";
           return <div className="font-medium">{label}</div>;
         },
       },
@@ -234,7 +266,9 @@ export default function AppointmentList() {
         render: (value, row) => {
           const did = value || row.doctorId || row.doctor?.id;
           const d = doctorsMap[did];
-          const label = d ? `${d.firstName || ""} ${d.lastName || ""}`.trim() : did || "N/A";
+          const label = d
+            ? `${d.firstName || ""} ${d.lastName || ""}`.trim()
+            : did || "N/A";
           return <div>{label}</div>;
         },
       },
@@ -245,7 +279,11 @@ export default function AppointmentList() {
       },
       { key: "time", label: "Time" },
       { key: "purpose", label: "Purpose" },
-      { key: "status", label: "Status", render: (value) => <StatusBadge status={value} /> },
+      {
+        key: "status",
+        label: "Status",
+        render: (value) => <StatusBadge status={value} />,
+      },
     ];
   };
 
@@ -280,8 +318,10 @@ export default function AppointmentList() {
     const appointmentId = row.id;
     if (!appointmentId) return;
     const reason =
-      window.prompt("Please provide a reason for rejecting this appointment:", "Rejected by staff") ||
-      "Rejected by staff";
+      window.prompt(
+        "Please provide a reason for rejecting this appointment:",
+        "Rejected by staff"
+      ) || "Rejected by staff";
     try {
       setActionLoadingId(appointmentId);
       await appointmentService.rejectAppointment(appointmentId, reason);
@@ -318,13 +358,15 @@ export default function AppointmentList() {
     if (!appointmentId) return;
     try {
       setActionLoadingId(appointmentId);
-      await appointmentService.completeAppointment(appointmentId, { completedAt: new Date().toISOString() });
-      
+      await appointmentService.completeAppointment(appointmentId, {
+        completedAt: new Date().toISOString(),
+      });
+
       try {
         // Create initial pending transaction (Requirement: Create payment intent on completion)
-        await paymentService.createStripeSession(appointmentId, { 
+        await paymentService.createStripeSession(appointmentId, {
           amount: 2, // Placeholder amount, will be updated in PaymentDetails
-          currency: 'MYR' 
+          currency: "MYR",
         });
       } catch (err) {
         console.error("Failed to create initial payment intent:", err);
@@ -361,9 +403,6 @@ export default function AppointmentList() {
   const scheduledAppointments = appointments.filter(
     (appointment) => (appointment.status || "").toLowerCase() === "scheduled"
   ).length;
-  const completedAppointments = appointments.filter(
-    (appointment) => (appointment.status || "").toLowerCase() === "completed"
-  ).length;
   const approvedAppointments = appointments.filter(
     (appointment) => (appointment.status || "").toLowerCase() === "approved"
   ).length;
@@ -386,7 +425,7 @@ export default function AppointmentList() {
     if (filter === "completed-paid") {
       return completedPaid;
     }
-    
+
     return appointments.filter((appointment) => {
       const status = (appointment.status || "").toLowerCase();
       if (filter === "scheduled") return status === "scheduled";
@@ -395,7 +434,12 @@ export default function AppointmentList() {
       if (filter === "approved") return status === "approved";
       if (filter === "paid") return status === "paid";
       if (filter === "today") return isSameDay(appointment.date);
-      if (filter === "others") return status === "cancelled" || status === "rejected" || status === "no show";
+      if (filter === "others")
+        return (
+          status === "cancelled" ||
+          status === "rejected" ||
+          status === "no show"
+        );
       return true; // "all" or any unknown filter
     });
   };
@@ -409,7 +453,9 @@ export default function AppointmentList() {
           <div className="mb-6 flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold mb-2">Appointments</h1>
-              <p className="text-gray-600">Manage and review all appointments</p>
+              <p className="text-gray-600">
+                Manage and review all appointments
+              </p>
             </div>
             <Link
               to="/staff/appointments/new"
@@ -428,7 +474,9 @@ export default function AppointmentList() {
                   <FaCalendarAlt size={24} className="text-ondark" />
                 </div>
                 <div>
-                  <h3 className="text-heading text-2xl font-bold">{totalAppointments}</h3>
+                  <h3 className="text-heading text-2xl font-bold">
+                    {totalAppointments}
+                  </h3>
                   <p className="text-muted text-sm">Total Appointments</p>
                 </div>
               </div>
@@ -440,7 +488,9 @@ export default function AppointmentList() {
                   <FaClock size={24} className="text-ondark" />
                 </div>
                 <div>
-                  <h3 className="text-heading text-2xl font-bold">{scheduledAppointments}</h3>
+                  <h3 className="text-heading text-2xl font-bold">
+                    {scheduledAppointments}
+                  </h3>
                   <p className="text-muted text-sm">Scheduled</p>
                 </div>
               </div>
@@ -452,7 +502,9 @@ export default function AppointmentList() {
                   <FaClock size={24} className="text-ondark" />
                 </div>
                 <div>
-                  <h3 className="text-heading text-2xl font-bold">{approvedAppointments}</h3>
+                  <h3 className="text-heading text-2xl font-bold">
+                    {approvedAppointments}
+                  </h3>
                   <p className="text-muted text-sm">Approved</p>
                 </div>
               </div>
@@ -468,7 +520,9 @@ export default function AppointmentList() {
                     {loadingCompleted ? "..." : completedPendingPayments.length}
                   </h3>
                   <p className="text-muted text-sm">Completed (Unpaid)</p>
-                  <p className="text-muted text-xs mt-1">Transaction: Pending</p>
+                  <p className="text-muted text-xs mt-1">
+                    Transaction: Pending
+                  </p>
                 </div>
               </div>
             </div>
@@ -495,9 +549,13 @@ export default function AppointmentList() {
               {tabs.map((tab) => (
                 <button
                   key={tab.filter}
-                  onClick={() => navigate(`/staff/appointments?filter=${tab.filter}`)}
+                  onClick={() =>
+                    navigate(`/staff/appointments?filter=${tab.filter}`)
+                  }
                   className={`px-6 py-3 font-medium text-sm ${
-                    filter === tab.filter ? "border-b-2 border-primary text-primary" : "text-gray-600 hover:text-gray-900"
+                    filter === tab.filter
+                      ? "border-b-2 border-primary text-primary"
+                      : "text-gray-600 hover:text-gray-900"
                   }`}
                 >
                   {tab.label}
@@ -507,11 +565,14 @@ export default function AppointmentList() {
           </div>
 
           {/* Appointments Table */}
-          {(loading || (loadingCompleted && (filter === "completed-pending" || filter === "completed-paid"))) ? (
+          {loading ||
+          (loadingCompleted &&
+            (filter === "completed-pending" || filter === "completed-paid")) ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <p className="text-gray-500">Loading appointments...</p>
             </div>
-          ) : errorCompleted && (filter === "completed-pending" || filter === "completed-paid") ? (
+          ) : errorCompleted &&
+            (filter === "completed-pending" || filter === "completed-paid") ? (
             <div className="bg-white rounded-lg shadow-md p-8 text-center">
               <p className="text-red-600 mb-2">Error loading data</p>
               <p className="text-gray-500 text-sm mb-4">{errorCompleted}</p>
@@ -545,7 +606,7 @@ export default function AppointmentList() {
                     </div>
                   );
                 }
-                
+
                 if (filter === "completed-paid") {
                   const appointmentId = row.appointmentId || row.id || row._id;
                   return (
@@ -553,7 +614,9 @@ export default function AppointmentList() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/staff/payment/receipt/view?appointmentId=${appointmentId}`);
+                          navigate(
+                            `/staff/payment/receipt/view?appointmentId=${appointmentId}`
+                          );
                         }}
                         className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700"
                       >
@@ -562,7 +625,7 @@ export default function AppointmentList() {
                     </div>
                   );
                 }
-                
+
                 // Default actions for other filters
                 const status = (row.status || "").toLowerCase();
                 const isScheduled = status === "scheduled";
@@ -576,14 +639,18 @@ export default function AppointmentList() {
                           disabled={actionLoadingId === row.id}
                           className="px-3 py-1 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700 disabled:opacity-50"
                         >
-                          {actionLoadingId === row.id ? "Approving..." : "Approve"}
+                          {actionLoadingId === row.id
+                            ? "Approving..."
+                            : "Approve"}
                         </button>
                         <button
                           onClick={(event) => handleReject(event, row)}
                           disabled={actionLoadingId === row.id}
                           className="px-3 py-1 rounded-lg bg-red-600 text-white text-xs font-medium hover:bg-red-700 disabled:opacity-50"
                         >
-                          {actionLoadingId === row.id ? "Rejecting..." : "Reject"}
+                          {actionLoadingId === row.id
+                            ? "Rejecting..."
+                            : "Reject"}
                         </button>
                       </>
                     )}
@@ -594,14 +661,18 @@ export default function AppointmentList() {
                           disabled={actionLoadingId === row.id}
                           className="px-3 py-1 rounded-lg bg-orange-600 text-white text-xs font-medium hover:bg-orange-700 disabled:opacity-50"
                         >
-                          {actionLoadingId === row.id ? "Updating..." : "No Show"}
+                          {actionLoadingId === row.id
+                            ? "Updating..."
+                            : "No Show"}
                         </button>
                         <button
                           onClick={(event) => handleComplete(event, row)}
                           disabled={actionLoadingId === row.id}
                           className="px-3 py-1 rounded-lg bg-blue-600 text-white text-xs font-medium hover:bg-blue-700 disabled:opacity-50"
                         >
-                          {actionLoadingId === row.id ? "Completing..." : "Complete"}
+                          {actionLoadingId === row.id
+                            ? "Completing..."
+                            : "Complete"}
                         </button>
                       </>
                     )}
