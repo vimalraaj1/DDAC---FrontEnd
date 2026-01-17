@@ -384,15 +384,15 @@ export default function DoctorAvailability() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <button
                             onClick={() => handleEdit(availability)}
-                            className="text-blue-600 hover:text-blue-900 mr-4"
-                            disabled={availability.isBooked}
+                            className="text-blue-600 hover:text-blue-900 cursor-pointer mr-4"
+                            title="Edit availability"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDelete(availability.id)}
-                            className="text-red-600 hover:text-red-900"
-                            disabled={availability.isBooked}
+                            className="text-red-600 hover:text-red-900 cursor-pointer"
+                            title="Delete availability"
                           >
                             Delete
                           </button>

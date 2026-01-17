@@ -7,13 +7,14 @@
             },
             "ssh": "Disabled",
             "previewLimit": 50,
-            "server": "wellspringhealthcare.c1amhunnq6ei.us-east-1.rds.amazonaws.com",
+            "server": "localhost",
             "port": 3306,
             "driver": "MySQL",
-            "name": "wellspring-healthcare",
-            "database": "metadata",
+            "name": "wellspring-db",
+            "group": "wellspring-db.c8i3eb77bnuk.us-east-1.rds.amazonaws.com",
+            "database": "wellspring",
             "username": "admin",
-            "askForPassword": true
+            "password": "wellspring"
         }
     ]
 }
