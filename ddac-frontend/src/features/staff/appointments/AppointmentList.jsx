@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { formatStaffDate } from "../utils/dateFormat";
 
 export default function AppointmentList() {
+  const staffId = localStorage.getItem("id");
   const [searchParams] = useSearchParams();
   const filter = searchParams.get("filter") || "all";
   const navigate = useNavigate();
@@ -302,7 +303,7 @@ export default function AppointmentList() {
     if (!appointmentId) return;
     try {
       setActionLoadingId(appointmentId);
-      await appointmentService.approveAppointment(appointmentId);
+      await appointmentService.approveAppointment(appointmentId, staffId);
       toast.success("Appointment marked as approved.");
       await loadAppointments();
     } catch (error) {

@@ -145,6 +145,8 @@ export default function DoctorAppointments() {
             if (!userId) {
                 throw new Error('User ID not found. Please log in again.');
             }
+
+            console.log({selectedAppointment});
             const commentData = {
                 patientId: selectedAppointment.patientId,
                 doctorId: userId,
@@ -153,6 +155,7 @@ export default function DoctorAppointments() {
                 time: new Date().toISOString()
                 // Omit optional fields (commentText, ratings, tags) - patient will fill these in later
             };
+            console.log({commentData});
 
             await commentService.createComment(commentData);
 

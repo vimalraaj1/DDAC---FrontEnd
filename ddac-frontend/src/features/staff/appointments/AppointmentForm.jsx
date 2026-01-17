@@ -13,7 +13,7 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
     time: "",
     patientId: "",
     doctorId: "",
-    staffId: "",
+    staffId: localStorage.getItem("id"),
     purpose: "",
     status: "Scheduled",
     cancellationReason: null,
@@ -62,7 +62,6 @@ export default function AppointmentForm({ onSubmit, onClose, initialData }) {
       ...formData,
       patientId: String(formData.patientId || ""),
       doctorId: String(formData.doctorId || ""),
-      staffId: formData.staffId ? String(formData.staffId) : null,
       cancellationReason: formData.cancellationReason || null,
     });
     onClose && onClose();
