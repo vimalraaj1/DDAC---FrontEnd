@@ -74,15 +74,15 @@ export default function PaymentList() {
     });
   };
 
-  const viewReceipt = (item) => {
-    const appointmentId = getAppointmentId(item);
-    if (!appointmentId || appointmentId === "N/A") {
-      toast.error("Unable to determine appointment identifier.");
-      return;
-    }
-    // Navigate to receipt view with appointment ID
-    navigate(`/staff/payment/receipt/view?appointmentId=${appointmentId}`);
-  };
+  // const viewReceipt = (item) => {
+  //   const appointmentId = getAppointmentId(item);
+  //   if (!appointmentId || appointmentId === "N/A") {
+  //     toast.error("Unable to determine appointment identifier.");
+  //     return;
+  //   }
+  //   // Navigate to receipt view with appointment ID
+  //   navigate(`/staff/payment/receipt/view?appointmentId=${appointmentId}`);
+  // };
 
   const formatCurrency = (amount) => {
     return `RM ${(amount || 0).toFixed(2)}`;
@@ -319,7 +319,7 @@ export default function PaymentList() {
                       <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">Card Last 4</th>
                       <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">Payment Date</th>
                       <th className="text-left py-4 px-6 text-ondark font-semibold text-sm break-all">Status</th>
-                      <th className="text-center py-4 px-6 text-ondark font-semibold text-sm break-all">Actions</th>
+                      {/* <th className="text-center py-4 px-6 text-ondark font-semibold text-sm break-all">Actions</th> */}
                     </tr>
                   </thead>
                   <tbody>
@@ -370,7 +370,7 @@ export default function PaymentList() {
                               {"Paid"}
                             </span>
                           </td>
-                          <td className="py-4 px-4">
+                          {/* <td className="py-4 px-4">
                             <div className="flex items-center justify-center gap-2">
                               {item.receipt ? (
                                 <button
@@ -385,7 +385,7 @@ export default function PaymentList() {
                                 <span className="text-muted text-xs">No receipt</span>
                               )}
                             </div>
-                          </td>
+                          </td> */}
                         </tr>
                       ))
                     ) : (
