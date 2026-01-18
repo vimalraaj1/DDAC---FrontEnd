@@ -45,8 +45,6 @@ export default function StaffAppointments() {
         });
       } catch (error) {
         console.error("Failed to create payment intent:", error);
-        // We continue with the update even if this fails, 
-        // as the staff can manually trigger payment later from Payment module if needed
       }
     }
 

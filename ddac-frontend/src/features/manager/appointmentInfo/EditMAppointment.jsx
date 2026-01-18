@@ -25,7 +25,7 @@ export default function EditMAppointment() {
         status: '',
         patientId: '',
         doctorId: '',
-        staffId: '',
+        staffId: localStorage.getItem("id"),
         purpose: '',
         cancellationReason: ''
     });

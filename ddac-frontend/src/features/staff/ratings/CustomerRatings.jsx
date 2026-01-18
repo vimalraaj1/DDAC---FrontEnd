@@ -97,13 +97,14 @@ export default function CustomerRatings() {
   });
 
   // Calculate analytics
+  console.log({ratings});
   const analytics = ratings.length > 0
     ? {
         averageRating:
           ratings.reduce((sum, r) => sum + (r.staffRating || r.rating || 0), 0) / ratings.length,
         totalRatings: ratings.length,
         latestRating: ratings[0]?.staffRating || ratings[0]?.rating || 0,
-        latestRatingDate: ratings[0]?.time || ratings[0]?.date,
+        latestRatingDate: ratings[0]?.commentTime || ratings[0]?.date,
       }
     : null;
 
@@ -191,9 +192,9 @@ export default function CustomerRatings() {
                         </div>
                         <div>
                           <p className="text-heading font-semibold">
-                            {rating.patientName || `Patient ${rating.patientId || "N/A"}`}
+                            {rating.patientFirstName + rating.patientLastName ||  "N/A"}
                           </p>
-                          <p className="text-muted text-sm">{formatDate(rating.time || rating.date)}</p>
+                          <p className="text-muted text-sm">{formatDate(rating.commentTime)}</p>
                         </div>
                       </div>
                       <div className="text-right">

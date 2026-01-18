@@ -23,6 +23,10 @@ export const registerAppointment = async (appointment) => {
     return res.data;
 }
 
+export const updateAppointment = async (id, appointment) => {
+    const res = await api.put(`${BASE_URL}/${id}`, appointment);
+    return res.data;
+}
 export const getAppointments = async () => {
     const res = await api.get(`${BASE_URL}`);
     return res.data;
@@ -33,10 +37,6 @@ export const getAppointmentById = async (id) => {
     return res.data;
 }
 
-export const updateAppointment = async (id, appointment) => {
-    const res = await api.put(`${BASE_URL}/${id}`, appointment);
-    return res.data;
-}
 
 export const deleteAppointment = async (id) => {
     const res = await api.delete(`${BASE_URL}/${id}`);

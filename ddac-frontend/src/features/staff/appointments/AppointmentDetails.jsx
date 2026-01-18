@@ -13,6 +13,7 @@ import { formatStaffDate } from "../utils/dateFormat";
 
 export default function AppointmentDetails() {
   const { id } = useParams();
+  const staffId = localStorage.getItem("id");
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export default function AppointmentDetails() {
     }
     try {
       setActionLoading(true);
-      await appointmentService.approveAppointment(appointmentIdValue);
+      await appointmentService.approveAppointment(appointmentIdValue, staffId);
       toast.success("Appointment approved.");
       await loadAppointment();
     } catch (error) {

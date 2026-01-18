@@ -198,7 +198,7 @@ export default function DoctorDashboard() {
                                     onClick={() => setShowDropdown(!showDropdown)}
                                 >
                                     <img
-                                        src="https://ui-avatars.com/api/?name=Sarah+Wilson&background=4f46e5&color=fff"
+                                        src={`https://ui-avatars.com/api/?name=${userName}&background=4f46e5&color=fff`}
                                         alt="Profile"
                                         className="w-10 h-10 rounded-full"
                                     />

@@ -104,8 +104,8 @@ export const updateAppointment = async (id, appointmentData) => {
   return response.data;
 };
 
-export const approveAppointment = async (id) => {
-  const response = await staffApi.patch(`${APPOINTMENT_ENDPOINT}/${id}/approve`);
+export const approveAppointment = async (appointmentId, staffId) => {
+  const response = await staffApi.patch(`${APPOINTMENT_ENDPOINT}/${appointmentId}/approve`, { staffId });
   return response.data;
 };
 
